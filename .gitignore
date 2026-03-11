@@ -1,0 +1,138 @@
+# =============================================================
+# ImoOS — .gitignore
+# Python + Django + Node.js + React Native + DevOps
+# =============================================================
+
+# ---------------------------------------------------------------
+# SECRETS — NEVER COMMIT
+# ---------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+secrets/
+credentials.json
+service_account*.json
+
+# ---------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+pip-wheel-metadata/
+pip-log.txt
+pip-delete-this-directory.txt
+.installed.cfg
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+MANIFEST
+
+# ---------------------------------------------------------------
+# Virtual Environments
+# ---------------------------------------------------------------
+.venv/
+venv/
+ENV/
+env/
+.env.bak/
+env.bak/
+
+# ---------------------------------------------------------------
+# Django
+# ---------------------------------------------------------------
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+staticfiles/
+mediafiles/
+/media/
+*.pot
+
+# ---------------------------------------------------------------
+# Tests & Coverage
+# ---------------------------------------------------------------
+.tox/
+.nox/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+htmlcov/
+nosetests.xml
+test-results/
+
+# ---------------------------------------------------------------
+# Node.js / Next.js / React Native
+# ---------------------------------------------------------------
+node_modules/
+.npm
+.eslintcache
+.stylelintcache
+frontend/.next/
+frontend/out/
+frontend/.turbo
+mobile/.expo/
+mobile/dist/
+.pnp
+.pnp.js
+
+# ---------------------------------------------------------------
+# Build artifacts
+# ---------------------------------------------------------------
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------------------------------------------------------------
+# IDEs
+# ---------------------------------------------------------------
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# ---------------------------------------------------------------
+# Docker
+# ---------------------------------------------------------------
+docker-compose.override.yml
+
+# ---------------------------------------------------------------
+# Database backups
+# ---------------------------------------------------------------
+backups/
+*.sql
+*.dump
+
+# ---------------------------------------------------------------
+# Misc
+# ---------------------------------------------------------------
+*.bak
+*.tmp
+*.temp
+celerybeat-schedule
+celerybeat.pid

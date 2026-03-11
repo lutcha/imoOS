@@ -1,0 +1,186 @@
+# =============================================================
+# ImoOS — DigitalOcean App Platform Spec
+# Deploy: doctl apps create --spec .do/app.yaml
+# Update:  doctl apps update <APP_ID> --spec .do/app.yaml
+# =============================================================
+
+name: imos-staging
+region: ams    # Amsterdam — closest to Cabo Verde with DO presence
+
+# ------------------------------------------------------------------
+# Django API (web + release)
+# ------------------------------------------------------------------
+services:
+  - name: api
+    github:
+      repo: lutcha/imoOS
+      branch: develop
+      deploy_on_push: true
+    source_dir: /
+    dockerfile_path: docker/Dockerfile.staging    # see below
+    http_port: 8000
+    instance_count: 1
+    instance_size_slug: professional-xs           # 1 vCPU, 2 GB RAM
+
+    envs:
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.staging
+      - key: SECRET_KEY
+        value: ${SECRET_KEY}
+        type: SECRET
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: ${APP_DOMAIN},staging.imos.cv
+      - key: DB_NAME
+        value: ${db.DATABASE}
+      - key: DB_USER
+        value: ${db.USERNAME}
+      - key: DB_PASSWORD
+        value: ${db.PASSWORD}
+        type: SECRET
+      - key: DB_HOST
+        value: ${db.HOSTNAME}
+      - key: DB_PORT
+        value: ${db.PORT}
+      - key: REDIS_URL
+        value: ${redis.REDIS_URL}
+        type: SECRET
+      - key: CELERY_BROKER_URL
+        value: ${redis.REDIS_URL}
+        type: SECRET
+      - key: CELERY_RESULT_BACKEND
+        value: ${redis.REDIS_URL}
+        type: SECRET
+      - key: AWS_ACCESS_KEY_ID
+        value: ${AWS_ACCESS_KEY_ID}
+        type: SECRET
+      - key: AWS_SECRET_ACCESS_KEY
+        value: ${AWS_SECRET_ACCESS_KEY}
+        type: SECRET
+      - key: AWS_STORAGE_BUCKET_NAME
+        value: imos-staging-media
+      - key: AWS_S3_ENDPOINT_URL
+        value: https://fra1.digitaloceanspaces.com
+      - key: SENTRY_DSN
+        value: ${SENTRY_DSN}
+        type: SECRET
+      - key: APP_VERSION
+        value: ${_self.COMMIT_HASH}
+      - key: TENANT_BASE_DOMAIN
+        value: staging.imos.cv
+
+    run_command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2 --threads 4 --timeout 120 --log-file -
+
+    # Runs before each new deployment (migrations, collectstatic)
+    # DO App Platform runs `release` phase automatically from Procfile
+    health_check:
+      http_path: /api/v1/health/
+      initial_delay_seconds: 30
+      period_seconds: 30
+      timeout_seconds: 10
+      failure_threshold: 3
+
+# ------------------------------------------------------------------
+# Celery Worker
+# ------------------------------------------------------------------
+  - name: worker
+    github:
+      repo: your-org/imos
+      branch: develop
+      deploy_on_push: true
+    source_dir: /
+    dockerfile_path: docker/Dockerfile.staging
+    instance_count: 1
+    instance_size_slug: professional-xs
+    run_command: celery -A config.celery worker --loglevel=info --concurrency=2
+    envs:
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.staging
+      - key: SECRET_KEY
+        value: ${SECRET_KEY}
+        type: SECRET
+      - key: DB_NAME
+        value: ${db.DATABASE}
+      - key: DB_USER
+        value: ${db.USERNAME}
+      - key: DB_PASSWORD
+        value: ${db.PASSWORD}
+        type: SECRET
+      - key: DB_HOST
+        value: ${db.HOSTNAME}
+      - key: DB_PORT
+        value: ${db.PORT}
+      - key: REDIS_URL
+        value: ${redis.REDIS_URL}
+        type: SECRET
+      - key: CELERY_BROKER_URL
+        value: ${redis.REDIS_URL}
+        type: SECRET
+      - key: CELERY_RESULT_BACKEND
+        value: ${redis.REDIS_URL}
+        type: SECRET
+
+# ------------------------------------------------------------------
+# Celery Beat (scheduler)
+# ------------------------------------------------------------------
+  - name: beat
+    github:
+      repo: your-org/imos
+      branch: develop
+      deploy_on_push: true
+    source_dir: /
+    dockerfile_path: docker/Dockerfile.staging
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    run_command: celery -A config.celery beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    envs:
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.staging
+      - key: SECRET_KEY
+        value: ${SECRET_KEY}
+        type: SECRET
+      - key: DB_NAME
+        value: ${db.DATABASE}
+      - key: DB_USER
+        value: ${db.USERNAME}
+      - key: DB_PASSWORD
+        value: ${db.PASSWORD}
+        type: SECRET
+      - key: DB_HOST
+        value: ${db.HOSTNAME}
+      - key: DB_PORT
+        value: ${db.PORT}
+      - key: REDIS_URL
+        value: ${redis.REDIS_URL}
+        type: SECRET
+      - key: CELERY_BROKER_URL
+        value: ${redis.REDIS_URL}
+        type: SECRET
+      - key: CELERY_RESULT_BACKEND
+        value: ${redis.REDIS_URL}
+        type: SECRET
+
+# ------------------------------------------------------------------
+# Managed Databases (DO provisions these)
+# ------------------------------------------------------------------
+databases:
+  - name: db
+    engine: PG
+    version: "15"
+    production: false
+    cluster_name: imos-staging-pg
+
+  - name: redis
+    engine: REDIS
+    version: "7"
+    production: false
+    cluster_name: imos-staging-redis
+
+# ------------------------------------------------------------------
+# Custom domain
+# ------------------------------------------------------------------
+domains:
+  - domain: staging.imos.cv
+    type: PRIMARY
+    zone: imos.cv

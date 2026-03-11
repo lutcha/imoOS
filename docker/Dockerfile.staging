@@ -1,0 +1,31 @@
+FROM python:3.11-slim
+
+# Install system dependencies (GDAL for PostGIS)
+RUN apt-get update && apt-get install -y \
+    gdal-bin \
+    libgdal-dev \
+    libpq-dev \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV GDAL_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libgdal.so
+ENV GEOS_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libgeos_c.so
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# Install Python deps (cached layer)
+COPY requirements/base.txt requirements/base.txt
+COPY requirements/production.txt requirements/production.txt
+RUN pip install --no-cache-dir -r requirements/production.txt
+
+COPY . .
+
+# Collect static files at build time
+RUN DJANGO_SETTINGS_MODULE=config.settings.staging \
+    SECRET_KEY=build-phase-dummy \
+    DB_HOST=localhost DB_NAME=x DB_USER=x DB_PASSWORD=x \
+    python manage.py collectstatic --noinput || true
+
+EXPOSE 8000

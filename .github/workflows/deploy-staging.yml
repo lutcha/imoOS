@@ -1,0 +1,80 @@
+name: CD — Deploy to Staging
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:           # Allow manual trigger from GitHub UI
+
+concurrency:
+  group: staging-deploy
+  cancel-in-progress: true    # Cancel stale deploys if a new push arrives
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  # ------------------------------------------------------------------
+  # Gate: CI must pass before deploy
+  # ------------------------------------------------------------------
+  ci-gate:
+    name: CI Gate (lint + test + isolation)
+    uses: ./.github/workflows/ci.yml
+    secrets: inherit
+
+  # ------------------------------------------------------------------
+  # Deploy to DigitalOcean App Platform
+  # ------------------------------------------------------------------
+  deploy-staging:
+    name: Deploy to DigitalOcean Staging
+    runs-on: ubuntu-latest
+    needs: [ci-gate]
+    environment:
+      name: staging
+      url: https://staging.imos.cv
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Deploy to App Platform
+        run: |
+          doctl apps create-deployment ${{ secrets.DIGITALOCEAN_APP_ID }} \
+            --wait \
+            --format "ID,Phase,Progress,Created"
+
+      - name: Notify Sentry of release
+        if: ${{ secrets.SENTRY_AUTH_TOKEN != '' }}
+        uses: getsentry/action-release@v1
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        with:
+          environment: staging
+          version: ${{ github.sha }}
+
+      - name: Smoke test — API health check
+        run: |
+          sleep 30  # Wait for deployment to stabilise
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            "https://staging.imos.cv/api/v1/health/" \
+            -H "Accept: application/json")
+          if [ "$STATUS" != "200" ]; then
+            echo "Health check failed with status $STATUS"
+            exit 1
+          fi
+          echo "Health check passed (HTTP $STATUS)"
+
+      - name: Post deploy summary
+        if: always()
+        run: |
+          echo "### Staging Deploy Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Triggered by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **URL:** https://staging.imos.cv" >> $GITHUB_STEP_SUMMARY
