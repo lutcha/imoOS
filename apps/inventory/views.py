@@ -1,5 +1,8 @@
+from django.db import connection
 from rest_framework import viewsets, filters
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
+from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
@@ -7,6 +10,8 @@ from apps.users.permissions import IsTenantMember
 from .models import Unit, UnitType, UnitPricing
 from .serializers import UnitSerializer, UnitTypeSerializer, UnitPricingSerializer
 from .filters import UnitFilter
+
+MAX_UPLOAD_BYTES = 5 * 1024 * 1024  # 5 MB
 
 
 class UnitViewSet(viewsets.ModelViewSet):
@@ -20,6 +25,18 @@ class UnitViewSet(viewsets.ModelViewSet):
     search_fields = ['code', 'description']
     ordering_fields = ['code', 'area_bruta', 'created_at']
 
+    def perform_create(self, serializer):
+        from apps.tenants.models import TenantSettings
+        from apps.tenants.limits import check_unit_limit
+        tenant_settings, _ = TenantSettings.objects.get_or_create(
+            tenant__schema_name=connection.schema_name,
+            defaults={'tenant': self.request.tenant},
+        )
+        check = check_unit_limit(tenant_settings)
+        if not check.allowed:
+            raise ValidationError({'non_field_errors': [check.message]})
+        serializer.save()
+
     @action(detail=True, methods=['patch'])
     def update_status(self, request, pk=None):
         unit = self.get_object()
@@ -29,6 +46,45 @@ class UnitViewSet(viewsets.ModelViewSet):
         unit.status = new_status
         unit.save(update_fields=['status', 'updated_at'])
         return Response(UnitSerializer(unit).data)
+
+    @action(
+        detail=False,
+        methods=['post'],
+        url_path='import-csv',
+        parser_classes=[MultiPartParser],
+    )
+    def import_csv(self, request):
+        """
+        Upload a CSV file to bulk-import Units asynchronously via Celery.
+
+        Accepts a multipart/form-data POST with a single ``file`` field
+        containing a UTF-8 (or Excel BOM) CSV.  Returns a Celery task ID
+        that can be polled for progress.
+
+        CSV required columns: code, floor_id, unit_type_code, area_bruta
+        CSV optional columns: description, area_util, orientation,
+                              floor_number, price_cve, price_eur,
+                              discount_type, discount_value
+        """
+        from .tasks import import_units_from_csv
+
+        csv_file = request.FILES.get('file')
+        if not csv_file:
+            return Response({'detail': 'Ficheiro CSV obrigatório.'}, status=400)
+        if not csv_file.name.lower().endswith('.csv'):
+            return Response({'detail': 'O ficheiro deve ter extensão .csv'}, status=400)
+        if csv_file.size > MAX_UPLOAD_BYTES:
+            return Response({'detail': 'Ficheiro demasiado grande (máximo 5 MB).'}, status=400)
+
+        # utf-8-sig strips the Excel BOM if present
+        csv_content = csv_file.read().decode('utf-8-sig')
+
+        task = import_units_from_csv.delay(
+            tenant_schema=connection.schema_name,
+            csv_content=csv_content,
+            created_by_id=str(request.user.id),
+        )
+        return Response({'task_id': task.id, 'status': 'queued'}, status=202)
 
 
 class UnitTypeViewSet(viewsets.ModelViewSet):

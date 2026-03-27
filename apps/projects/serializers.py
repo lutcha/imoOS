@@ -21,9 +21,9 @@ class ProjectSerializer(GeoFeatureModelSerializer):
         model = Project
         geo_field = 'location'
         fields = (
-            'id', 'name', 'slug', 'status', 'description', 
-            'address', 'city', 'total_area', 'total_units',
-            'start_date', 'expected_delivery_date', 
-            'created_at', 'updated_at', 'buildings'
+            'id', 'name', 'slug', 'status', 'description',
+            'address', 'city', 'island',
+            'start_date', 'expected_completion', 'actual_completion',
+            'created_at', 'updated_at', 'buildings',
         )
         read_only_fields = ('id', 'created_at', 'updated_at')

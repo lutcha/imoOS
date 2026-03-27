@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <title>Contrato nº {{ contract.contract_number }}</title>
+  <style>
+    /* ------------------------------------------------------------------ */
+    /* @page — A4, 2 cm margins, running footer with page counter          */
+    /* ------------------------------------------------------------------ */
+    @page {
+      size: A4;
+      margin: 2cm 2.2cm 2.8cm 2.2cm;
+
+      @bottom-center {
+        content: "Contrato nº {{ contract.contract_number }} · página " counter(page) " de " counter(pages);
+        font-size: 7.5pt;
+        color: #94a3b8;
+      }
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Reset / base                                                         */
+    /* ------------------------------------------------------------------ */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 10pt;
+      color: #1a1a1a;
+      line-height: 1.6;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Colour accent — driven by tenant branding                           */
+    /* ------------------------------------------------------------------ */
+    :root {
+      --accent: {{ branding.primary_color|default:"#1e40af" }};
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Header                                                               */
+    /* ------------------------------------------------------------------ */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding-bottom: 16px;
+      border-bottom: 3px solid var(--accent);
+      margin-bottom: 24px;
+    }
+
+    .header__logo img {
+      max-height: 56px;
+      max-width: 180px;
+    }
+
+    .header__logo-text {
+      font-size: 18pt;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .header__meta {
+      text-align: right;
+      font-size: 8.5pt;
+      color: #555;
+    }
+
+    .header__meta strong {
+      display: block;
+      font-size: 11pt;
+      font-weight: 700;
+      color: #111;
+      margin-bottom: 4px;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Document title block                                                 */
+    /* ------------------------------------------------------------------ */
+    .doc-title {
+      text-align: center;
+      margin: 20px 0 28px;
+    }
+
+    .doc-title h1 {
+      font-size: 15pt;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .doc-title p {
+      font-size: 9pt;
+      color: #475569;
+      margin-top: 4px;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Section headings                                                     */
+    /* ------------------------------------------------------------------ */
+    h2 {
+      font-size: 10pt;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1.5px solid var(--accent);
+      padding-bottom: 4px;
+      margin: 26px 0 12px;
+    }
+
+    /* Legal clause headings */
+    h3 {
+      font-size: 10pt;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin: 16px 0 6px;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Two-column grid                                                      */
+    /* ------------------------------------------------------------------ */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px 40px;
+    }
+
+    .field-label {
+      font-size: 7.5pt;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #94a3b8;
+      margin-bottom: 2px;
+    }
+
+    .field-value {
+      font-size: 10pt;
+      color: #111;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Parties box                                                          */
+    /* ------------------------------------------------------------------ */
+    .parties {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0 28px;
+      margin-top: 8px;
+    }
+
+    .party-box {
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      padding: 12px 14px;
+    }
+
+    .party-box__role {
+      font-size: 7.5pt;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 8px;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 4px;
+    }
+
+    .party-box__name {
+      font-size: 11pt;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+
+    .party-box__detail {
+      font-size: 8.5pt;
+      color: #475569;
+      line-height: 1.7;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Details table                                                        */
+    /* ------------------------------------------------------------------ */
+    table.details {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9.5pt;
+      margin-top: 8px;
+    }
+
+    table.details th {
+      background: #f1f5f9;
+      color: #475569;
+      font-size: 7.5pt;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 6px 10px;
+      text-align: left;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    table.details td {
+      padding: 8px 10px;
+      border-bottom: 1px solid #f1f5f9;
+      color: #1a1a1a;
+      vertical-align: top;
+    }
+
+    table.details tr:last-child td {
+      border-bottom: none;
+    }
+
+    table.details tr:nth-child(even) td {
+      background: #fafafa;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Price highlight box                                                  */
+    /* ------------------------------------------------------------------ */
+    .price-box {
+      background: var(--accent);
+      color: #fff;
+      border-radius: 6px;
+      padding: 18px 24px;
+      margin: 16px 0 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .price-box__label {
+      font-size: 8.5pt;
+      opacity: 0.85;
+      margin-bottom: 4px;
+    }
+
+    .price-box__amount {
+      font-size: 22pt;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .price-box__eur {
+      text-align: right;
+    }
+
+    .price-box__eur .price-box__amount {
+      font-size: 14pt;
+      opacity: 0.9;
+    }
+
+    .price-note {
+      font-size: 7.5pt;
+      color: #94a3b8;
+      margin-bottom: 16px;
+      margin-top: 4px;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Payment status badge                                                 */
+    /* ------------------------------------------------------------------ */
+    .badge {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 10px;
+      font-size: 7pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .badge--pending  { background: #fef9c3; color: #713f12; }
+    .badge--paid     { background: #dcfce7; color: #14532d; }
+    .badge--overdue  { background: #fee2e2; color: #7f1d1d; }
+
+    /* ------------------------------------------------------------------ */
+    /* Legal clauses                                                        */
+    /* ------------------------------------------------------------------ */
+    .clauses {
+      font-size: 9.5pt;
+      color: #1a1a1a;
+      line-height: 1.7;
+    }
+
+    .clauses p {
+      margin-bottom: 8px;
+    }
+
+    .clause {
+      margin-bottom: 16px;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Signature block                                                      */
+    /* ------------------------------------------------------------------ */
+    .signature-block {
+      margin-top: 52px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+    }
+
+    .signature-column {
+      border-top: 1.5px solid #334155;
+      padding-top: 8px;
+    }
+
+    .signature-column__role {
+      font-size: 7.5pt;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .signature-column__name {
+      font-size: 10pt;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 2px;
+    }
+
+    .signature-column__detail {
+      font-size: 8.5pt;
+      color: #475569;
+      line-height: 2;
+    }
+
+    .signature-column__bi-line {
+      margin-top: 8px;
+      border-bottom: 1px solid #94a3b8;
+      padding-bottom: 2px;
+      font-size: 8pt;
+      color: #94a3b8;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Footer stamp                                                         */
+    /* ------------------------------------------------------------------ */
+    .footer-stamp {
+      margin-top: 36px;
+      padding: 10px 14px;
+      border: 1px dashed #cbd5e1;
+      border-radius: 4px;
+      font-size: 7.5pt;
+      color: #64748b;
+      text-align: center;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Page-break control                                                   */
+    /* ------------------------------------------------------------------ */
+    .avoid-break {
+      page-break-inside: avoid;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ================================================================== -->
+  <!-- HEADER: logo + document meta                                        -->
+  <!-- ================================================================== -->
+  <div class="header">
+    <div class="header__logo">
+      {% if branding.logo_url %}
+        <img src="{{ branding.logo_url }}" alt="{{ tenant_name }}" />
+      {% else %}
+        <span class="header__logo-text">{{ tenant_name }}</span>
+      {% endif %}
+    </div>
+    <div class="header__meta">
+      <strong>Contrato de Promessa de Compra e Venda</strong>
+      Ref.: {{ contract.contract_number }}<br />
+      Data: {% now "d \d\e F \d\e Y" %}<br />
+      Estado: {{ contract.get_status_display }}<br />
+      {% if contract.signed_at %}
+        Assinado em: {{ contract.signed_at|date:"d/m/Y" }}
+      {% else %}
+        Aguarda assinatura
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ================================================================== -->
+  <!-- DOCUMENT TITLE                                                       -->
+  <!-- ================================================================== -->
+  <div class="doc-title">
+    <h1>Contrato de Promessa de Compra e Venda</h1>
+    <p>{{ unit.floor.building.project.name }} &mdash; Unidade {{ unit.code }}</p>
+  </div>
+
+  <!-- ================================================================== -->
+  <!-- PARTIES: Vendedor vs Comprador                                       -->
+  <!-- ================================================================== -->
+  <h2>Partes Contratantes</h2>
+  <div class="parties avoid-break">
+
+    <div class="party-box">
+      <div class="party-box__role">O Vendedor</div>
+      <div class="party-box__name">{{ tenant_name }}</div>
+      <div class="party-box__detail">
+        Promotora imobiliária<br />
+        Endereço: _______________________________<br />
+        NIPC: ___________________________________<br />
+        {% if vendor %}
+          Representado por: {{ vendor.get_full_name|default:vendor.email }}
+        {% else %}
+          Representado por: ______________________
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="party-box">
+      <div class="party-box__role">O Comprador</div>
+      <div class="party-box__name">{{ lead.first_name }} {{ lead.last_name }}</div>
+      <div class="party-box__detail">
+        {% if lead.email %}E-mail: {{ lead.email }}<br />{% endif %}
+        {% if lead.phone %}Telefone: {{ lead.phone }}<br />{% endif %}
+        Endereço: _______________________________<br />
+        BI / Passaporte nº: _____________________<br />
+        NIF: ____________________________________
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ================================================================== -->
+  <!-- PROPERTY DETAILS                                                     -->
+  <!-- ================================================================== -->
+  <h2>Identificação do Imóvel</h2>
+  <table class="details avoid-break">
+    <thead>
+      <tr>
+        <th>Código</th>
+        <th>Tipologia</th>
+        <th>Piso</th>
+        <th>Edifício</th>
+        <th>Projecto</th>
+        <th>Área bruta</th>
+        <th>Área útil</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>{{ unit.code }}</strong></td>
+        <td>{{ unit.unit_type.name|default:"—" }}</td>
+        <td>{{ unit.floor.number|default:unit.floor_number|default:"—" }}</td>
+        <td>{{ unit.floor.building.name|default:"—" }}</td>
+        <td>{{ unit.floor.building.project.name|default:"—" }}</td>
+        <td>
+          {% if unit.area_bruta %}{{ unit.area_bruta|floatformat:1 }} m²{% else %}—{% endif %}
+        </td>
+        <td>
+          {% if unit.area_util %}{{ unit.area_util|floatformat:1 }} m²{% else %}—{% endif %}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  {% if unit.orientation %}
+  <p style="font-size:8.5pt; color:#475569; margin-top:6px;">
+    Orientação: {{ unit.orientation }}
+  </p>
+  {% endif %}
+
+  <!-- ================================================================== -->
+  <!-- PRICE                                                                -->
+  <!-- ================================================================== -->
+  <h2>Valor do Contrato</h2>
+  <div class="price-box avoid-break">
+    <div>
+      <div class="price-box__label">Valor total acordado (moeda principal)</div>
+      <div class="price-box__amount">
+        {{ price_cve|floatformat:0 }} CVE
+      </div>
+    </div>
+    <div class="price-box__eur">
+      <div class="price-box__label">Equivalente indicativo em euros*</div>
+      <div class="price-box__amount">
+        &euro; {{ price_eur|floatformat:2 }} EUR
+      </div>
+    </div>
+  </div>
+  <p class="price-note">
+    * Conversão indicativa: 1 EUR = 110,265 CVE (taxa de câmbio fixa CVE/EUR).
+    O pagamento é efectuado exclusivamente em Escudos Cabo-Verdianos (CVE).
+  </p>
+
+  <!-- ================================================================== -->
+  <!-- PAYMENT PLAN                                                         -->
+  <!-- ================================================================== -->
+  <h2>Plano de Pagamentos</h2>
+  {% if payments %}
+  <table class="details avoid-break">
+    <thead>
+      <tr>
+        <th>Tipo</th>
+        <th>Data de vencimento</th>
+        <th style="text-align:right">Valor (CVE)</th>
+        <th>Referência</th>
+        <th>Estado</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for payment in payments %}
+      <tr>
+        <td>{{ payment.get_payment_type_display }}</td>
+        <td>{{ payment.due_date|date:"d/m/Y" }}</td>
+        <td style="text-align:right; font-variant-numeric: tabular-nums;">
+          {{ payment.amount_cve|floatformat:0 }}
+        </td>
+        <td>
+          {% if payment.reference %}{{ payment.reference }}{% else %}&mdash;{% endif %}
+        </td>
+        <td>
+          {% if payment.status == "PAID" %}
+            <span class="badge badge--paid">Pago</span>
+            {% if payment.paid_date %}
+              <br /><span style="font-size:7.5pt; color:#64748b;">{{ payment.paid_date|date:"d/m/Y" }}</span>
+            {% endif %}
+          {% elif payment.status == "OVERDUE" %}
+            <span class="badge badge--overdue">Em atraso</span>
+          {% else %}
+            <span class="badge badge--pending">Pendente</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="font-size:9pt; color:#64748b; margin-top:8px;">
+    Nenhum pagamento registado neste contrato.
+  </p>
+  {% endif %}
+
+  <!-- ================================================================== -->
+  <!-- LEGAL CLAUSES                                                        -->
+  <!-- ================================================================== -->
+  <h2>Cláusulas do Contrato</h2>
+  <div class="clauses">
+
+    <div class="clause avoid-break">
+      <h3>Cláusula 1.ª &mdash; Objecto do Contrato</h3>
+      <p>
+        Pelo presente contrato, o Vendedor promete vender ao Comprador, que promete comprar,
+        a fracção autónoma identificada na Cláusula 2.ª, livre de quaisquer ónus ou encargos,
+        pelo preço e condições estabelecidos nas cláusulas seguintes.
+      </p>
+      <p>
+        A fracção compreende todos os seus pertences, designadamente estacionamentos, arrecadações
+        e demais acessórios que dela sejam parte integrante, conforme descrito no projecto de
+        arquitectura aprovado.
+      </p>
+    </div>
+
+    <div class="clause avoid-break">
+      <h3>Cláusula 2.ª &mdash; Preço e Condições de Pagamento</h3>
+      <p>
+        O preço global de venda da fracção é de
+        <strong>{{ price_cve|floatformat:0 }} CVE</strong>
+        ({{ price_eur|floatformat:2 }} EUR a título indicativo), a pagar nos termos do plano
+        de pagamentos constante do presente contrato.
+      </p>
+      <p>
+        Todos os pagamentos devem ser efectuados em Escudos Cabo-Verdianos (CVE) mediante
+        transferência bancária, Multibanco (MBE) ou qualquer outro meio acordado entre as partes,
+        para a conta indicada pelo Vendedor.
+      </p>
+      <p>
+        O incumprimento de qualquer prestação na respectiva data de vencimento constitui o
+        Comprador em mora, ficando sujeito aos juros legais previstos na lei cabo-verdiana.
+      </p>
+    </div>
+
+    <div class="clause avoid-break">
+      <h3>Cláusula 3.ª &mdash; Prazo de Entrega</h3>
+      <p>
+        O Vendedor compromete-se a concluir a construção e a entregar a fracção ao Comprador
+        no prazo de ____________ meses a contar da data da assinatura do presente contrato,
+        podendo este prazo ser prorrogado por circunstâncias de força maior devidamente comunicadas.
+      </p>
+      <p>
+        A entrega será formalizada mediante auto de entrega das chaves assinado por ambas as partes,
+        após vistoria conjunta da fracção.
+      </p>
+    </div>
+
+    <div class="clause avoid-break">
+      <h3>Cláusula 4.ª &mdash; Incumprimento</h3>
+      <p>
+        Em caso de incumprimento definitivo imputável ao Comprador, o Vendedor poderá resolver
+        o presente contrato, retendo a título de indemnização as importâncias já recebidas,
+        sem prejuízo do direito à reparação de danos superiores.
+      </p>
+      <p>
+        Em caso de incumprimento definitivo imputável ao Vendedor, o Comprador terá direito à
+        devolução do dobro das quantias entregues, nos termos previstos no Código Civil de
+        Cabo Verde.
+      </p>
+    </div>
+
+    <div class="clause avoid-break">
+      <h3>Cláusula 5.ª &mdash; Legislação Aplicável e Foro</h3>
+      <p>
+        O presente contrato é regido pelo direito cabo-verdiano, nomeadamente pelo Código Civil,
+        pelo regime jurídico da actividade imobiliária e pela Lei n.º 133/V/2019 (Lei de Protecção
+        de Dados Pessoais de Cabo Verde), no que respeita ao tratamento dos dados pessoais das partes.
+      </p>
+      <p>
+        Para a resolução de qualquer litígio emergente do presente contrato as partes elegem o foro
+        da comarca de Praia, com expressa renúncia a qualquer outro.
+      </p>
+      <p>
+        Os dados pessoais constantes neste documento são tratados exclusivamente para efeitos da
+        execução deste contrato, ao abrigo da Lei n.º 133/V/2019, e não serão partilhados com
+        terceiros sem consentimento expresso do titular.
+      </p>
+    </div>
+
+  </div>
+
+  <!-- ================================================================== -->
+  <!-- SIGNATURE BLOCK                                                      -->
+  <!-- ================================================================== -->
+  <div class="signature-block">
+
+    <div class="signature-column">
+      <div class="signature-column__role">O Vendedor</div>
+      <div class="signature-column__name">{{ tenant_name }}</div>
+      <div class="signature-column__detail">
+        {% if vendor %}
+          {{ vendor.get_full_name|default:vendor.email }}<br />
+        {% endif %}
+        Cargo: ______________________________
+      </div>
+      <div class="signature-column__bi-line">
+        BI / NIF: ___________________________
+      </div>
+      <div style="margin-top:32px; border-top:1px solid #334155; padding-top:4px; font-size:8pt; color:#94a3b8;">
+        Assinatura &amp; Data
+      </div>
+    </div>
+
+    <div class="signature-column">
+      <div class="signature-column__role">O Comprador</div>
+      <div class="signature-column__name">{{ lead.first_name }} {{ lead.last_name }}</div>
+      <div class="signature-column__detail">
+        {% if lead.email %}{{ lead.email }}<br />{% endif %}
+        {% if lead.phone %}{{ lead.phone }}<br />{% endif %}
+        Morada: _____________________________
+      </div>
+      <div class="signature-column__bi-line">
+        BI / Passaporte nº: _________________
+      </div>
+      <div style="margin-top:32px; border-top:1px solid #334155; padding-top:4px; font-size:8pt; color:#94a3b8;">
+        Assinatura &amp; Data
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ================================================================== -->
+  <!-- FOOTER STAMP                                                         -->
+  <!-- ================================================================== -->
+  <div class="footer-stamp">
+    Documento gerado electronicamente por <strong>ImoOS</strong> em
+    {% now "d/m/Y \à\s H:i" %} (UTC-1 Cabo Verde).
+    Contrato de referência: <strong>{{ contract.contract_number }}</strong>.
+    Este documento é válido sem assinatura manuscrita quando utilizado como rascunho informativo.
+    A versão vinculativa requer assinatura de ambas as partes.
+  </div>
+
+</body>
+</html>

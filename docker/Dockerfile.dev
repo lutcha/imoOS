@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y \
     libgdal-dev \
     libpq-dev \
     gcc \
+    g++ \
     && rm -rf /var/lib/apt/lists/*
 
 ENV GDAL_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libgdal.so
@@ -13,10 +14,18 @@ ENV GEOS_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libgeos_c.so
 
 WORKDIR /app
 
+# Copy and install requirements (Sprint 7: added sentry-sdk, django-prometheus)
 COPY requirements/base.txt requirements/base.txt
 COPY requirements/development.txt requirements/development.txt
-RUN pip install --no-cache-dir -r requirements/development.txt
+# Install GDAL Python package matching the system libgdal version before the rest
+RUN GDAL_VERSION=$(gdal-config --version) && \
+    pip install --no-cache-dir "GDAL==$GDAL_VERSION" && \
+    pip install --no-cache-dir -r requirements/development.txt
 
+# Copy application code
 COPY . .
 
 EXPOSE 8000
+
+# Sprint 7 - Observability
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

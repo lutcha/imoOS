@@ -1,0 +1,14 @@
+**/node_modules
+**/__pycache__
+**/.next
+**/.git
+**/.pytest_cache
+**/.mypy_cache
+**/.claude
+**/venv
+**/env
+*.pyc
+*.pyo
+*.pyd
+.db.sqlite3
+.DS_Store

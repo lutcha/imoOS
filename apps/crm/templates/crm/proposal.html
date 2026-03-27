@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Proposta Comercial — {{ project.name }}</title>
+  <style>
+    /* ------------------------------------------------------------------ */
+    /* Reset / base                                                         */
+    /* ------------------------------------------------------------------ */
+    @page {
+      size: A4;
+      margin: 2cm 2.2cm 2.5cm 2.2cm;
+
+      @bottom-center {
+        content: "{{ tenant_name }} · Proposta nº {{ lead.id|truncatechars:8 }}/{{ unit.code }} · " counter(page) " de " counter(pages);
+        font-size: 8pt;
+        color: #888;
+      }
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 10pt;
+      color: #1a1a1a;
+      line-height: 1.55;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Colour accent — driven by tenant branding                           */
+    /* ------------------------------------------------------------------ */
+    :root {
+      --accent: {{ branding.primary_color|default:"#1e40af" }};
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Header                                                               */
+    /* ------------------------------------------------------------------ */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding-bottom: 18px;
+      border-bottom: 3px solid var(--accent);
+      margin-bottom: 28px;
+    }
+
+    .header__logo img {
+      max-height: 56px;
+      max-width: 180px;
+    }
+
+    .header__logo-text {
+      font-size: 18pt;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .header__meta {
+      text-align: right;
+      font-size: 8.5pt;
+      color: #555;
+    }
+
+    .header__meta strong {
+      display: block;
+      font-size: 10pt;
+      color: #111;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Section headings                                                     */
+    /* ------------------------------------------------------------------ */
+    h1 {
+      font-size: 16pt;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    h2 {
+      font-size: 11pt;
+      font-weight: 700;
+      color: var(--accent);
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 4px;
+      margin: 24px 0 12px;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Two-column grid                                                      */
+    /* ------------------------------------------------------------------ */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 32px;
+    }
+
+    .field-label {
+      font-size: 7.5pt;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #888;
+      margin-bottom: 1px;
+    }
+
+    .field-value {
+      font-size: 10pt;
+      color: #111;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Price highlight box                                                  */
+    /* ------------------------------------------------------------------ */
+    .price-box {
+      background: var(--accent);
+      color: #fff;
+      border-radius: 6px;
+      padding: 18px 24px;
+      margin: 20px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .price-box__label {
+      font-size: 9pt;
+      opacity: 0.85;
+      margin-bottom: 4px;
+    }
+
+    .price-box__amount {
+      font-size: 20pt;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .price-box__eur {
+      text-align: right;
+    }
+
+    .price-box__eur .price-box__amount {
+      font-size: 14pt;
+      opacity: 0.9;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Details table                                                        */
+    /* ------------------------------------------------------------------ */
+    table.details {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9.5pt;
+      margin-top: 8px;
+    }
+
+    table.details th {
+      background: #f1f5f9;
+      color: #475569;
+      font-size: 8pt;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 6px 10px;
+      text-align: left;
+    }
+
+    table.details td {
+      padding: 7px 10px;
+      border-bottom: 1px solid #f1f5f9;
+      color: #1a1a1a;
+    }
+
+    table.details tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Legal / terms block                                                  */
+    /* ------------------------------------------------------------------ */
+    .legal {
+      background: #f8fafc;
+      border-left: 3px solid var(--accent);
+      padding: 12px 16px;
+      font-size: 8pt;
+      color: #555;
+      margin-top: 24px;
+      line-height: 1.6;
+    }
+
+    .legal p + p {
+      margin-top: 6px;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Signature block                                                      */
+    /* ------------------------------------------------------------------ */
+    .signature-block {
+      margin-top: 48px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+    }
+
+    .signature-line {
+      border-top: 1px solid #334155;
+      padding-top: 6px;
+      font-size: 8.5pt;
+      color: #475569;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Footer stamp                                                         */
+    /* ------------------------------------------------------------------ */
+    .validity-stamp {
+      margin-top: 28px;
+      padding: 10px 14px;
+      border: 1px dashed #cbd5e1;
+      border-radius: 4px;
+      font-size: 8pt;
+      color: #64748b;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ================================================================== -->
+  <!-- HEADER                                                              -->
+  <!-- ================================================================== -->
+  <div class="header">
+    <div class="header__logo">
+      {% if branding.logo_url %}
+        <img src="{{ branding.logo_url }}" alt="{{ tenant_name }}" />
+      {% else %}
+        <span class="header__logo-text">{{ tenant_name }}</span>
+      {% endif %}
+    </div>
+    <div class="header__meta">
+      <strong>Proposta Comercial</strong>
+      Ref.: {{ lead.id|truncatechars:8 }}/{{ unit.code }}<br />
+      Data: {% now "d \d\e F \d\e Y" %}<br />
+      Válida por: 30 dias
+    </div>
+  </div>
+
+  <!-- ================================================================== -->
+  <!-- TITLE                                                               -->
+  <!-- ================================================================== -->
+  <h1>{{ project.name }}</h1>
+  <p style="color:#475569; font-size:10pt; margin-bottom:4px;">
+    Empreendimento imobiliário em Cabo Verde
+  </p>
+
+  <!-- ================================================================== -->
+  <!-- CLIENT                                                              -->
+  <!-- ================================================================== -->
+  <h2>Dados do Cliente</h2>
+  <div class="grid-2">
+    <div>
+      <div class="field-label">Nome completo</div>
+      <div class="field-value">{{ lead.first_name }} {{ lead.last_name }}</div>
+    </div>
+    <div>
+      <div class="field-label">E-mail</div>
+      <div class="field-value">{{ lead.email }}</div>
+    </div>
+    {% if lead.phone %}
+    <div>
+      <div class="field-label">Telefone / WhatsApp</div>
+      <div class="field-value">{{ lead.phone }}</div>
+    </div>
+    {% endif %}
+    {% if lead.preferred_typology %}
+    <div>
+      <div class="field-label">Tipologia pretendida</div>
+      <div class="field-value">{{ lead.preferred_typology }}</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ================================================================== -->
+  <!-- UNIT                                                                -->
+  <!-- ================================================================== -->
+  <h2>Unidade Proposta</h2>
+  <table class="details">
+    <thead>
+      <tr>
+        <th>Código</th>
+        <th>Tipologia</th>
+        <th>Piso</th>
+        <th>Edifício</th>
+        <th>Área bruta</th>
+        <th>Área útil</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>{{ unit.code }}</strong></td>
+        <td>{{ unit.unit_type.name|default:"—" }}</td>
+        <td>{{ unit.floor.number|default:"—" }}</td>
+        <td>{{ unit.floor.building.name|default:"—" }}</td>
+        <td>
+          {% if unit.gross_area %}{{ unit.gross_area|floatformat:1 }} m²{% else %}—{% endif %}
+        </td>
+        <td>
+          {% if unit.net_area %}{{ unit.net_area|floatformat:1 }} m²{% else %}—{% endif %}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ================================================================== -->
+  <!-- PRICE                                                               -->
+  <!-- ================================================================== -->
+  <div class="price-box">
+    <div>
+      <div class="price-box__label">Preço de venda</div>
+      <div class="price-box__amount">
+        {{ price_cve|floatformat:0 }} CVE
+      </div>
+    </div>
+    <div class="price-box__eur">
+      <div class="price-box__label">Equivalente em euros*</div>
+      <div class="price-box__amount">
+        € {{ price_eur|floatformat:2 }} EUR
+      </div>
+    </div>
+  </div>
+  <p style="font-size:7.5pt; color:#94a3b8; margin-top:-10px; margin-bottom:8px;">
+    * Taxa de câmbio indicativa: 1 EUR = 110,265 CVE (taxa fixa CVE/EUR).
+    O pagamento é efectuado em escudos cabo-verdianos (CVE).
+  </p>
+
+  <!-- ================================================================== -->
+  <!-- PAYMENT CONDITIONS                                                  -->
+  <!-- ================================================================== -->
+  <h2>Condições de Pagamento</h2>
+  <table class="details">
+    <thead>
+      <tr>
+        <th>Fase</th>
+        <th>Descrição</th>
+        <th style="text-align:right">%</th>
+        <th style="text-align:right">Valor (CVE)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>Sinal / Reserva</td>
+        <td style="text-align:right">10%</td>
+        <td style="text-align:right">
+          {% widthratio price_cve 100 10 %} CVE
+        </td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>Contrato Promessa Compra e Venda (CPCV)</td>
+        <td style="text-align:right">20%</td>
+        <td style="text-align:right">
+          {% widthratio price_cve 100 20 %} CVE
+        </td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>Durante construção (prestações)</td>
+        <td style="text-align:right">50%</td>
+        <td style="text-align:right">
+          {% widthratio price_cve 100 50 %} CVE
+        </td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>Escritura pública de compra e venda</td>
+        <td style="text-align:right">20%</td>
+        <td style="text-align:right">
+          {% widthratio price_cve 100 20 %} CVE
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ================================================================== */
+  <!-- LEGAL                                                               -->
+  <!-- ================================================================== -->
+  <h2>Termos e Condições</h2>
+  <div class="legal">
+    <p>
+      A presente proposta é válida por um período de 30 (trinta) dias a contar da data de emissão,
+      ficando sujeita à disponibilidade da unidade e aprovação interna da promotora.
+    </p>
+    <p>
+      Os valores indicados incluem o preço base de venda da fracção autónoma. Não incluem:
+      custos notariais, registo predial, SISA (Imposto sobre a Transmissão de Bens Imóveis),
+      nem despesas de financiamento bancário, caso aplicável.
+    </p>
+    <p>
+      O presente documento não constitui contrato nem gera obrigações vinculativas para qualquer
+      das partes. A formalização da reserva realiza-se mediante a assinatura de contrato de reserva
+      e pagamento da respectiva caução.
+    </p>
+    <p>
+      Tratamento de dados pessoais efectuado nos termos da Lei n.º 133/V/2019 (Lei de Protecção
+      de Dados Pessoais de Cabo Verde). Os dados do cliente são utilizados exclusivamente para
+      fins comerciais relacionados com este empreendimento.
+    </p>
+  </div>
+
+  <!-- ================================================================== -->
+  <!-- SIGNATURE                                                           -->
+  <!-- ================================================================== -->
+  <div class="signature-block">
+    <div>
+      <div class="signature-line">
+        {{ tenant_name }}<br />
+        Representante Comercial
+      </div>
+    </div>
+    <div>
+      <div class="signature-line">
+        {{ lead.first_name }} {{ lead.last_name }}<br />
+        Cliente
+      </div>
+    </div>
+  </div>
+
+  <div class="validity-stamp">
+    Esta proposta foi gerada electronicamente por <strong>ImoOS</strong> em
+    {% now "d/m/Y \à\s H:i" %} (UTC-1 Cabo Verde) e é válida sem assinatura manuscrita
+    como documento informativo.
+  </div>
+
+</body>
+</html>

@@ -6,6 +6,7 @@
 Django==4.2.9
 djangorestframework==3.14.0
 django-filter==23.5
+django-cors-headers==4.3.1
 python-decouple==3.8
 
 # Multi-Tenancy
@@ -24,7 +25,7 @@ psycopg2-binary==2.9.9
 django-extensions==3.2.3
 
 # Geo / PostGIS
-GDAL==3.4.3
+# GDAL installed in Dockerfile to match system libgdal version (see docker/Dockerfile.dev)
 Shapely==2.0.2
 djangorestframework-gis==1.0
 
@@ -34,6 +35,7 @@ drf-spectacular==0.27.1
 # Async / Background Tasks
 celery==5.3.6
 redis==5.0.1
+django-redis==5.4.0
 django-celery-beat==2.5.0
 django-celery-results==2.5.1
 
@@ -46,6 +48,8 @@ Pillow==10.2.0
 django-ratelimit==4.1.0
 django-cryptography==1.1
 bandit==1.7.7
+django-csp==3.8
+django-permissions-policy==4.28.0
 
 # i18n
 django-modeltranslation==0.18.11
@@ -57,3 +61,8 @@ WeasyPrint==60.2
 python-dateutil==2.8.2
 requests==2.31.0
 celery[redis]==5.3.6
+
+# Observability (Sprint 7)
+sentry-sdk[django]==1.40.0
+django-prometheus==2.3.1
+python-json-logger==2.0.7

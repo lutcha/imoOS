@@ -3,6 +3,17 @@ from .base import *
 DEBUG = False
 DATABASES['default']['NAME'] = 'imos_test'
 
+# Use in-memory cache — no Redis needed in tests
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
+}
+
+# Disable throttling in tests (avoids Redis dependency)
+REST_FRAMEWORK['DEFAULT_THROTTLE_CLASSES'] = []
+REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'] = {}
+
 DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 MEDIA_ROOT = BASE_DIR / 'test_media'
 

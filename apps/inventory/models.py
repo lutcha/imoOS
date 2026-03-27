@@ -72,6 +72,10 @@ class Unit(models.Model):
         verbose_name_plural = 'Unidades'
         unique_together = ['floor', 'code']
         ordering = ['code']
+        indexes = [
+            models.Index(fields=['status'],            name='inventory_unit_status_idx'),
+            models.Index(fields=['status', 'is_deleted'], name='inventory_unit_status_del_idx'),
+        ]
 
     def __str__(self):
         return f'{self.code} ({self.get_status_display()})'

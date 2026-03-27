@@ -1,0 +1,98 @@
+name: CD — Deploy to Production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false  # Never cancel in-flight production deploys
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  # ------------------------------------------------------------------
+  # Gate: CI must pass before deploy
+  # ------------------------------------------------------------------
+  ci-gate:
+    name: CI Gate (lint + test + isolation)
+    uses: ./.github/workflows/ci.yml
+    secrets: inherit
+
+  # ------------------------------------------------------------------
+  # Deploy to DigitalOcean App Platform (production)
+  # ------------------------------------------------------------------
+  deploy-production:
+    name: Deploy to DigitalOcean Production
+    runs-on: ubuntu-latest
+    needs: [ci-gate]
+    environment:
+      name: production
+      url: https://api.imos.cv
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Deploy to App Platform
+        run: |
+          doctl apps create-deployment ${{ secrets.DIGITALOCEAN_APP_ID_PRODUCTION }} \
+            --wait \
+            --format "ID,Phase,Progress,Created"
+
+      - name: Notify Sentry of release
+        if: ${{ secrets.SENTRY_AUTH_TOKEN != '' }}
+        uses: getsentry/action-release@v1
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        with:
+          environment: production
+          version: ${{ github.sha }}
+
+      - name: Smoke test — API health check
+        run: |
+          sleep 45  # Production deploys need more time to stabilise
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            "https://api.imos.cv/api/v1/health/" \
+            -H "Accept: application/json")
+          if [ "$STATUS" != "200" ]; then
+            echo "Health check failed with status $STATUS"
+            exit 1
+          fi
+          echo "Health check passed (HTTP $STATUS)"
+
+      - name: Notify Slack on success
+        if: success() && ${{ secrets.SLACK_WEBHOOK != '' }}
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_COLOR: good
+          SLACK_MESSAGE: "Production deploy succeeded — ${{ github.sha }} by ${{ github.actor }}"
+          SLACK_TITLE: "ImoOS Production Deploy"
+
+      - name: Notify Slack on failure
+        if: failure() && ${{ secrets.SLACK_WEBHOOK != '' }}
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_COLOR: danger
+          SLACK_MESSAGE: "Production deploy FAILED — ${{ github.sha }} by ${{ github.actor }}"
+          SLACK_TITLE: "ImoOS Production Deploy FAILED"
+
+      - name: Post deploy summary
+        if: always()
+        run: |
+          echo "### Production Deploy Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Triggered by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **URL:** https://api.imos.cv" >> $GITHUB_STEP_SUMMARY

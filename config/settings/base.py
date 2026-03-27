@@ -16,6 +16,69 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='', cast=Csv())
 
 # =============================================================
+# Security Hardening (Sprint 7 - Prompt 05)
+# =============================================================
+
+# Security headers
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+REFERRER_POLICY = 'strict-origin-when-cross-origin'
+
+# CSRF Security
+CSRF_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='', cast=Csv())
+
+# Session Security
+SESSION_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_AGE = 1209600  # 2 weeks
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+# SSL/HTTPS (production only)
+if not DEBUG:
+    SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=True, cast=bool)
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
+# Content Security Policy (CSP)
+CSP_DEFAULT_SRC = ("'self'",)
+CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://*.sentry.io')
+CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", 'https://fonts.googleapis.com')
+CSP_FONT_SRC = ("'self'", 'https://fonts.gstatic.com', 'data:')
+CSP_IMG_SRC = ("'self'", 'data:', 'blob:', 'https:')
+CSP_CONNECT_SRC = ("'self'", 'https://*.sentry.io', 'https://*.imos.cv')
+CSP_FRAME_SRC = ("'self'",)
+CSP_OBJECT_SRC = ("'none'",)
+CSP_BASE_URI = ("'self'",)
+CSP_FORM_ACTION = ("'self'",)
+
+# Permissions Policy (formerly Feature Policy)
+PERMISSIONS_POLICY = {
+    'accelerometer': [],
+    'ambient-light-sensor': [],
+    'autoplay': [],
+    'camera': [],
+    'display-capture': [],
+    'document-domain': [],
+    'encrypted-media': [],
+    'fullscreen': [],
+    'geolocation': [],
+    'gyroscope': [],
+    'magnetometer': [],
+    'microphone': [],
+    'midi': [],
+    'payment': [],
+    'picture-in-picture': [],
+    'usb': [],
+}
+
+# =============================================================
 # Multi-Tenant (django-tenants)
 # =============================================================
 SHARED_APPS = [
@@ -35,15 +98,26 @@ SHARED_APPS = [
     'apps.users',
     'apps.core',
 
+    # Observability (Sprint 7)
+    'django_prometheus',
+
     # Third party
     'rest_framework',
     'corsheaders',
     'drf_spectacular',
     'simple_history',
+    'django_celery_results',  # Required for task monitoring
+    
+    # Security (Sprint 7 - Prompt 05)
+    'csp',
+    'django_permissions_policy',
 ]
 
 TENANT_APPS = [
     'django.contrib.contenttypes',
+
+    # Per-tenant user roles (replaces global User.role for auth decisions)
+    'apps.memberships',
 
     # Business modules (each gets its own schema)
     'apps.projects',
@@ -54,6 +128,7 @@ TENANT_APPS = [
     'apps.payments',
     'apps.construction',
     'apps.marketplace',
+    'apps.investors',
 ]
 
 INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
@@ -68,7 +143,7 @@ SHOW_PUBLIC_IF_NO_TENANT_FOUND = False
 # =============================================================
 DATABASES = {
     'default': {
-        'ENGINE': 'django_tenants.postgresql_backend',
+        'ENGINE': 'config.postgis_tenant_backend',
         'NAME': config('DB_NAME', default='imos'),
         'USER': config('DB_USER', default='imos'),
         'PASSWORD': config('DB_PASSWORD', default=''),
@@ -82,7 +157,8 @@ DATABASE_ROUTERS = ['django_tenants.routers.TenantSyncRouter']
 # Middleware
 # =============================================================
 MIDDLEWARE = [
-    'apps.tenants.middleware.ImoOSTenantMiddleware',  # MUST be first
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',  # Sprint 7 - must be first
+    'apps.tenants.middleware.ImoOSTenantMiddleware',  # MUST be after Prometheus
     'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -93,9 +169,29 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',
+    'django_prometheus.middleware.PrometheusAfterMiddleware',  # Sprint 7 - must be last
 ]
 
 ROOT_URLCONF = 'config.urls'
+
+# =============================================================
+# Templates
+# =============================================================
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [BASE_DIR / 'templates'],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
 
 # =============================================================
 # Authentication
@@ -175,7 +271,7 @@ CACHES = {
 # Celery
 # =============================================================
 CELERY_BROKER_URL = config('CELERY_BROKER_URL', default='redis://localhost:6379/1')
-CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default='redis://localhost:6379/2')
+CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default='django-db')  # Sprint 7
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
@@ -184,6 +280,20 @@ CELERY_TASK_TIME_LIMIT = 300
 CELERY_TASK_SOFT_TIME_LIMIT = 270
 CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 CELERY_TIMEZONE = 'Atlantic/Cape_Verde'
+
+# Celery Beat — Scheduled tasks (Sprint 7)
+CELERY_BEAT_SCHEDULE = {
+    # Monitor failed tasks every hour
+    'monitor-failed-tasks-hourly': {
+        'task': 'apps.core.tasks.monitor_failed_tasks',
+        'schedule': 3600.0,  # seconds (1 hour)
+    },
+    # Cleanup old task results daily
+    'cleanup-task-results-daily': {
+        'task': 'apps.core.tasks.cleanup_old_task_results',
+        'schedule': 86400.0,  # seconds (1 day)
+    },
+}
 
 # =============================================================
 # Storage (S3-compatible)
@@ -232,6 +342,97 @@ SPECTACULAR_SETTINGS = {
 # Tenant Domain
 # =============================================================
 TENANT_BASE_DOMAIN = config('TENANT_BASE_DOMAIN', default='imos.cv')
+DJANGO_SUPERADMIN_URL = config('DJANGO_SUPERADMIN_URL', default='django-admin/')
+
+# =============================================================
+# SaaS Plan Limits
+# =============================================================
+PLAN_LIMITS = {
+    'starter':    {'max_projects': 3,   'max_units': 100,  'max_users': 5},
+    'pro':        {'max_projects': 15,  'max_units': 1000, 'max_users': 50},
+    'enterprise': {'max_projects': 999, 'max_units': 9999, 'max_users': 999},
+}
+
+# =============================================================
+# imo.cv Marketplace Integration
+# =============================================================
+IMOCV_API_BASE_URL = config('IMOCV_API_BASE_URL', default='https://api.imo.cv/v1')
+IMOCV_WEBHOOK_SECRET = config('IMOCV_WEBHOOK_SECRET', default='')
+
+# =============================================================
+# Sentry Error Tracking (Sprint 7)
+# =============================================================
+SENTRY_DSN = config('SENTRY_DSN', default='')
+SENTRY_ENVIRONMENT = config('SENTRY_ENVIRONMENT', default='development')
+
+if SENTRY_DSN and SENTRY_DSN != 'https://your-key@sentry.io/your-project-id':
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+    from sentry_sdk.integrations.celery import CeleryIntegration
+    from sentry_sdk.integrations.redis import RedisIntegration
+    
+    def _scrub_tenant_pii(event, hint):
+        """
+        Remove PII from Sentry events (LGPD compliance).
+        Filters Authorization headers and cookies from request data.
+        """
+        if 'request' in event:
+            headers = event['request'].get('headers', {})
+            for key in list(headers.keys()):
+                if key.lower() in ('authorization', 'cookie'):
+                    headers[key] = '[Filtered]'
+        return event
+    
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[DjangoIntegration(), CeleryIntegration(), RedisIntegration()],
+        traces_sample_rate=0.1,        # 10% of requests in production
+        profiles_sample_rate=0.05,     # 5% for profiling
+        environment=SENTRY_ENVIRONMENT,
+        send_default_pii=False,        # LGPD: no PII in reports
+        before_send=_scrub_tenant_pii, # Remove sensitive data
+    )
+
+# =============================================================
+# Structured Logging (Sprint 7)
+# =============================================================
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'json': {
+            '()': 'pythonjsonlogger.jsonlogger.JsonFormatter',
+            'format': '%(asctime)s %(name)s %(levelname)s %(message)s %(tenant_schema)s',
+        },
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+    },
+    'filters': {
+        'require_debug_false': {'()': 'django.utils.log.RequireDebugFalse'},
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'json',
+        },
+        'sentry': {
+            'level': 'ERROR',
+            'class': 'sentry_sdk.integrations.logging.EventHandler',
+            'filters': ['require_debug_false'],
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'apps': {'handlers': ['console', 'sentry'], 'level': 'INFO', 'propagate': False},
+        'celery': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+        'django': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+    },
+}
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 STATIC_URL = '/static/'

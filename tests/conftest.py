@@ -6,39 +6,130 @@ from django_tenants.utils import tenant_context
 from rest_framework.test import APIClient
 
 
+@pytest.fixture(scope='session', autouse=True)
+def fix_cascade_truncate():
+    """
+    Patch PostgreSQL's sql_flush to always use CASCADE.
+
+    Django's TransactionTestCase teardown calls `flush` (TRUNCATE) to reset
+    the DB between tests. With simple-history FK chains (e.g.
+    projects_historicalbuilding → users_user) the plain TRUNCATE fails.
+    Setting allow_cascade=True generates `TRUNCATE ... CASCADE`, which is
+    safe for test teardown.
+    """
+    from django.db.backends.postgresql.operations import DatabaseOperations
+
+    _original = DatabaseOperations.sql_flush
+
+    def _patched(self, style, tables, *, reset_sequences=False, allow_cascade=False):
+        return _original(self, style, tables, reset_sequences=reset_sequences, allow_cascade=True)
+
+    DatabaseOperations.sql_flush = _patched
+    yield
+    DatabaseOperations.sql_flush = _original
+
+
 @pytest.fixture
 def api_client():
     return APIClient()
 
 
+def _create_test_tenant(db, schema_name: str, name: str, slug: str, plan: str, domain: str):
+    """
+    Create a test tenant with proper schema isolation.
+
+    Problem: pytest-django runs `migrate` during test DB setup, which records
+    ALL app migrations (including TENANT_APPS) in the public schema's
+    django_migrations table. When Client.create_schema() runs migrate_schemas,
+    PostgreSQL finds that table via search_path and reports "No migrations to
+    apply" — leaving the tenant schema without any tables.
+
+    Fix: pre-create the django_migrations table inside the tenant schema
+    BEFORE running migrate_schemas. PostgreSQL's search_path finds it there
+    first (not in public), sees it is empty, and correctly applies all
+    tenant migrations.
+    """
+    from unittest.mock import patch
+    from django.db import connection
+    from django.core.management import call_command
+    from apps.tenants.models import Client, Domain
+
+    # Ensure we start from public schema (left-over search_path from prior test)
+    connection.set_schema_to_public()
+
+    # 1. Create the PostgreSQL schema and seed its django_migrations table.
+    with connection.cursor() as cursor:
+        cursor.execute(f'DROP SCHEMA IF EXISTS "{schema_name}" CASCADE')
+        cursor.execute(f'CREATE SCHEMA "{schema_name}"')
+        # Shadow public.django_migrations so migrate_schemas sees this empty
+        # table first and correctly applies all pending tenant migrations.
+        cursor.execute(f'''
+            CREATE TABLE "{schema_name}".django_migrations (
+                "id"      bigserial    NOT NULL PRIMARY KEY,
+                "app"     varchar(255) NOT NULL,
+                "name"    varchar(255) NOT NULL,
+                "applied" timestamptz  NOT NULL
+            )
+        ''')
+
+    # 3. Reset connection to public schema before creating the Client record.
+    #    Between transaction=True tests the search_path can be left on the
+    #    previous tenant schema, which causes django-tenants to reject the
+    #    Client.save() with "Can't create tenant outside the public schema".
+    connection.set_schema_to_public()
+
+    # 4. Create the Client DB record WITHOUT triggering auto create_schema
+    #    (we already created the schema above).
+    with patch.object(Client, 'create_schema', return_value=False):
+        tenant = Client.objects.create(
+            schema_name=schema_name,
+            name=name,
+            slug=slug,
+            plan=plan,
+            is_active=True,
+        )
+    Domain.objects.create(domain=domain, tenant=tenant, is_primary=True)
+
+    # 3. Apply all tenant-schema migrations.
+    #    migrate_schemas now finds the empty django_migrations table in the
+    #    tenant schema (not the full one in public) and applies everything.
+    call_command('migrate_schemas', schema_name=schema_name, verbosity=0)
+
+    return tenant
+
+
 @pytest.fixture
 def tenant_a(db):
     """Tenant A — first promotora for isolation tests."""
-    from apps.tenants.models import Client, Domain
-    tenant = Client.objects.create(
+    tenant = _create_test_tenant(
+        db,
         schema_name='test_empresa_a',
         name='Empresa A Lda',
         slug='empresa-a',
         plan='pro',
-        is_active=True,
+        domain='empresa-a.imos.cv',
     )
-    Domain.objects.create(domain='empresa-a.imos.cv', tenant=tenant, is_primary=True)
-    return tenant
+    yield tenant
+    # Reset to public before TransactionTestCase teardown/flush so that
+    # the tenants_client row is properly truncated from the correct schema.
+    from django.db import connection
+    connection.set_schema_to_public()
 
 
 @pytest.fixture
 def tenant_b(db):
     """Tenant B — second promotora for isolation tests."""
-    from apps.tenants.models import Client, Domain
-    tenant = Client.objects.create(
+    tenant = _create_test_tenant(
+        db,
         schema_name='test_empresa_b',
         name='Empresa B Lda',
         slug='empresa-b',
         plan='starter',
-        is_active=True,
+        domain='empresa-b.imos.cv',
     )
-    Domain.objects.create(domain='empresa-b.imos.cv', tenant=tenant, is_primary=True)
-    return tenant
+    yield tenant
+    from django.db import connection
+    connection.set_schema_to_public()
 
 
 @pytest.fixture

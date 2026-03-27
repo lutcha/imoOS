@@ -21,3 +21,6 @@ pre-commit==3.6.0
 # Development Tools
 django-debug-toolbar==4.3.0
 ipython==8.20.0
+
+# Load Testing
+locust==2.24.0

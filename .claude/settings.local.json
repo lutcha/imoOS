@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 create_dirs.py)",
+      "Bash(python create_dirs.py)",
+      "Bash(C:/Python314/python.exe create_dirs.py)",
+      "Bash(rm create_dirs.py)",
+      "Bash(for f in \"c:/Dev/imos/.claude/agents/01-backend/model-architect.md\" \"c:/Dev/imos/.claude/agents/01-backend/drf-viewset-builder.md\" \"c:/Dev/imos/.claude/agents/01-backend/celery-task-specialist.md\" \"c:/Dev/imos/.claude/agents/03-testing/isolation-test-writer.md\")",
+      "Bash(do echo \"=== $f ===\")",
+      "Read(//c/Dev/imos/**)",
+      "Bash(done)",
+      "Bash(npm install axios @tanstack/react-query jwt-decode)",
+      "Bash(docker port imocv_db)",
+      "Bash(pip list)",
+      "Bash(doctl version)",
+      "Bash(gh auth status)",
+      "Bash(doctl auth list)",
+      "Bash(doctl account get)",
+      "Bash(npx next build)",
+      "Bash(pip install -r c:/Dev/imos/requirements/base.txt -r c:/Dev/imos/requirements/development.txt)",
+      "Bash(pip show corsheaders django-allauth celery)",
+      "Bash(pip install django-cors-headers django-allauth django-extensions)",
+      "Bash(docker-compose -f docker-compose.dev.yml up --build -d db redis)",
+      "Bash(docker compose:*)",
+      "Bash(docker ps:*)",
+      "Bash(docker exec imos-frontend-1 node -e \":*)",
+      "Bash(docker-compose -f docker-compose.dev.yml up -d)",
+      "Bash(docker-compose -f docker-compose.dev.yml up -d web celery)"
+    ]
+  }
+}
