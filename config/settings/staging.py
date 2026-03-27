@@ -8,14 +8,14 @@ from sentry_sdk.integrations.celery import CeleryIntegration
 from sentry_sdk.integrations.redis import RedisIntegration
 
 from .base import *  # noqa
-from decouple import config
+from decouple import config, Csv
 
 # =============================================================
 # Core
 # =============================================================
 DEBUG = False
 SECRET_KEY = config('SECRET_KEY')
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv())
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='.ondigitalocean.app,staging.imos.cv', cast=Csv())
 
 # =============================================================
 # Database

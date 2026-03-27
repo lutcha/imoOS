@@ -191,6 +191,11 @@ jobs:
         value: ${db.HOSTNAME}
       - key: DB_PORT
         value: ${db.PORT}
+      - key: ALLOWED_HOSTS
+        value: .ondigitalocean.app,staging.imos.cv
+      - key: REDIS_URL
+        value: ${REDIS_URL}
+        type: SECRET
 
 # ------------------------------------------------------------------
 # Managed Databases
