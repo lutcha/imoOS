@@ -8,6 +8,7 @@ Routes here must be either:
 """
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+from apps.core.views import health_check
 from apps.crm.views_public import LeadCaptureView
 from apps.contracts.views_public import SignatureView
 from apps.tenants.views import TenantViewSet
@@ -24,6 +25,9 @@ _admin_router = DefaultRouter()
 _admin_router.register(r'admin/tenants', TenantViewSet, basename='tenant')
 
 urlpatterns = [
+    # Health check — must be first, hit by DO App Platform on the public domain
+    path('api/v1/health/', health_check, name='health-check'),
+
     # Public unauthenticated
     path('api/v1/crm/lead-capture/', LeadCaptureView.as_view(), name='lead-capture-public'),
     path('api/v1/sign/<uuid:token>/', SignatureView.as_view(), name='contract-sign'),
