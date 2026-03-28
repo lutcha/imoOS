@@ -257,12 +257,18 @@ REST_FRAMEWORK = {
 # =============================================================
 # Cache (Redis)
 # =============================================================
+_redis_url = config('REDIS_URL', default='redis://localhost:6379/0')
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': config('REDIS_URL', default='redis://localhost:6379/0'),
+        'LOCATION': _redis_url,
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            # DO Managed Redis/Valkey uses TLS (rediss://) with internal CA —
+            # disable cert verification for managed clusters
+            'CONNECTION_POOL_KWARGS': {
+                'ssl_cert_reqs': None,
+            } if _redis_url.startswith('rediss://') else {},
         }
     }
 }
@@ -272,6 +278,10 @@ CACHES = {
 # =============================================================
 CELERY_BROKER_URL = config('CELERY_BROKER_URL', default='redis://localhost:6379/1')
 CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default='django-db')  # Sprint 7
+# DO Managed Redis/Valkey TLS — disable cert verification for rediss:// broker
+if CELERY_BROKER_URL.startswith('rediss://'):
+    CELERY_BROKER_USE_SSL = {'ssl_cert_reqs': None}
+    CELERY_REDIS_BACKEND_USE_SSL = {'ssl_cert_reqs': None}
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
