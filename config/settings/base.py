@@ -375,7 +375,7 @@ IMOCV_WEBHOOK_SECRET = config('IMOCV_WEBHOOK_SECRET', default='')
 SENTRY_DSN = config('SENTRY_DSN', default='')
 SENTRY_ENVIRONMENT = config('SENTRY_ENVIRONMENT', default='development')
 
-if SENTRY_DSN and SENTRY_DSN != 'https://your-key@sentry.io/your-project-id':
+if SENTRY_DSN and SENTRY_DSN.startswith('https://') and '@sentry.io' in SENTRY_DSN:
     import sentry_sdk
     from sentry_sdk.integrations.django import DjangoIntegration
     from sentry_sdk.integrations.celery import CeleryIntegration
