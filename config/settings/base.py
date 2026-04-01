@@ -281,7 +281,7 @@ CACHES = {
 def _fix_rediss_url(url):
     if url.startswith('rediss://') and 'ssl_cert_reqs' not in url:
         sep = '&' if '?' in url else '?'
-        return f"{url}{sep}ssl_cert_reqs=none"
+        return f"{url}{sep}ssl_cert_reqs=CERT_NONE"
     return url
 
 CELERY_BROKER_URL = _fix_rediss_url(config('CELERY_BROKER_URL', default='redis://localhost:6379/1'))

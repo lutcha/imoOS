@@ -61,11 +61,11 @@ services:
       - key: DB_PORT
         value: ${db.PORT}
       - key: REDIS_URL
-        value: ${redis.DATABASE_URL}
+        value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
       - key: CELERY_BROKER_URL
-        value: ${redis.DATABASE_URL}
+        value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
       - key: CELERY_RESULT_BACKEND
-        value: ${redis.DATABASE_URL}
+        value: django-db
       - key: AWS_ACCESS_KEY_ID
         value: ${AWS_ACCESS_KEY_ID}
         type: SECRET
@@ -134,11 +134,11 @@ workers:
       - key: DB_PORT
         value: ${db.PORT}
       - key: REDIS_URL
-        value: ${redis.DATABASE_URL}
+        value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
       - key: CELERY_BROKER_URL
-        value: ${redis.DATABASE_URL}
+        value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
       - key: CELERY_RESULT_BACKEND
-        value: ${redis.DATABASE_URL}
+        value: django-db
 
   - name: celery-beat
     github:
@@ -168,11 +168,11 @@ workers:
       - key: DB_PORT
         value: ${db.PORT}
       - key: REDIS_URL
-        value: ${redis.DATABASE_URL}
+        value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
       - key: CELERY_BROKER_URL
-        value: ${redis.DATABASE_URL}
+        value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
       - key: CELERY_RESULT_BACKEND
-        value: ${redis.DATABASE_URL}
+        value: django-db
 
 # ------------------------------------------------------------------
 # Pre-deploy Jobs
@@ -212,7 +212,7 @@ jobs:
       - key: APP_DOMAIN
         value: ${APP_DOMAIN}
       - key: REDIS_URL
-        value: ${redis.DATABASE_URL}
+        value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
 
 # ------------------------------------------------------------------
 # Managed Databases
