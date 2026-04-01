@@ -1,19 +1,18 @@
-FROM python:3.11-slim
+FROM python:3.11-slim-bookworm
 
-# Install system dependencies (GDAL for PostGIS)
+# Install system dependencies (GDAL and WeasyPrint requirements)
 RUN apt-get update && apt-get install -y \
     gdal-bin \
     libgdal-dev \
     libpq-dev \
     gcc \
-    # WeasyPrint dependencies
     python3-pip \
     python3-cffi \
     python3-brotli \
     libpango-1.0-0 \
     libpangocairo-1.0-0 \
     libcairo2 \
-    libgdk-pixbuf2.0-0 \
+    libgdk-pixbuf-2.0-0 \
     libffi-dev \
     shared-mime-info \
     && rm -rf /var/lib/apt/lists/*
