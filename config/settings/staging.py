@@ -10,7 +10,8 @@ from decouple import config, Csv
 # =============================================================
 DEBUG = False
 SECRET_KEY = config('SECRET_KEY')
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='.ondigitalocean.app,staging.imos.cv', cast=Csv())
+# Staging health checks of internal DO IP require lenient ALLOWED_HOSTS
+ALLOWED_HOSTS = ['*']
 
 # =============================================================
 # Database
