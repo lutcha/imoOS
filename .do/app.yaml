@@ -94,6 +94,7 @@ services:
     source_dir: frontend
     instance_count: 1
     instance_size_slug: professional-xs
+    http_port: 3000
     routes:
       - path: /app
     envs:
