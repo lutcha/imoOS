@@ -7,6 +7,12 @@
 name: imos-staging
 region: ams
 
+domains:
+  - domain: proptech.cv
+    type: PRIMARY
+  - domain: www.proptech.cv
+    type: ALIAS
+
 # ------------------------------------------------------------------
 # Web Service — Django API
 # ------------------------------------------------------------------
@@ -43,7 +49,7 @@ services:
       - key: DEBUG
         value: "False"
       - key: ALLOWED_HOSTS
-        value: ${APP_DOMAIN},staging.imos.cv
+        value: ${APP_DOMAIN},proptech.cv,www.proptech.cv,api.proptech.cv
       - key: DB_NAME
         value: ${db.DATABASE}
       - key: DB_USER
@@ -80,7 +86,7 @@ services:
       - key: APP_VERSION
         value: ${_self.COMMIT_HASH}
       - key: TENANT_BASE_DOMAIN
-        value: staging.imos.cv
+        value: proptech.cv
 
 # ------------------------------------------------------------------
 # Workers — Celery (background, no HTTP port)
@@ -190,7 +196,7 @@ jobs:
       - key: DB_PORT
         value: ${db.PORT}
       - key: ALLOWED_HOSTS
-        value: .ondigitalocean.app,staging.imos.cv
+        value: .ondigitalocean.app,proptech.cv,www.proptech.cv,api.proptech.cv
       - key: REDIS_URL
         value: ${REDIS_URL}
         type: SECRET
