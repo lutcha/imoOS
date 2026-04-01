@@ -105,7 +105,7 @@ def _scrub_sensitive_data(event, hint):
 # =============================================================
 SENTRY_DSN = config('SENTRY_DSN', default='')
 
-if SENTRY_DSN:
+if SENTRY_DSN and SENTRY_DSN.startswith('https://') and '@sentry.io' in SENTRY_DSN:
     sentry_sdk.init(
         dsn=SENTRY_DSN,
         integrations=[
