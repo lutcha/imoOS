@@ -177,7 +177,7 @@ jobs:
       branch: develop
     source_dir: /
     dockerfile_path: docker/Dockerfile.staging
-    run_command: "bash -c 'python manage.py migrate_schemas --shared && python manage.py migrate_schemas'"
+    run_command: "bash -c 'python manage.py migrate_schemas --shared && python manage.py migrate_schemas && python manage.py ensure_public_tenant'"
     envs:
       - key: DJANGO_SETTINGS_MODULE
         value: config.settings.staging
