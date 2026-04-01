@@ -29,10 +29,7 @@ services:
     instance_size_slug: professional-xs
 
     routes:
-      - path: /api
-      - path: /django-admin
-      - path: /static
-
+      - path: /
     health_check:
       http_path: /api/v1/health/
       initial_delay_seconds: 60
@@ -51,7 +48,7 @@ services:
       - key: DEBUG
         value: "False"
       - key: ALLOWED_HOSTS
-        value: .ondigitalocean.app,${APP_DOMAIN},proptech.cv,www.proptech.cv,api.proptech.cv
+        value: "*"
       - key: DB_NAME
         value: ${db.DATABASE}
       - key: DB_USER
@@ -98,7 +95,7 @@ services:
     instance_count: 1
     instance_size_slug: professional-xs
     routes:
-      - path: /
+      - path: /app
     envs:
       - key: NEXT_PUBLIC_API_URL
         value: https://proptech.cv
@@ -207,7 +204,7 @@ jobs:
       - key: DB_PORT
         value: ${db.PORT}
       - key: ALLOWED_HOSTS
-        value: .ondigitalocean.app,proptech.cv,www.proptech.cv,api.proptech.cv
+        value: "*"
       - key: TENANT_BASE_DOMAIN
         value: proptech.cv
       - key: CORS_ALLOWED_ORIGINS
