@@ -29,7 +29,9 @@ services:
     instance_size_slug: professional-xs
 
     routes:
-      - path: /
+      - path: /api
+      - path: /django-admin
+      - path: /static
 
     health_check:
       http_path: /api/v1/health/
@@ -86,6 +88,22 @@ services:
         value: proptech.cv
       - key: CORS_ALLOWED_ORIGINS
         value: https://proptech.cv,https://www.proptech.cv,https://demo.proptech.cv
+
+  - name: frontend
+    github:
+      repo: lutcha/imoOS
+      branch: develop
+      deploy_on_push: true
+    source_dir: frontend
+    instance_count: 1
+    instance_size_slug: professional-xs
+    routes:
+      - path: /
+    envs:
+      - key: NEXT_PUBLIC_API_URL
+        value: https://proptech.cv
+      - key: API_URL
+        value: http://api:8000
 
 # ------------------------------------------------------------------
 # Workers — Celery (background, no HTTP port)
