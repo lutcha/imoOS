@@ -62,11 +62,11 @@ services:
       - key: DB_PORT
         value: ${db.PORT}
       - key: REDIS_URL
-        value: ${REDIS_URL}
+        value: ${redis.DATABASE_URL}
       - key: CELERY_BROKER_URL
-        value: ${REDIS_URL}
+        value: ${redis.DATABASE_URL}
       - key: CELERY_RESULT_BACKEND
-        value: ${REDIS_URL}
+        value: ${redis.DATABASE_URL}
       - key: AWS_ACCESS_KEY_ID
         value: ${AWS_ACCESS_KEY_ID}
         type: SECRET
@@ -117,11 +117,11 @@ workers:
       - key: DB_PORT
         value: ${db.PORT}
       - key: REDIS_URL
-        value: ${REDIS_URL}
+        value: ${redis.DATABASE_URL}
       - key: CELERY_BROKER_URL
-        value: ${REDIS_URL}
+        value: ${redis.DATABASE_URL}
       - key: CELERY_RESULT_BACKEND
-        value: ${REDIS_URL}
+        value: ${redis.DATABASE_URL}
 
   - name: celery-beat
     github:
@@ -151,11 +151,11 @@ workers:
       - key: DB_PORT
         value: ${db.PORT}
       - key: REDIS_URL
-        value: ${REDIS_URL}
+        value: ${redis.DATABASE_URL}
       - key: CELERY_BROKER_URL
-        value: ${REDIS_URL}
+        value: ${redis.DATABASE_URL}
       - key: CELERY_RESULT_BACKEND
-        value: ${REDIS_URL}
+        value: ${redis.DATABASE_URL}
 
 # ------------------------------------------------------------------
 # Pre-deploy Jobs
@@ -193,7 +193,7 @@ jobs:
       - key: APP_DOMAIN
         value: ${APP_DOMAIN}
       - key: REDIS_URL
-        value: ${REDIS_URL}
+        value: ${redis.DATABASE_URL}
 
 # ------------------------------------------------------------------
 # Managed Databases
@@ -204,3 +204,7 @@ databases:
     engine: PG
     version: "15"
     production: false
+  - name: redis
+    engine: VALKEY
+    production: true
+    cluster_name: imos-redis-staging
