@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ImoOS CRM - Lead Detail</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#00d4ff",
+                        "secondary": "#7c3aed",
+                        "accent": "#ec4899",
+                        "background-light": "#f5f8f8",
+                        "background-dark": "#0a0a0f",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glow-cyan {
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+        }
+        .glow-purple {
+            box-shadow: 0 0 15px rgba(124, 58, 237, 0.3);
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen flex overflow-hidden">
+<!-- Global Sidebar -->
+<aside class="w-20 lg:w-64 border-r border-slate-200 dark:border-white/10 flex flex-col items-center lg:items-start py-6 bg-white dark:bg-black/40 transition-all">
+<div class="px-6 mb-10 flex items-center gap-3">
+<div class="size-10 bg-gradient-to-br from-primary via-secondary to-accent rounded-xl flex items-center justify-center text-white shadow-lg">
+<span class="material-symbols-outlined">rocket_launch</span>
+</div>
+<span class="hidden lg:block text-xl font-extrabold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">ImoOS</span>
+</div>
+<nav class="flex-1 w-full px-3 space-y-2">
+<a class="flex items-center gap-4 px-4 py-3 rounded-xl text-slate-400 hover:text-primary hover:bg-primary/10 transition-all group" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="hidden lg:block font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-xl text-slate-400 hover:text-primary hover:bg-primary/10 transition-all group" href="#">
+<span class="material-symbols-outlined">business_center</span>
+<span class="hidden lg:block font-medium">Projects</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-xl text-slate-400 hover:text-primary hover:bg-primary/10 transition-all group" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="hidden lg:block font-medium">Inventory</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-xl bg-primary/20 text-primary border border-primary/20 group" href="#">
+<span class="material-symbols-outlined">groups</span>
+<span class="hidden lg:block font-medium">CRM</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-xl text-slate-400 hover:text-primary hover:bg-primary/10 transition-all group" href="#">
+<span class="material-symbols-outlined">insights</span>
+<span class="hidden lg:block font-medium">Analytics</span>
+</a>
+</nav>
+<div class="px-3 w-full mt-auto">
+<a class="flex items-center gap-4 px-4 py-3 rounded-xl text-slate-400 hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="hidden lg:block font-medium">Settings</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col h-screen overflow-hidden">
+<!-- Topbar -->
+<header class="h-16 border-b border-slate-200 dark:border-white/5 flex items-center justify-between px-8 bg-white/50 dark:bg-background-dark/50 backdrop-blur-md z-10">
+<div class="flex items-center gap-4 text-sm font-medium">
+<span class="text-slate-400 hover:text-primary cursor-pointer transition-colors">Dashboard</span>
+<span class="material-symbols-outlined text-xs text-slate-600">chevron_right</span>
+<span class="text-slate-400 hover:text-primary cursor-pointer transition-colors">CRM</span>
+<span class="material-symbols-outlined text-xs text-slate-600">chevron_right</span>
+<span class="text-primary">João Silva</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative hidden md:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
+<input class="bg-slate-100 dark:bg-white/5 border-none rounded-full pl-10 pr-4 py-1.5 w-64 text-sm focus:ring-2 focus:ring-primary transition-all" placeholder="Search leads, units..." type="text"/>
+</div>
+<div class="flex items-center gap-3 border-l border-white/10 pl-6">
+<div class="text-right hidden sm:block">
+<p class="text-xs font-bold leading-none">Ricardo M.</p>
+<p class="text-[10px] text-slate-500 uppercase tracking-widest mt-1">Admin Account</p>
+</div>
+<div class="size-10 rounded-full border-2 border-primary/30 p-0.5">
+<img alt="User Profile" class="rounded-full w-full h-full object-cover" data-alt="Portrait of a male real estate agent" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCe_Oj8VRtJOWinUIkdz2WXirAWqOx52J_1hVe83ye58XpCRpmWKJhH3wzVBfNq2rOZdE2WhrQm07JcG5g1wRcT_Lzo6oHPqj2k03riQq5ZlPYj6x6DUen7-ZFCmzn0JiPQXPsnSFzOxIvw-NR8eTB46DHGOxoYd8T_pv9t88lyQ-36fHdGtMnsQra6t65-_AWXn5Lk4pkFj-h3jfJ--7P4KtDLO7K3Jl8nArUa60o7OseMWUbak6uYVvJ1ltz0kNez78-HZ5XFeY-P"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Content Scroller -->
+<div class="flex-1 overflow-y-auto p-8 space-y-8 bg-background-light dark:bg-background-dark">
+<!-- Header Section -->
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+<div class="flex items-center gap-6">
+<div class="relative">
+<div class="size-24 rounded-2xl overflow-hidden border-2 border-white/10 glow-cyan">
+<img alt="Lead Profile" class="w-full h-full object-cover" data-alt="Professional portrait of a middle-aged male customer" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtxGBwGIpQRDMzKQQN4HSe3lTcC24wIMgLwzyLnuRoiDtzYqFuii4hSQR4-ndnRGRuUO9HdfXvPvkbIQx63vlKeJoMhEWSRddxNV0VkWTrMaPXHivzpB8xLi8PuAxUgdnQBh75mqy8kGPc--v-kanmoCyqZ8upd8S9EGF7axxLKfBgmZ38yw-Cq5pVehuGbzekL7qMUIqU9C6V6oEhkP7GSjjceA4emjaGbQOUsgQZh6mGT5ooR_Cct_dIQ4vKyPEmHOrCNVI2l5Hs"/>
+</div>
+<div class="absolute -bottom-2 -right-2 bg-primary text-background-dark text-[10px] font-black px-2 py-1 rounded-md shadow-xl uppercase tracking-tighter">Verified</div>
+</div>
+<div>
+<h1 class="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
+                            João Silva
+                            <span class="material-symbols-outlined text-primary text-2xl">verified</span>
+</h1>
+<div class="flex flex-wrap items-center gap-3 mt-2">
+<span class="px-3 py-1 bg-primary/10 border border-primary/20 rounded-full text-xs font-bold text-primary flex items-center gap-1.5">
+<span class="size-2 rounded-full bg-primary animate-pulse"></span>
+                                PROPOSTA ENVIADA
+                            </span>
+<span class="text-slate-400 text-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">mail</span>
+                                joao.silva@email.com
+                            </span>
+<span class="text-slate-400 text-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">call</span>
+                                +351 912 345 678
+                            </span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="glass-panel p-4 rounded-2xl flex items-center gap-4 glow-cyan border-primary/20">
+<div class="text-right">
+<p class="text-[10px] text-primary font-bold uppercase tracking-widest leading-none">Lead Score</p>
+<p class="text-2xl font-black text-white leading-none mt-1">92<span class="text-slate-500 text-sm font-normal">/100</span></p>
+</div>
+<div class="size-12 rounded-full border-4 border-primary border-t-transparent flex items-center justify-center -rotate-45">
+<span class="material-symbols-outlined text-primary rotate-45">bolt</span>
+</div>
+</div>
+<button class="bg-primary hover:bg-primary/80 text-background-dark font-bold py-3 px-6 rounded-xl transition-all shadow-lg shadow-primary/20 flex items-center gap-2">
+<span class="material-symbols-outlined">send</span>
+                        Actions
+                    </button>
+</div>
+</div>
+<!-- Tabs Navigation -->
+<div class="flex items-center gap-1 border-b border-white/5 overflow-x-auto no-scrollbar">
+<button class="px-6 py-3 text-slate-400 hover:text-white font-semibold transition-all border-b-2 border-transparent hover:border-white/20">Informações</button>
+<button class="px-6 py-3 text-primary font-semibold transition-all border-b-2 border-primary">Interações</button>
+<button class="px-6 py-3 text-slate-400 hover:text-white font-semibold transition-all border-b-2 border-transparent hover:border-white/20">Unidades</button>
+<button class="px-6 py-3 text-slate-400 hover:text-white font-semibold transition-all border-b-2 border-transparent hover:border-white/20">Documentos</button>
+<button class="px-6 py-3 text-slate-400 hover:text-white font-semibold transition-all border-b-2 border-transparent hover:border-white/20">Notas</button>
+</div>
+<div class="grid grid-cols-12 gap-8">
+<!-- Tab Content: Interações -->
+<div class="col-span-12 lg:col-span-8 space-y-6">
+<div class="glass-panel p-6 rounded-3xl relative overflow-hidden">
+<div class="flex items-center justify-between mb-8">
+<h3 class="text-xl font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary">history</span>
+                                Timeline de Interação
+                            </h3>
+<button class="text-xs text-slate-400 flex items-center gap-1 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-sm">filter_list</span>
+                                Filter
+                            </button>
+</div>
+<!-- Vertical Timeline -->
+<div class="relative pl-8 space-y-8 before:content-[''] before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-gradient-to-b before:from-primary before:via-secondary before:to-transparent">
+<!-- Interaction Event 1 -->
+<div class="relative group">
+<div class="absolute -left-[31px] top-1 size-4 rounded-full bg-primary glow-cyan ring-4 ring-background-dark transition-all group-hover:scale-125"></div>
+<div class="glass-panel p-4 rounded-2xl border-white/5 group-hover:border-primary/30 transition-all">
+<div class="flex items-start justify-between">
+<div class="flex gap-4">
+<div class="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">mail</span>
+</div>
+<div>
+<p class="font-bold">Email Enviado</p>
+<p class="text-sm text-slate-400">Proposta comercial referente ao Skyline Residences.</p>
+</div>
+</div>
+<span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest bg-white/5 px-2 py-1 rounded">Today, 10:45 AM</span>
+</div>
+</div>
+</div>
+<!-- Interaction Event 2 -->
+<div class="relative group">
+<div class="absolute -left-[31px] top-1 size-4 rounded-full bg-secondary ring-4 ring-background-dark transition-all group-hover:scale-125"></div>
+<div class="glass-panel p-4 rounded-2xl border-white/5 group-hover:border-secondary/30 transition-all">
+<div class="flex items-start justify-between">
+<div class="flex gap-4">
+<div class="size-10 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined">call</span>
+</div>
+<div>
+<p class="font-bold">Chamada Telefónica</p>
+<p class="text-sm text-slate-400">Discussão sobre condições de financiamento e reserva.</p>
+</div>
+</div>
+<span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest bg-white/5 px-2 py-1 rounded">Yesterday, 4:20 PM</span>
+</div>
+</div>
+</div>
+<!-- Interaction Event 3 -->
+<div class="relative group">
+<div class="absolute -left-[31px] top-1 size-4 rounded-full bg-green-500 ring-4 ring-background-dark transition-all group-hover:scale-125"></div>
+<div class="glass-panel p-4 rounded-2xl border-white/5 group-hover:border-green-500/30 transition-all">
+<div class="flex items-start justify-between">
+<div class="flex gap-4">
+<div class="size-10 rounded-xl bg-green-500/10 flex items-center justify-center text-green-500">
+<span class="material-symbols-outlined">chat</span>
+</div>
+<div>
+<p class="font-bold">Mensagem WhatsApp</p>
+<p class="text-sm text-slate-400">Cliente solicitou planta baixa atualizada da Unidade 402.</p>
+</div>
+</div>
+<span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest bg-white/5 px-2 py-1 rounded">Oct 24, 09:12 AM</span>
+</div>
+</div>
+</div>
+<!-- Interaction Event 4 -->
+<div class="relative group">
+<div class="absolute -left-[31px] top-1 size-4 rounded-full bg-accent ring-4 ring-background-dark transition-all group-hover:scale-125"></div>
+<div class="glass-panel p-4 rounded-2xl border-white/5 group-hover:border-accent/30 transition-all">
+<div class="flex items-start justify-between">
+<div class="flex gap-4">
+<div class="size-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent">
+<span class="material-symbols-outlined">apartment</span>
+</div>
+<div>
+<p class="font-bold">Visita à Obra</p>
+<p class="text-sm text-slate-400">Visita realizada com sucesso. Cliente demonstrou forte interesse.</p>
+</div>
+</div>
+<span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest bg-white/5 px-2 py-1 rounded">Oct 22, 2:30 PM</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Quick Action Input -->
+<div class="mt-10 pt-6 border-t border-white/5">
+<div class="flex gap-3">
+<div class="flex-1 relative">
+<input class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none" placeholder="Escreva uma nota ou registe uma interação..." type="text"/>
+<div class="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+<button class="size-8 rounded-lg hover:bg-white/10 flex items-center justify-center text-slate-400"><span class="material-symbols-outlined text-lg">attach_file</span></button>
+<button class="size-8 rounded-lg hover:bg-white/10 flex items-center justify-center text-slate-400"><span class="material-symbols-outlined text-lg">mood</span></button>
+</div>
+</div>
+<button class="bg-secondary p-4 rounded-2xl text-white shadow-lg glow-purple hover:scale-105 transition-all">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Unit Interests Section -->
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<h3 class="text-lg font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-accent">favorite</span>
+                                Interesse em Unidades
+                            </h3>
+<button class="text-xs text-primary font-bold">Ver Catálogo</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Unit Card 1 -->
+<div class="glass-panel rounded-2xl overflow-hidden group hover:scale-[1.02] transition-all cursor-pointer">
+<div class="h-32 relative overflow-hidden">
+<img alt="Unit thumbnail" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="Modern luxury apartment living room" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSNEOnrFczrZZfYq5qO0T0_WbX2Cd_UcWZiGO_1SFJPxgck9JYXWXXGVtXCbQPK3791FdiUcsVPXWZeZ05PEkUw69y4wZTi1uexwNGxx1fFYzPx8SovdyHfGfXlaVFCAq-mFYlhybaPngi78wVGf9RWoeIq-Ih1wMiy9NslM4MozkZ3c50j1rl2SUIQ0hYWrOL-hbU8flLOCIbP9Ldpx_XrS3vNEN8rgTNMb3xkuvOOtj7KLHZJic3IJBrIqtaB4ncsMkrbpPMeSi7"/>
+<div class="absolute top-2 right-2 px-2 py-1 bg-background-dark/80 backdrop-blur rounded text-[10px] font-bold text-primary">T3 • 145m²</div>
+</div>
+<div class="p-4">
+<h4 class="font-bold text-white">Skyline Residences - Apto 402</h4>
+<p class="text-xs text-slate-400 mt-1">Av. Liberdade, Bloco A</p>
+<div class="mt-4 flex items-center justify-between">
+<p class="text-lg font-black text-primary">€ 845.000</p>
+<span class="material-symbols-outlined text-slate-600">arrow_forward_ios</span>
+</div>
+</div>
+</div>
+<!-- Unit Card 2 -->
+<div class="glass-panel rounded-2xl overflow-hidden group hover:scale-[1.02] transition-all cursor-pointer">
+<div class="h-32 relative overflow-hidden">
+<img alt="Unit thumbnail" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="Futuristic high-rise building exterior" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAHUqHETKXN3wr3LGxEM9C-Buwr9J0w6lFQ0cKMyNZpR_K7lHG0tUXrQKZTKo3n1xyqUUIoAOIeuUzQX-GzUu_7NZIgTkML3lrP_L5NSA9fpAjfVEyHVYl56dkQDerRIHSrdl98w85HFWwHmr3lmIs_tDFPyWE2HwNdkBnsvYQt-rRkInomeCpvQgKvTwlOz9iyaGwQromdaBIPRnwGU7miA5eH0YxFhss50nYBajrSqeFjjRNVaSbpJoAB-pXdS9RHfvtWNL7JhP1"/>
+<div class="absolute top-2 right-2 px-2 py-1 bg-background-dark/80 backdrop-blur rounded text-[10px] font-bold text-accent">T2 • 112m²</div>
+</div>
+<div class="p-4">
+<h4 class="font-bold text-white">Ocean View - Penthouse C</h4>
+<p class="text-xs text-slate-400 mt-1">Costa da Guia, Cascais</p>
+<div class="mt-4 flex items-center justify-between">
+<p class="text-lg font-black text-accent">€ 1.250.000</p>
+<span class="material-symbols-outlined text-slate-600">arrow_forward_ios</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Sidebar (Right Panel) -->
+<div class="col-span-12 lg:col-span-4 space-y-8">
+<!-- Quick Actions Card -->
+<div class="glass-panel p-6 rounded-3xl border-primary/20 space-y-4">
+<h4 class="font-bold text-sm text-slate-400 uppercase tracking-widest">Próximos Passos</h4>
+<div class="grid grid-cols-1 gap-3">
+<button class="w-full flex items-center gap-3 p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-primary/5 transition-all group">
+<span class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">event</span>
+<span class="font-semibold text-sm">Agendar Visita</span>
+</button>
+<button class="w-full flex items-center gap-3 p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-secondary/50 hover:bg-secondary/5 transition-all group">
+<span class="material-symbols-outlined text-secondary group-hover:scale-110 transition-transform">description</span>
+<span class="font-semibold text-sm">Enviar Proposta</span>
+</button>
+<button class="w-full flex items-center gap-3 p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-accent/50 hover:bg-accent/5 transition-all group">
+<span class="material-symbols-outlined text-accent group-hover:scale-110 transition-transform">book_online</span>
+<span class="font-semibold text-sm">Criar Reserva</span>
+</button>
+</div>
+</div>
+<!-- Next Follow-up Widget -->
+<div class="glass-panel p-6 rounded-3xl relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4">
+<span class="material-symbols-outlined text-primary opacity-20 text-6xl rotate-12">notifications_active</span>
+</div>
+<h4 class="font-bold text-sm text-slate-400 uppercase tracking-widest mb-4">Follow-up</h4>
+<div class="flex items-center gap-4">
+<div class="size-14 rounded-2xl bg-primary/20 border border-primary/30 flex flex-col items-center justify-center text-primary glow-cyan">
+<span class="text-xs font-black">OUT</span>
+<span class="text-xl font-black">28</span>
+</div>
+<div>
+<p class="font-bold">Ligar para João S.</p>
+<p class="text-xs text-slate-500">Amanhã • 10:30 AM</p>
+</div>
+</div>
+<button class="w-full mt-6 py-2 border border-white/10 rounded-xl text-xs font-bold hover:bg-white/5 transition-all">Alterar Lembrete</button>
+</div>
+<!-- Assigned Agent Card -->
+<div class="glass-panel p-6 rounded-3xl">
+<h4 class="font-bold text-sm text-slate-400 uppercase tracking-widest mb-4">Agente Responsável</h4>
+<div class="flex items-center gap-4">
+<div class="size-12 rounded-full overflow-hidden border-2 border-secondary/50">
+<img alt="Agent" class="w-full h-full object-cover" data-alt="Portrait of a friendly smiling female agent" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBclG8Y32Qm-2IcvYjCg6Y_dgCgnO_pNX9za059LMVx_Lzle-GyRiFv8xTiniP-XL0MpNqr1hjgQaZSUxb0GRQkO84vKe944mwTQgAophhgSVTD8K6e1V5C3680yJF1NoR06yT1nCbCyjiImBTWAHtiiTuP6XM7XCHVcWU1EkfsC7LUbi-CuBAekE0P7DpXs-EqqA7w5XDLi57I1lvqAZkAtv_YzU-W1OHQ-U6JwtmHLjzmesGNjO76luly-2W4tqJf2i1UpWuS5WzR"/>
+</div>
+<div class="flex-1">
+<p class="font-bold text-sm">Mariana Costa</p>
+<p class="text-[10px] text-slate-500 uppercase tracking-widest">Senior Advisor</p>
+</div>
+<button class="size-8 rounded-full bg-secondary/20 text-secondary flex items-center justify-center hover:bg-secondary hover:text-white transition-all">
+<span class="material-symbols-outlined text-lg">forum</span>
+</button>
+</div>
+</div>
+<!-- Lead Map Location -->
+<div class="glass-panel rounded-3xl overflow-hidden h-40 relative group">
+<div class="absolute inset-0 bg-gradient-to-t from-background-dark via-transparent to-transparent z-10 pointer-events-none"></div>
+<div class="absolute bottom-3 left-3 z-20 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm">location_on</span>
+<span class="text-xs font-bold">Lisboa, Portugal</span>
+</div>
+<img alt="Location Map" class="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity" data-location="Lisbon" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA_092Wzi7H9CybqxaKsCeIrHUjMgnepjHOD5utPkM_uRVeuzAp4hgpK693PAZIigTB8am3RJnq6S-MXGES2iMoXbS0CdAhgHqC6Q1unm1NHk1mfbE2g5OqB0xPrLn-zPC28JszUH45vkAGEgSelyysrRERHF_wgsTF5FdCoUivzahhFre6jPkEpyXqjADNpx7lbFSppYWpPfQQF76SnVRDiFcfpMDFpuuK1MkA9uknWScCiAlJYLLDQaUdPCzrosD_KBfZoT6XHVYj"/>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

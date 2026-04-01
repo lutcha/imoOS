@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html class="dark" lang="pt"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ImoOS - Command Center Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500;600;700&amp;family=Inter:wght@400;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style type="text/tailwindcss">
+        :root {
+            --navy-deep: #05070A;
+            --navy-surface: #0E1219;
+            --silver: #94A3B8;
+            --silver-bright: #E2E8F0;
+            --electric-orange: #FF5C00;
+            --border-color: #1E293B;
+        }
+        body {
+            background-color: var(--navy-deep);
+            color: var(--silver);
+        }
+        .ops-card {
+            background-color: var(--navy-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 0px;}
+        .font-mono-data {
+            font-family: 'Roboto Mono', monospace;
+        }
+        .alert-glow {
+            box-shadow: 0 0 10px rgba(255, 92, 0, 0.2);
+        }
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--navy-deep);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+        }
+        .sidebar-active {
+            border-left: 3px solid var(--electric-orange);
+            background: linear-gradient(90deg, rgba(255, 92, 0, 0.1) 0%, transparent 100%);
+            color: var(--silver-bright);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#FF5C00", // Electric Orange
+                        "navy-deep": "#05070A",
+                        "navy-surface": "#0E1219",
+                        "silver": "#94A3B8",
+                    },
+                    fontFamily: {
+                        "mono": ["Roboto Mono", "monospace"],
+                        "sans": ["Inter", "sans-serif"]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="font-sans antialiased overflow-hidden">
+<div class="flex h-screen overflow-hidden">
+<aside class="w-64 flex-shrink-0 border-r border-[#1E293B] bg-navy-deep flex flex-col z-20">
+<div class="p-6 flex items-center gap-3 border-b border-[#1E293B]">
+<div class="w-8 h-8 flex items-center justify-center border border-primary">
+<span class="material-symbols-outlined text-primary text-xl">terminal</span>
+</div>
+<div>
+<h1 class="text-lg font-black tracking-tighter text-white">ImoOS <span class="text-[10px] font-mono font-normal text-primary">v4.2.0</span></h1>
+<p class="text-[9px] uppercase tracking-[0.2em] text-silver font-bold">Ops Lead Dashboard</p>
+</div>
+</div>
+<nav class="flex-1 px-0 space-y-0 mt-2 overflow-y-auto font-mono text-[11px] uppercase tracking-wider">
+<a class="flex items-center gap-4 px-6 py-4 text-silver hover:text-white hover:bg-white/5 transition-all border-l-4 border-transparent" href="#">
+<span class="material-symbols-outlined text-lg">monitoring</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-4 px-6 py-4 text-silver hover:text-white hover:bg-white/5 transition-all border-l-4 border-transparent" href="#">
+<span class="material-symbols-outlined text-lg">database</span>
+<span>Propriedades</span>
+</a>
+<a class="flex items-center gap-4 px-6 py-4 text-silver hover:text-white hover:bg-white/5 transition-all border-l-4 border-transparent" href="#">
+<span class="material-symbols-outlined text-lg">hub</span>
+<span>Clientes</span>
+</a>
+<div class="py-4 px-6 opacity-30">
+<div class="h-[1px] bg-silver w-full"></div>
+</div>
+<a class="flex items-center gap-4 px-6 py-4 sidebar-active" href="#">
+<span class="material-symbols-outlined text-lg">settings_input_component</span>
+<span>Sistema</span>
+</a>
+<a class="flex items-center gap-4 px-6 py-4 text-silver hover:text-white hover:bg-white/5 transition-all border-l-4 border-transparent" href="#">
+<span class="material-symbols-outlined text-lg">policy</span>
+<span>Segurança</span>
+</a>
+</nav>
+<div class="p-4 mt-auto border-t border-[#1E293B]">
+<div class="bg-navy-surface border border-primary/30 p-4 font-mono">
+<div class="flex justify-between items-center mb-2">
+<span class="text-[10px] text-primary font-bold">OPS STATUS</span>
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+</div>
+<p class="text-[10px] text-silver-bright mb-3">Kernel version 5.15.0-x86_64</p>
+<div class="w-full bg-navy-deep h-1 mb-3">
+<div class="bg-primary h-full" style="width: 88%"></div>
+</div>
+<button class="w-full py-2 border border-primary text-primary text-[10px] font-bold hover:bg-primary hover:text-navy-deep transition-all uppercase tracking-widest">
+                    Run Diagnostics
+                </button>
+</div>
+</div>
+</aside>
+<main class="flex-1 flex flex-col min-w-0 bg-navy-deep relative">
+<header class="h-14 border-b border-[#1E293B] flex items-center justify-between px-8 bg-navy-surface/80 backdrop-blur-sm sticky top-0 z-10">
+<div class="flex items-center gap-4 flex-1">
+<div class="relative w-full max-w-lg">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-primary text-sm">code</span>
+<input class="w-full bg-navy-deep border border-[#1E293B] py-1.5 pl-10 pr-4 text-xs font-mono text-silver-bright focus:ring-1 focus:ring-primary focus:border-primary transition-all placeholder:text-slate-700 uppercase" placeholder="EXECUTE_COMMAND_OR_SEARCH..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex gap-4">
+<button class="relative text-silver hover:text-primary transition-colors">
+<span class="material-symbols-outlined">sensors</span>
+<span class="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full"></span>
+</button>
+<button class="text-silver hover:text-white transition-colors">
+<span class="material-symbols-outlined">terminal</span>
+</button>
+</div>
+<div class="h-6 w-[1px] bg-[#1E293B]"></div>
+<div class="flex items-center gap-3">
+<div class="text-right font-mono">
+<p class="text-[11px] font-bold text-white uppercase">Mendes.R</p>
+<p class="text-[9px] text-primary uppercase">Ops Lead</p>
+</div>
+<div class="w-8 h-8 border border-[#1E293B] p-0.5">
+<div class="w-full h-full bg-[#1E293B] flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-sm">fitbit_spinning</span>
+</div>
+</div>
+</div>
+</div>
+</header>
+<div class="flex-1 overflow-y-auto p-6">
+<div class="max-w-[1600px] mx-auto">
+<div class="flex items-center justify-between mb-6 border-b border-[#1E293B] pb-4">
+<div class="font-mono">
+<div class="flex items-center gap-2 text-[10px] text-primary mb-1 uppercase tracking-[0.3em]">
+<span>root</span>
+<span>/</span>
+<span>config</span>
+<span>/</span>
+<span class="text-white">administration</span>
+</div>
+<h2 class="text-2xl font-black tracking-tighter text-white uppercase">Gestão do Sistema</h2>
+</div>
+<div class="flex gap-2">
+<button class="px-4 py-2 border border-[#1E293B] text-[10px] font-mono font-bold text-silver hover:bg-white/5 transition-all flex items-center gap-2 uppercase tracking-widest">
+<span class="material-symbols-outlined text-sm">download</span>
+                            Dump Logs
+                        </button>
+<button class="px-4 py-2 bg-primary text-navy-deep text-[10px] font-mono font-bold hover:brightness-110 transition-all flex items-center gap-2 uppercase tracking-widest">
+<span class="material-symbols-outlined text-sm">person_add</span>
+                            Provision Member
+                        </button>
+</div>
+</div>
+<div class="grid grid-cols-12 gap-6">
+<div class="col-span-2 space-y-1">
+<p class="text-[9px] font-mono text-slate-600 mb-3 uppercase tracking-widest">Filters // Section</p>
+<button class="w-full flex items-center gap-3 px-4 py-3 bg-white/5 border-r-2 border-primary text-white font-mono text-[11px] uppercase transition-all">
+<span class="material-symbols-outlined text-sm text-primary">group</span>
+                            Equipa
+                        </button>
+<button class="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-silver font-mono text-[11px] uppercase transition-all">
+<span class="material-symbols-outlined text-sm">shield_person</span>
+                            Permissões
+                        </button>
+<button class="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-silver font-mono text-[11px] uppercase transition-all">
+<span class="material-symbols-outlined text-sm">integration_instructions</span>
+                            Integrações
+                        </button>
+<button class="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-silver font-mono text-[11px] uppercase transition-all">
+<span class="material-symbols-outlined text-sm">encrypted</span>
+                            Segurança
+                        </button>
+<div class="mt-8 pt-4 border-t border-[#1E293B]">
+<p class="text-[9px] font-mono text-slate-600 mb-3 uppercase tracking-widest">Resource Allocation</p>
+<div class="ops-card p-4 space-y-4">
+<div>
+<div class="flex justify-between text-[9px] font-mono mb-1">
+<span>CPU LOAD</span>
+<span class="text-primary">24%</span>
+</div>
+<div class="w-full h-1 bg-navy-deep">
+<div class="bg-primary h-full" style="width: 24%"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-[9px] font-mono mb-1">
+<span>NETWORK</span>
+<span class="text-primary">1.2GB/s</span>
+</div>
+<div class="w-full h-1 bg-navy-deep">
+<div class="bg-primary/50 h-full" style="width: 60%"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="col-span-10 space-y-6">
+<div class="grid grid-cols-3 gap-6">
+<div class="ops-card p-5 border-l-4 border-primary alert-glow">
+<div class="flex justify-between items-start mb-4">
+<h3 class="text-[10px] font-mono font-bold text-silver uppercase tracking-[0.2em]">Status Operacional</h3>
+<span class="material-symbols-outlined text-primary text-lg">settings_heart</span>
+</div>
+<div class="font-mono">
+<p class="text-3xl font-black text-white">UPTIME: 99.9%</p>
+<p class="text-[10px] text-primary mt-1">342 DAYS WITHOUT INCIDENT</p>
+</div>
+</div>
+<div class="ops-card p-5 border-l-4 border-slate-600">
+<div class="flex justify-between items-start mb-4">
+<h3 class="text-[10px] font-mono font-bold text-silver uppercase tracking-[0.2em]">Métricas de Segurança</h3>
+<span class="material-symbols-outlined text-silver text-lg">shield</span>
+</div>
+<div class="font-mono">
+<p class="text-3xl font-black text-white">LOW RISK</p>
+<p class="text-[10px] text-green-500 mt-1">NO VULNERABILITIES DETECTED</p>
+</div>
+</div>
+<div class="ops-card p-5 border-l-4 border-primary">
+<div class="flex justify-between items-start mb-4">
+<h3 class="text-[10px] font-mono font-bold text-silver uppercase tracking-[0.2em]">Threads Ativas</h3>
+<span class="material-symbols-outlined text-primary text-lg">dynamic_form</span>
+</div>
+<div class="font-mono">
+<p class="text-3xl font-black text-white">1,402</p>
+<p class="text-[10px] text-primary mt-1">PEAK PERFORMANCE MODE</p>
+</div>
+</div>
+</div>
+<div class="ops-card">
+<div class="px-6 py-4 border-b border-[#1E293B] flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">data_object</span>
+<h3 class="font-mono text-xs font-bold text-white uppercase tracking-widest">Team Matrix // Access Logs</h3>
+</div>
+<div class="flex gap-2 font-mono">
+<span class="px-2 py-1 text-[9px] bg-white/5 border border-[#1E293B] text-silver uppercase">Filter: active_only</span>
+<span class="px-2 py-1 text-[9px] bg-white/5 border border-[#1E293B] text-silver uppercase">Sort: last_seen</span>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse font-mono-data">
+<thead>
+<tr class="text-[10px] uppercase tracking-widest text-slate-500 border-b border-[#1E293B] bg-navy-deep/50">
+<th class="px-6 py-4 font-bold">UID / Operator</th>
+<th class="px-6 py-4 font-bold">Encrypted_Email</th>
+<th class="px-6 py-4 font-bold">Access_Level</th>
+<th class="px-6 py-4 font-bold">Process_State</th>
+<th class="px-6 py-4 text-right font-bold">Binary_Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-[#1E293B]">
+<tr class="hover:bg-white/5 transition-colors group">
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 border border-primary/40 flex items-center justify-center bg-navy-deep text-primary overflow-hidden">
+<span class="material-symbols-outlined text-sm">hive</span>
+</div>
+<div>
+<p class="text-xs font-bold text-white uppercase">André Silva</p>
+<p class="text-[9px] text-slate-600">ID: 0x821A7</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-xs text-silver">A.SILVA@IMOOS.LOCAL</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="px-2 py-0.5 border border-primary/40 text-[9px] font-bold text-primary uppercase">SysAdmin</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-2">
+<div class="w-1.5 h-1.5 bg-primary alert-glow"></div>
+<span class="text-[10px] font-bold text-primary uppercase">Running</span>
+</div>
+</td>
+<td class="px-6 py-4 text-right whitespace-nowrap">
+<button class="px-2 py-1 border border-[#1E293B] hover:border-primary text-slate-500 hover:text-primary transition-all text-[10px]">
+                                                    EXEC_MOD
+                                                </button>
+</td>
+</tr>
+<tr class="hover:bg-white/5 transition-colors group">
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 border border-slate-600 flex items-center justify-center bg-navy-deep text-slate-500 overflow-hidden">
+<span class="material-symbols-outlined text-sm">scatter_plot</span>
+</div>
+<div>
+<p class="text-xs font-bold text-white uppercase">Sofia Costa</p>
+<p class="text-[9px] text-slate-600">ID: 0x44B21</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-xs text-silver">S.COSTA@IMOOS.LOCAL</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="px-2 py-0.5 border border-slate-700 text-[9px] font-bold text-silver uppercase">Manager</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-2">
+<div class="w-1.5 h-1.5 bg-primary alert-glow"></div>
+<span class="text-[10px] font-bold text-primary uppercase">Running</span>
+</div>
+</td>
+<td class="px-6 py-4 text-right whitespace-nowrap">
+<button class="px-2 py-1 border border-[#1E293B] hover:border-primary text-slate-500 hover:text-primary transition-all text-[10px]">
+                                                    EXEC_MOD
+                                                </button>
+</td>
+</tr>
+<tr class="hover:bg-white/5 transition-colors group">
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 border border-slate-700/30 flex items-center justify-center bg-navy-deep text-slate-700 overflow-hidden">
+<span class="material-symbols-outlined text-sm">hub</span>
+</div>
+<div>
+<p class="text-xs font-bold text-white uppercase">Paulo Freire</p>
+<p class="text-[9px] text-slate-600">ID: 0x112C9</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-xs text-silver">P.FREIRE@IMOOS.LOCAL</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="px-2 py-0.5 border border-slate-700 text-[9px] font-bold text-slate-500 uppercase">Operator</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-2">
+<div class="w-1.5 h-1.5 bg-slate-800"></div>
+<span class="text-[10px] font-bold text-slate-700 uppercase">Idle</span>
+</div>
+</td>
+<td class="px-6 py-4 text-right whitespace-nowrap">
+<button class="px-2 py-1 border border-[#1E293B] hover:border-primary text-slate-500 hover:text-primary transition-all text-[10px]">
+                                                    EXEC_MOD
+                                                </button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="ops-card">
+<div class="px-6 py-3 border-b border-[#1E293B] bg-navy-deep/30">
+<h3 class="font-mono text-[10px] font-bold text-primary uppercase tracking-[0.3em]">Logs de Auditoria // System_Feed</h3>
+</div>
+<div class="p-4 font-mono-data text-[10px] space-y-2 h-40 overflow-y-auto bg-navy-deep/20">
+<div class="flex gap-4">
+<span class="text-slate-600">[2024-05-20 14:22:10]</span>
+<span class="text-primary font-bold">INFO:</span>
+<span class="text-silver">User 0x821A7 updated ACL for integration cluster_04.</span>
+</div>
+<div class="flex gap-4">
+<span class="text-slate-600">[2024-05-20 14:18:05]</span>
+<span class="text-primary font-bold">WARN:</span>
+<span class="text-primary">Attempted unauthorized access from IP 192.168.1.104 blocked.</span>
+</div>
+<div class="flex gap-4">
+<span class="text-slate-600">[2024-05-20 14:15:33]</span>
+<span class="text-primary font-bold">INFO:</span>
+<span class="text-silver">System backup cycle completed. Checksum verified.</span>
+</div>
+<div class="flex gap-4">
+<span class="text-slate-600">[2024-05-20 14:10:01]</span>
+<span class="text-primary font-bold">INFO:</span>
+<span class="text-silver">Scaling policy applied: +2 instances in region-eu-west.</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<div class="fixed inset-0 pointer-events-none opacity-[0.03] z-50 pointer-events-none" style="background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06)); background-size: 100% 2px, 3px 100%;"></div>
+
+</body></html>

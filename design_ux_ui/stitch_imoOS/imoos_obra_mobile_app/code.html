@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-CV"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#00d4ff",
+                        "secondary": "#7c3aed",
+                        "background-light": "#f5f8f8",
+                        "background-dark": "#0a0a0f",
+                        "surface-dark": "#16161e",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "1rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .glass {
+            background: rgba(22, 22, 30, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 212, 255, 0.1);
+        }
+        .neon-glow-cyan {
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+        }
+        .neon-glow-purple {
+            box-shadow: 0 0 15px rgba(124, 58, 237, 0.3);
+        }
+        .active-tab {
+            background: linear-gradient(135deg, #00d4ff 0%, #7c3aed 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-dark text-slate-100 font-display selection:bg-primary/30">
+<div class="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden pb-24">
+<header class="sticky top-0 z-50 glass border-b border-primary/10 px-4 py-4 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center neon-glow-cyan">
+<span class="material-symbols-outlined text-white">construction</span>
+</div>
+<div>
+<h1 class="text-lg font-bold tracking-tight text-slate-100">Obra Mobile</h1>
+<div class="flex items-center gap-1.5">
+<span class="size-2 rounded-full bg-emerald-500 animate-pulse"></span>
+<span class="text-[10px] uppercase tracking-widest text-emerald-500 font-bold">Modo Offline</span>
+</div>
+</div>
+</div>
+<button class="flex items-center gap-2 bg-primary/10 border border-primary/30 px-4 py-2 rounded-full text-primary hover:bg-primary/20 transition-all neon-glow-cyan">
+<span class="material-symbols-outlined text-sm">sync</span>
+<span class="text-sm font-bold uppercase tracking-wider">Sincronizar</span>
+</button>
+</header>
+<main class="p-4 space-y-6">
+<div class="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+<div class="flex-1 min-w-[160px] glass rounded-xl p-4 border-l-4 border-primary">
+<p class="text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">Progresso Global</p>
+<div class="flex items-end justify-between">
+<span class="text-3xl font-bold text-slate-100">84%</span>
+<span class="text-primary text-xs font-bold bg-primary/10 px-2 py-0.5 rounded">+2.4%</span>
+</div>
+<div class="w-full bg-slate-800 h-1.5 rounded-full mt-3 overflow-hidden">
+<div class="bg-primary h-full w-[84%] shadow-[0_0_8px_rgba(0,212,255,0.8)]"></div>
+</div>
+</div>
+<div class="flex-1 min-w-[160px] glass rounded-xl p-4 border-l-4 border-secondary">
+<p class="text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">Clima Local</p>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary">wb_sunny</span>
+<span class="text-2xl font-bold text-slate-100">31°C</span>
+</div>
+<p class="text-slate-500 text-[10px] mt-2 font-medium">Céu Limpo • Humidade 42%</p>
+</div>
+</div>
+<section>
+<h2 class="text-slate-100 text-sm font-bold uppercase tracking-[0.2em] mb-4 px-1">Acesso Rápido</h2>
+<div class="grid grid-cols-2 gap-4">
+<button class="flex flex-col items-center justify-center gap-3 glass p-6 rounded-xl border border-primary/20 hover:border-primary/50 transition-all group active:scale-95">
+<div class="size-14 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+<span class="material-symbols-outlined text-primary text-3xl">assignment</span>
+</div>
+<span class="font-bold text-sm text-slate-200">Diário de Obra</span>
+</button>
+<button class="flex flex-col items-center justify-center gap-3 glass p-6 rounded-xl border border-secondary/20 hover:border-secondary/50 transition-all group active:scale-95">
+<div class="size-14 rounded-full bg-secondary/10 flex items-center justify-center group-hover:bg-secondary/20 transition-colors">
+<span class="material-symbols-outlined text-secondary text-3xl">fact_check</span>
+</div>
+<span class="font-bold text-sm text-slate-200">Inspeções</span>
+</button>
+<button class="flex flex-col items-center justify-center gap-3 glass p-6 rounded-xl border border-primary/20 hover:border-primary/50 transition-all group active:scale-95">
+<div class="size-14 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+<span class="material-symbols-outlined text-primary text-3xl">format_list_bulleted</span>
+</div>
+<span class="font-bold text-sm text-slate-200">Tarefas</span>
+</button>
+<button class="flex flex-col items-center justify-center gap-3 glass p-6 rounded-xl border border-secondary/20 hover:border-secondary/50 transition-all group active:scale-95">
+<div class="size-14 rounded-full bg-secondary/10 flex items-center justify-center group-hover:bg-secondary/20 transition-colors">
+<span class="material-symbols-outlined text-secondary text-3xl">add_a_photo</span>
+</div>
+<span class="font-bold text-sm text-slate-200">Enviar Fotos</span>
+</button>
+</div>
+</section>
+<section>
+<div class="flex items-center justify-between mb-4 px-1">
+<h2 class="text-slate-100 text-sm font-bold uppercase tracking-[0.2em]">Pendentes Hoje</h2>
+<span class="text-primary text-xs font-bold underline decoration-primary/30">Ver tudo</span>
+</div>
+<div class="space-y-3">
+<div class="glass p-4 rounded-xl flex items-center gap-4 border-l-4 border-amber-500">
+<div class="size-12 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-amber-500">warning</span>
+</div>
+<div class="flex-1">
+<p class="text-slate-200 font-bold text-sm">Verificação de Betão - Laje 4</p>
+<p class="text-slate-400 text-xs">Urgente • Em 2 horas</p>
+</div>
+<span class="material-symbols-outlined text-slate-500">chevron_right</span>
+</div>
+<div class="glass p-4 rounded-xl flex items-center gap-4 border-l-4 border-primary">
+<div class="size-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary">engineering</span>
+</div>
+<div class="flex-1">
+<p class="text-slate-200 font-bold text-sm">Relatório Semanal de Segurança</p>
+<p class="text-slate-400 text-xs">Aguardando envio • Offline</p>
+</div>
+<span class="material-symbols-outlined text-slate-500">chevron_right</span>
+</div>
+</div>
+</section>
+<section>
+<h2 class="text-slate-100 text-sm font-bold uppercase tracking-[0.2em] mb-4 px-1">Galeria Recente</h2>
+<div class="grid grid-cols-3 gap-2">
+<div class="aspect-square rounded-lg bg-cover bg-center border border-slate-800" data-alt="Canteiro de obras em construção avançada" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDBIrlDxX7-pbVwFXFby8LSPdgK_yBSUzbJemZOHXe0036p5NqD8lYnNmwfmqklCMqog3w4Y76hVdhx2DwqDCMpaPqO-iTZAgb8xPwzYgsXIXoAexVkC4NXVtmOcbe9L8_t4LvesW5EkQ88be6t8YiyRR2xXn1NV0h7lEK096ZDbzxbkwyOc-v_vlXSdT9OddxWBAEfP3TVni3EWeqQTwuoJx_DKQhcsRG7U35tEFX20L2E7DP4YI8fZPh0Je7b01lC3dxuxmMhy_Nz')"></div>
+<div class="aspect-square rounded-lg bg-cover bg-center border border-slate-800" data-alt="Estrutura de aço e betão moderna" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAYSyab__jGyD-wtMXu5hhtQDOS-quI0o20Se85-C3YNBKHUVBlmBFr4koop1Wxe_KWHDZdLRIrM8bZ4JKtUMjwUDufXXSY6OTvSfyJpXCQF0xvgLtklR3un37Xvk2qJMiyk9QoBC60IGYIr5lu5VfHj8lA8DGs-k4zRVHd7ijaiEZR6soulB688DOq84XI6yhaKrbUXAYriAA3JSz3KoTELNWFPcn9ps1YxcoGTGGNfxeiSC1WRhkPDQCRXoy6HJW6cZ54Zon2aaG2')"></div>
+<div class="aspect-square rounded-lg bg-primary/10 flex flex-col items-center justify-center border border-dashed border-primary/40 text-primary group active:bg-primary/20">
+<span class="material-symbols-outlined text-2xl">add</span>
+<span class="text-[10px] font-bold mt-1">NOVA</span>
+</div>
+</div>
+</section>
+</main>
+<nav class="fixed bottom-0 left-0 right-0 z-50 glass border-t border-primary/10 px-6 pb-6 pt-3 flex justify-between items-center">
+<a class="flex flex-col items-center gap-1 group" href="#">
+<span class="material-symbols-outlined text-primary transition-all group-active:scale-125 font-fill">home</span>
+<span class="text-[10px] font-bold text-primary uppercase tracking-tighter">Início</span>
+</a>
+<a class="flex flex-col items-center gap-1 group text-slate-500 hover:text-slate-300" href="#">
+<span class="material-symbols-outlined transition-all group-active:scale-125">apartment</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">Obras</span>
+</a>
+<div class="relative -top-8">
+<button class="size-16 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white shadow-2xl shadow-primary/40 ring-4 ring-background-dark active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-3xl">add</span>
+</button>
+</div>
+<a class="flex flex-col items-center gap-1 group text-slate-500 hover:text-slate-300" href="#">
+<span class="material-symbols-outlined transition-all group-active:scale-125">group</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">Equipa</span>
+</a>
+<a class="flex flex-col items-center gap-1 group text-slate-500 hover:text-slate-300" href="#">
+<span class="material-symbols-outlined transition-all group-active:scale-125">settings</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">Ajustes</span>
+</a>
+</nav>
+</div>
+</body></html>

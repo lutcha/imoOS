@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-PT"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ImoOS - PropTech &amp; ConstruTech em Cabo Verde</title>
+<!-- Google Fonts: Inter -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS v3 -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              primary: '#00d4ff',
+              purple: '#7C3AED',
+              pink: '#EC4899',
+              dark: '#0A0A0F',
+              glass: 'rgba(255, 255, 255, 0.03)',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          borderRadius: {
+            'custom': '8px',
+          },
+          animation: {
+            'glow-pulse': 'glow-pulse 3s infinite ease-in-out',
+            'float': 'float 6s infinite ease-in-out',
+          },
+          keyframes: {
+            'glow-pulse': {
+              '0%, 100%': { opacity: 0.5, transform: 'scale(1)' },
+              '50%': { opacity: 0.8, transform: 'scale(1.05)' },
+            },
+            'float': {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-20px)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+<style data-purpose="custom-layout">
+    body {
+      background-color: #0A0A0F;
+      color: #FFFFFF;
+      overflow-x: hidden;
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .neon-border-cyan {
+      box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+      border: 1px solid rgba(0, 212, 255, 0.5);
+    }
+    .text-gradient {
+      background: linear-gradient(to right, #00d4ff, #7C3AED, #EC4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .perspective-container {
+      perspective: 1000px;
+    }
+    .perspective-image {
+      transform: rotateY(-10deg) rotateX(5deg);
+      transition: transform 0.5s ease;
+    }
+    .perspective-image:hover {
+      transform: rotateY(0deg) rotateX(0deg);
+    }
+  </style>
+</head>
+<body class="font-sans antialiased">
+<!-- BEGIN: Navigation -->
+<nav class="fixed top-0 w-full z-50 glass-card border-b border-white/10" data-purpose="main-nav">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex justify-between h-20 items-center">
+<div class="flex items-center gap-2">
+<div class="w-10 h-10 bg-brand-primary rounded-custom flex items-center justify-center shadow-[0_0_15px_rgba(0,212,255,0.5)]">
+<span class="text-brand-dark font-extrabold text-xl">I</span>
+</div>
+<span class="text-2xl font-extrabold tracking-tighter">Imo<span class="text-brand-primary">OS</span></span>
+</div>
+<div class="hidden md:flex items-center space-x-8 text-sm font-medium">
+<a class="hover:text-brand-primary transition-colors" href="#">Soluções</a>
+<a class="hover:text-brand-primary transition-colors" href="#">Projetos</a>
+<a class="hover:text-brand-primary transition-colors" href="#">Preços</a>
+<a class="bg-brand-primary text-brand-dark px-6 py-2 rounded-custom font-bold hover:scale-105 transition-transform shadow-lg shadow-brand-primary/20" href="#">Login</a>
+</div>
+</div>
+</div>
+</nav>
+<!-- END: Navigation -->
+<main>
+<!-- BEGIN: Hero Section -->
+<section class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden" data-purpose="hero-section">
+<!-- Background Glows -->
+<div class="absolute top-1/4 -left-20 w-96 h-96 bg-brand-primary/20 rounded-full blur-[120px] animate-glow-pulse"></div>
+<div class="absolute bottom-1/4 -right-20 w-96 h-96 bg-brand-purple/20 rounded-full blur-[120px] animate-glow-pulse"></div>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+<div class="text-center mb-16">
+<h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-6">
+            A Revolução <span class="text-gradient">PropTech</span><br/>Chegou a Cabo Verde
+          </h1>
+<p class="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10">
+            A plataforma definitiva para gestão imobiliária e construção. Digitalize o seu portfólio, otimize obras e maximize vendas com tecnologia de ponta.
+          </p>
+<div class="flex flex-col sm:flex-row justify-center items-center gap-4">
+<button class="w-full sm:w-auto px-8 py-4 bg-brand-primary text-brand-dark font-bold rounded-custom hover:shadow-[0_0_25px_rgba(0,212,255,0.5)] transition-all">
+              Agendar Demonstração
+            </button>
+<button class="w-full sm:w-auto px-8 py-4 glass-card border-white/20 text-white font-bold rounded-custom hover:bg-white/10 transition-all">
+              Saber Mais
+            </button>
+</div>
+</div>
+<!-- 3D Dashboard Mockup -->
+<div class="relative max-w-5xl mx-auto animate-float" data-purpose="hero-mockup">
+<div class="absolute inset-0 bg-gradient-to-t from-brand-dark via-transparent to-transparent z-10 h-1/4 bottom-0"></div>
+<div class="glass-card rounded-xl p-2 border-white/10 overflow-hidden shadow-2xl">
+<img alt="ImoOS Dashboard" class="w-full h-auto rounded-lg" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAozhnvSxy0xjP18dzwSJsBkPRBhWGFTECukKyPI-ldcBtJxSiPRWFU395OZmSdVnwwUXEnHBAo1X7va9p3AlqPTCc254tpNwdNEaMKFGNUIKilkAoln15wxqixfRYAdp3nUimHaW9dXtoK6yuQ0F2640hGFwbvXeMroWtybDx1OHEhbDdbzVM1xPEYQhtqBI3cA7QxBZinYGeBiX6QSAdYjja2qwT-_K4KVN7Dr7tpBCSXTbc-2pRs1m1GRi527I6lg233hLxW94FM"/>
+</div>
+</div>
+</div>
+</section>
+<!-- END: Hero Section -->
+<!-- BEGIN: The Three Pillars -->
+<section class="py-24 bg-brand-dark relative" data-purpose="pillars-section">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="text-center mb-16">
+<h2 class="text-3xl md:text-5xl font-bold mb-4">Soluções 360º</h2>
+<div class="w-20 h-1.5 bg-brand-primary mx-auto rounded-full"></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<!-- Pillar 1: ConstruTech -->
+<div class="glass-card p-8 rounded-custom group hover:neon-border-cyan transition-all duration-500">
+<div class="w-14 h-14 mb-6 flex items-center justify-center rounded-xl bg-brand-primary/10 text-brand-primary group-hover:scale-110 transition-transform">
+<svg class="w-8 h-8" fill="none" stroke="currentColor" viewbox="24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"></path>
+</svg>
+</div>
+<h3 class="text-2xl font-bold mb-4">ConstruTech</h3>
+<p class="text-gray-400">Gestão completa de estaleiros, medições em tempo real e controlo de custos de construção.</p>
+</div>
+<!-- Pillar 2: PropTech -->
+<div class="glass-card p-8 rounded-custom group hover:border-brand-purple/50 hover:shadow-[0_0_15px_rgba(124,58,237,0.3)] transition-all duration-500">
+<div class="w-14 h-14 mb-6 flex items-center justify-center rounded-xl bg-brand-purple/10 text-brand-purple group-hover:scale-110 transition-transform">
+<svg class="w-8 h-8" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"></path>
+</svg>
+</div>
+<h3 class="text-2xl font-bold mb-4">PropTech</h3>
+<p class="text-gray-400">CRM imobiliário inteligente, gestão de leads e funis de vendas automatizados para brokers.</p>
+</div>
+<!-- Pillar 3: FinTech -->
+<div class="glass-card p-8 rounded-custom group hover:border-brand-pink/50 hover:shadow-[0_0_15px_rgba(236,72,153,0.3)] transition-all duration-500">
+<div class="w-14 h-14 mb-6 flex items-center justify-center rounded-xl bg-brand-pink/10 text-brand-pink group-hover:scale-110 transition-transform">
+<svg class="w-8 h-8" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"></path>
+</svg>
+</div>
+<h3 class="text-2xl font-bold mb-4">FinTech</h3>
+<p class="text-gray-400">Dashboard financeiro com projeções de ROI, faturação eletrónica e integração bancária.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- END: The Three Pillars -->
+<!-- BEGIN: Feature Showcase -->
+<section class="py-24 overflow-hidden" data-purpose="feature-showcase">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex flex-col lg:flex-row items-center gap-16">
+<div class="lg:w-1/2">
+<h2 class="text-4xl md:text-5xl font-bold mb-6 leading-tight">Visão Executiva em <span class="text-brand-primary">Tempo Real</span></h2>
+<p class="text-gray-400 text-lg mb-8">
+              Tome decisões baseadas em dados. A nossa dashboard executiva oferece uma vista aérea de todos os seus ativos em Cabo Verde, desde o progresso da fundação até à entrega das chaves.
+            </p>
+<ul class="space-y-4 mb-8">
+<li class="flex items-center gap-3">
+<span class="w-5 h-5 flex items-center justify-center rounded-full bg-brand-primary text-brand-dark">✓</span>
+<span class="text-gray-200">Mapas interativos de propriedades</span>
+</li>
+<li class="flex items-center gap-3">
+<span class="w-5 h-5 flex items-center justify-center rounded-full bg-brand-primary text-brand-dark">✓</span>
+<span class="text-gray-200">Alertas críticos de orçamento</span>
+</li>
+<li class="flex items-center gap-3">
+<span class="w-5 h-5 flex items-center justify-center rounded-full bg-brand-primary text-brand-dark">✓</span>
+<span class="text-gray-200">Relatórios PDF automáticos para investidores</span>
+</li>
+</ul>
+</div>
+<div class="lg:w-1/2 perspective-container">
+<div class="perspective-image relative">
+<div class="absolute -inset-4 bg-brand-primary/10 blur-2xl rounded-full"></div>
+<img alt="Dashboard Analytics" class="relative z-10 rounded-xl glass-card p-1 shadow-2xl border border-white/20" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDbO1MQ4QPARxIyx5wTjFef9rWRUuywL73KdkKxrW9eEK9t5lNMCN1SvFleUpN8uF8zL9ftQTht3HHgGAsl2PureQEbO9wgOj6f17cAyg9RZRdYcXjSv7vecLdxw2jz1ANmdox8WkKp8DalkCzKLjPYI2MbLqOWRNOt82q7so7m7l74c2M4OIy3klBo5tFF8fq81UcriN2RmvFsbaaDcD5HYe7GM5GS7F1OvmscUDRzEFG93mAbB0l4Zxw3-rcmDFU5_Rua57mPLZRN"/>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- END: Feature Showcase -->
+<!-- BEGIN: Trust & Scale -->
+<section class="py-20 border-y border-white/5" data-purpose="trust-section">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-12 text-center">
+<div data-purpose="counter-item">
+<p class="text-5xl font-extrabold text-white mb-2">120<span class="text-brand-primary">+</span></p>
+<p class="text-gray-400 uppercase tracking-widest text-sm">Projetos Geridos</p>
+</div>
+<div data-purpose="counter-item">
+<p class="text-5xl font-extrabold text-white mb-2">2K<span class="text-brand-purple">+</span></p>
+<p class="text-gray-400 uppercase tracking-widest text-sm">Unidades Vendidas</p>
+</div>
+<div data-purpose="counter-item">
+<p class="text-5xl font-extrabold text-white mb-2">24h</p>
+<p class="text-gray-400 uppercase tracking-widest text-sm">Suporte Técnico Local</p>
+</div>
+</div>
+</div>
+</section>
+<!-- END: Trust & Scale -->
+<!-- BEGIN: Call to Action -->
+<section class="py-24 relative overflow-hidden" data-purpose="cta-section">
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+<div class="w-[800px] h-[800px] bg-brand-primary/5 rounded-full blur-[150px]"></div>
+</div>
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+<div class="glass-card p-10 md:p-16 rounded-3xl border-brand-primary/20 shadow-2xl">
+<h2 class="text-4xl md:text-5xl font-extrabold mb-6">Pronto para o Futuro?</h2>
+<p class="text-gray-400 text-lg mb-10 max-w-xl mx-auto">
+            Junte-se às principais empresas de Cabo Verde que já estão a transformar o mercado com a ImoOS. Peça um orçamento personalizado hoje.
+          </p>
+<form class="flex flex-col md:flex-row gap-4 max-w-lg mx-auto" data-purpose="lead-capture">
+<input class="flex-grow px-6 py-4 rounded-custom bg-white/5 border border-white/10 text-white focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none transition-all" placeholder="O seu e-mail profissional" required="" type="email"/>
+<button class="bg-brand-primary text-brand-dark px-8 py-4 rounded-custom font-bold hover:shadow-[0_0_20px_rgba(0,212,255,0.6)] transition-all" type="submit">
+              Começar Agora
+            </button>
+</form>
+<p class="mt-4 text-xs text-gray-500">Sem compromissos. Sem taxas de configuração ocultas.</p>
+</div>
+</div>
+</section>
+<!-- END: Call to Action -->
+</main>
+<!-- BEGIN: Footer -->
+<footer class="bg-brand-dark py-12 border-t border-white/5" data-purpose="main-footer">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex flex-col md:flex-row justify-between items-center gap-8">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 bg-brand-primary rounded-custom flex items-center justify-center">
+<span class="text-brand-dark font-extrabold text-sm">I</span>
+</div>
+<span class="text-xl font-bold tracking-tighter">Imo<span class="text-brand-primary">OS</span></span>
+</div>
+<div class="flex gap-8 text-sm text-gray-500">
+<a class="hover:text-brand-primary transition-colors" href="#">Termos</a>
+<a class="hover:text-brand-primary transition-colors" href="#">Privacidade</a>
+<a class="hover:text-brand-primary transition-colors" href="#">Contactos</a>
+</div>
+<div class="text-sm text-gray-600">
+          © 2024 ImoOS Cabo Verde. Todos os direitos reservados.
+        </div>
+</div>
+</div>
+</footer>
+<!-- END: Footer -->
+</body></html>

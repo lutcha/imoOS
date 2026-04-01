@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ImoOS | Diário de Obra Consolidado</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#00d4ff",
+                        "background-light": "#f5f8f8",
+                        "background-dark": "#0A0A0F",
+                        "slate-950": "#050508",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .neon-glow {
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0A0A0F;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1f2937;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen">
+<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+<header class="sticky top-0 z-50 glass border-b border-white/10 px-6 py-3 flex items-center justify-between">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-3">
+<div class="size-9 bg-primary flex items-center justify-center rounded-lg neon-glow">
+<span class="material-symbols-outlined text-slate-950 font-bold">domain</span>
+</div>
+<div>
+<h2 class="text-slate-100 text-lg font-extrabold leading-tight tracking-tight">ImoOS <span class="text-primary">PRO</span></h2>
+<p class="text-xs text-primary/70 font-medium">Consolidado v2.4</p>
+</div>
+</div>
+<nav class="hidden lg:flex items-center gap-6">
+<a class="text-slate-400 hover:text-primary text-sm font-semibold transition-colors" href="#">Dashboard</a>
+<a class="text-primary text-sm font-semibold border-b-2 border-primary pb-1" href="#">Diário de Obra</a>
+<a class="text-slate-400 hover:text-primary text-sm font-semibold transition-colors" href="#">Equipe</a>
+<a class="text-slate-400 hover:text-primary text-sm font-semibold transition-colors" href="#">Relatórios</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden md:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xl">search</span>
+<input class="bg-white/5 border border-white/10 rounded-full pl-10 pr-4 py-2 text-sm w-64 focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all" placeholder="Buscar registros..."/>
+</div>
+<button class="glass p-2 rounded-lg text-slate-300 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="h-8 w-[1px] bg-white/10 mx-2"></div>
+<div class="flex items-center gap-3">
+<div class="text-right hidden sm:block">
+<p class="text-xs font-bold text-slate-100">Eng. Ricardo Silva</p>
+<p class="text-[10px] text-slate-500 uppercase tracking-widest">Master Admin</p>
+</div>
+<div class="size-10 rounded-full border-2 border-primary/30 p-0.5">
+<img class="w-full h-full rounded-full object-cover" data-alt="User profile avatar engineer" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSIMEafqC0F8wxZ34YB-tuC0_ZnUbSeq6FSuK2qgFoYWqqERWQzgHMUzpYQxZKqTaF57GZB78tsmXjvBWRrnV1416wyCcf59M6w6uR6cBVrBrR2JzBr_feNWfP5Th-4hjPKSn1Jjo47Y9xnfGnNMGWclySPFjVfd80chtP94duJA2DcZDofLqEbuHkEiacBEErVVdQQAmbb8m-nREa_2qgHeMCbLRZTpwqnESvNoxih4KJ--9_X5ZrCKgG3_Gjsq54gHYoI0w-Qugt"/>
+</div>
+</div>
+</div>
+</header>
+<main class="flex-1 flex flex-col lg:flex-row gap-6 p-6 max-w-[1600px] mx-auto w-full">
+<div class="flex-1 flex flex-col gap-6">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<h1 class="text-3xl font-black text-slate-100 tracking-tight">Diário de Obra</h1>
+<p class="text-slate-400 text-sm mt-1">Linha do tempo operacional: Edifício Sky Tower Residence</p>
+</div>
+<div class="flex gap-2">
+<button class="glass px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-white/5 transition-all">
+<span class="material-symbols-outlined text-lg">filter_list</span> Filtrar
+                        </button>
+<button class="bg-primary hover:bg-primary/80 text-slate-950 px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 neon-glow transition-all">
+<span class="material-symbols-outlined text-lg font-bold">add</span> Novo Registro
+                        </button>
+</div>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+<div class="glass p-4 rounded-xl">
+<p class="text-slate-500 text-[10px] uppercase font-bold tracking-widest">Registros Hoje</p>
+<h3 class="text-2xl font-black text-primary mt-1">12</h3>
+</div>
+<div class="glass p-4 rounded-xl">
+<p class="text-slate-500 text-[10px] uppercase font-bold tracking-widest">Sincronizados</p>
+<h3 class="text-2xl font-black text-green-400 mt-1">142</h3>
+</div>
+<div class="glass p-4 rounded-xl">
+<p class="text-slate-500 text-[10px] uppercase font-bold tracking-widest">Pendentes</p>
+<h3 class="text-2xl font-black text-amber-400 mt-1">03</h3>
+</div>
+<div class="glass p-4 rounded-xl">
+<p class="text-slate-500 text-[10px] uppercase font-bold tracking-widest">Clima Atual</p>
+<div class="flex items-center gap-2 mt-1">
+<span class="material-symbols-outlined text-primary">wb_sunny</span>
+<h3 class="text-2xl font-black text-slate-100">28°C</h3>
+</div>
+</div>
+</div>
+<div class="space-y-6">
+<div class="relative pl-8 border-l border-white/10 space-y-8">
+<div class="relative">
+<div class="absolute -left-[41px] top-0 size-6 bg-primary rounded-full border-4 border-background-dark neon-glow"></div>
+<div class="glass p-5 rounded-2xl space-y-4 hover:border-primary/30 transition-all group">
+<div class="flex flex-wrap items-center justify-between gap-4">
+<div class="flex items-center gap-3">
+<img class="size-10 rounded-full object-cover border border-white/20" data-alt="Avatar of author for site log" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUpW5hQGVca8M_VZMGJpgvd-BxA7qA7XOHri17-DP8b894VbO0f1bfF5eCamx2L3nTcaoAGFQPLgCuZB6GORMU7wCrMIp6UbJ76OmDkSootPMbWmEl85qCIGT2fA-x46PRbO-GALiAywQ9S0iW5iQLyCnMM7tCTpYPmBQV1JBL00TosQ20SWacn84hxT4LFEmENj6pwUDifc0X14MxVGDGS3DY_ADYoTQfWoYz6ptqrsr-J238B1MI5b8E2iSZxZnXQvgkG6nZQbW-"/>
+<div>
+<h4 class="text-sm font-bold text-slate-100">Carlos Eduardo</h4>
+<p class="text-xs text-slate-500">Mestre de Obras • Hoje, 09:45</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="px-3 py-1 bg-green-500/10 text-green-400 text-[10px] font-bold rounded-full border border-green-500/20 flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">check_circle</span> SINCRONIZADO
+                                        </span>
+<button class="text-slate-500 hover:text-white transition-colors">
+<span class="material-symbols-outlined">more_horiz</span>
+</button>
+</div>
+</div>
+<div class="bg-white/5 p-4 rounded-xl border border-white/5">
+<p class="text-sm text-slate-300 leading-relaxed">
+                                        Conclusão da concretagem da laje do 15º pavimento. Teste de slump realizado conforme NBR. Início da cura úmida e limpeza do canteiro. Sem intercorrências de segurança.
+                                    </p>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+<div class="aspect-square rounded-xl overflow-hidden border border-white/10">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="Construction site concrete pouring progress" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjmY-CDiLYeTek7hgpKuITvfCDkRJ4iyGi3anckOAM6_PwUi4YrhHJcWY5i-I7-ybH09jLY6hEI5LlA_3Fww8XnGS9mE6pPAPFnRIUvCeg39cVtlTmI4styxXh8gW7Pcf6QsNNOBD4McGUu7CTYs6i1U_0vfA0jCjuL8Hg8PjaDp7nk2OQUKamu-5uG_Fg9uiat7y3IwCMjffkuy4pt5zWJhWbrJapfdrrzRpO6jnSThBWkSWAGvNElrob66M0F907EAs6aH4enk23"/>
+</div>
+<div class="aspect-square rounded-xl overflow-hidden border border-white/10">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="Detail of steel reinforcements in slab" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBmkPsdW6UB5VY5ce59eTTysJYnfOX_fsuADp3RnVs8AsjtfAQc8-Os_P96nGe0iizCSewGocJVntfYGMMNUVFRyr0xPFHzLWl5wdwJU5D6t6qnVRhcwBie17JpW8aCpGFEIHvlJzO6qTeVFdQ_st2T6NFjWw3B-Nsff0yVRYE4ixzUelf0CZoJ33mamDD2u_AF3bMSbulfpPr5VCQSX_XM8ClG6mpa9zZbpdrRqNsmMCnRzMR9GHgijRIknz9QCWI6cCYQkdymaoVU"/>
+</div>
+<div class="aspect-square rounded-xl overflow-hidden border border-white/10">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="Worker using vibrator on concrete" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCwIGml_dmTZ0vllbVDXDnBPooVSSq0AxZdzkZUy0xvwwWalmpWA3qO-IaxhoOdO3e4-fNO7cfeYKRAyybytvpaVAs3C1aixeCyXEikzB8faLlGBGHvELKJy7ZAml856D77SARXuPfIYUvzhhsS701h-1Qp3ajNri3j6gjT0gRNh92OjaanSEUX-b4Cs7J8gRqL0zkufcSiarnl3pmSRwlkKaBBm4ughG9WBtVzoGrS1aJnj-ddLTcuR4F8VbAtuDxrtu5Py-YIKuAo"/>
+</div>
+<div class="aspect-square rounded-xl overflow-hidden border border-white/10 bg-slate-800 flex items-center justify-center text-slate-400 text-xs font-bold">
+                                        +5 FOTOS
+                                    </div>
+</div>
+<div class="flex flex-wrap items-center gap-4 pt-2 border-t border-white/5">
+<div class="flex items-center gap-1.5 text-xs text-slate-500">
+<span class="material-symbols-outlined text-base">group</span>
+<span>Equipe: 24 pax</span>
+</div>
+<div class="flex items-center gap-1.5 text-xs text-slate-500">
+<span class="material-symbols-outlined text-base">cloud</span>
+<span>Nublado</span>
+</div>
+<div class="flex items-center gap-1.5 text-xs text-slate-500">
+<span class="material-symbols-outlined text-base">warning</span>
+<span class="text-amber-400">01 Observação</span>
+</div>
+</div>
+</div>
+</div>
+<div class="relative">
+<div class="absolute -left-[41px] top-0 size-6 bg-amber-500 rounded-full border-4 border-background-dark"></div>
+<div class="glass p-5 rounded-2xl space-y-4 hover:border-amber-500/30 transition-all">
+<div class="flex flex-wrap items-center justify-between gap-4">
+<div class="flex items-center gap-3">
+<img class="size-10 rounded-full object-cover border border-white/20" data-alt="Avatar of supervisor for site log" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmbdkxGMTnb4YYIvVXY_Hlo10QEEOUlQQ_0Yg4KPHTj3fEU8W73AENSpu6nfQf2iDvDakuSQG7PkMVoMVgLMtwNZHrTBHa43Nxz7wdoqjnWKwJqxCeMR6FU9URPSnQVcMlPNGLlhdF9EsMokUs1VGH4ny6SPxL0pdTSf6m567aJTHr7Kt5aIVIkVBUzpwMjoSA9m-hzJGEKYf0Gz3_IWLIQ9KRmwhYsfoj-9FLEIT4ISYDpg4A0qbEJkvFaVBdhn9AQkq8K_-cw9jt"/>
+<div>
+<h4 class="text-sm font-bold text-slate-100">Felipe Mendes</h4>
+<p class="text-xs text-slate-500">Técnico de Segurança • Ontem, 16:20</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="px-3 py-1 bg-amber-500/10 text-amber-500 text-[10px] font-bold rounded-full border border-amber-500/20 flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">sync</span> PENDENTE
+                                        </span>
+</div>
+</div>
+<div class="bg-white/5 p-4 rounded-xl border border-white/5">
+<p class="text-sm text-slate-300 leading-relaxed">
+                                        Inspeção de rotina nos equipamentos de proteção coletiva (EPC) do setor norte. Identificada necessidade de reforço nas guardas de corpo. Equipe notificada para correção imediata.
+                                    </p>
+</div>
+<div class="flex flex-wrap items-center gap-4 pt-2 border-t border-white/5">
+<div class="flex items-center gap-1.5 text-xs text-slate-500">
+<span class="material-symbols-outlined text-base">group</span>
+<span>Equipe: 02 pax</span>
+</div>
+<div class="flex items-center gap-1.5 text-xs text-slate-500">
+<span class="material-symbols-outlined text-base">thermostat</span>
+<span>31°C</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<aside class="w-full lg:w-96 flex flex-col gap-6">
+<div class="glass rounded-2xl overflow-hidden">
+<div class="p-5 border-b border-white/10 bg-white/5">
+<h3 class="font-bold text-slate-100 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">analytics</span>
+                            Performance da Obra
+                        </h3>
+</div>
+<div class="p-5 space-y-6">
+<div class="space-y-2">
+<div class="flex justify-between text-xs">
+<span class="text-slate-400">Conformidade Geral</span>
+<span class="text-primary font-bold">94.2%</span>
+</div>
+<div class="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+<div class="h-full bg-primary neon-glow rounded-full" style="width: 94.2%"></div>
+</div>
+</div>
+<div class="space-y-4">
+<h4 class="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Principais Ocorrências</h4>
+<div class="space-y-3">
+<div class="flex items-start gap-3">
+<div class="size-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary text-lg">plumbing</span>
+</div>
+<div class="flex-1">
+<p class="text-xs font-bold text-slate-100">Instalações Hidráulicas</p>
+<p class="text-[10px] text-slate-500">4 registros pendentes esta semana</p>
+</div>
+</div>
+<div class="flex items-start gap-3">
+<div class="size-8 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-amber-500 text-lg">electric_bolt</span>
+</div>
+<div class="flex-1">
+<p class="text-xs font-bold text-slate-100">Infra Elétrica</p>
+<p class="text-[10px] text-slate-500">Atraso na entrega de eletrodutos</p>
+</div>
+</div>
+</div>
+</div>
+<div class="pt-4 border-t border-white/10">
+<h4 class="text-[10px] uppercase font-bold text-slate-500 tracking-widest mb-4">Inspeções Críticas</h4>
+<div class="glass rounded-xl p-3 flex items-center justify-between border-l-4 border-l-primary">
+<div>
+<p class="text-xs font-bold text-slate-100">Teste de Estanqueidade</p>
+<p class="text-[10px] text-slate-500">Bloco A - Pav. 12</p>
+</div>
+<span class="material-symbols-outlined text-slate-500">chevron_right</span>
+</div>
+</div>
+</div>
+</div>
+<div class="glass rounded-2xl p-5 space-y-4">
+<h3 class="font-bold text-slate-100">Localização do Canteiro</h3>
+<div class="aspect-video rounded-xl bg-slate-800 overflow-hidden relative border border-white/10">
+<div class="absolute inset-0 bg-cover bg-center opacity-60" data-location="São Paulo, Brazil" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCGePFbNqLKXS6NzYWt3tnaW7em1DouRcMqs_mUW81jy03SAds_7RtwW6jPRNS2y3MLbKV_tCw-OpJnazP2vEbJ-MTcKB7k_qyPUz-De7u_Llc1f6yHtcAURGa5Dp1oN3IXkom66hbZ87Z4mKmZMZAM2T9cqDHThpfTtwGfm62vkQhCedSmsHVIKs713dxadmsSOWTFmu8GoVs82X0k3TQeYFW_2nRTtIC9TYdNd0qLWirQZnXJlyxzt2XSRmZA5GT9FIR_nfD21YsU');"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 to-transparent"></div>
+<div class="absolute bottom-3 left-3 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-lg">location_on</span>
+<span class="text-[10px] text-slate-200 font-medium">Av. Paulista, 1500 - SP</span>
+</div>
+</div>
+</div>
+<div class="bg-primary/5 border border-primary/20 rounded-2xl p-5 text-center">
+<p class="text-slate-100 text-sm font-bold">Precisa de um relatório completo?</p>
+<p class="text-slate-400 text-xs mt-1 mb-4">Gere o PDF consolidado de todo o período da obra em segundos.</p>
+<button class="w-full bg-primary/20 hover:bg-primary/30 text-primary py-2 rounded-lg text-xs font-black transition-all border border-primary/30">
+                        EXPORTAR PDF
+                    </button>
+</div>
+</aside>
+</main>
+<button class="fixed bottom-8 right-8 size-14 bg-primary text-slate-950 rounded-full flex items-center justify-center neon-glow shadow-2xl hover:scale-110 transition-transform active:scale-95 z-40 group">
+<span class="material-symbols-outlined text-3xl font-black">edit_square</span>
+<span class="absolute right-16 bg-slate-900 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-white/10">Novo Registro</span>
+</button>
+</div>
+</body></html>

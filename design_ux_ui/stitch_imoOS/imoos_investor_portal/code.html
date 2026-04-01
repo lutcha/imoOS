@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-br"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#00d4ff",
+                        "secondary": "#7c3aed",
+                        "background-light": "#f5f8f8",
+                        "background-dark": "#0a0a0f",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glow-border {
+            position: relative;
+        }
+        .glow-border::after {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            background: linear-gradient(45deg, #00d4ff, #7c3aed);
+            border-radius: inherit;
+            z-index: -1;
+            opacity: 0.3;
+        }
+        .neon-text {
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 selection:bg-primary/30">
+<div class="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden">
+<header class="flex items-center justify-between border-b border-white/10 bg-background-dark/80 backdrop-blur-md sticky top-0 z-50 px-6 lg:px-10 py-4">
+<div class="flex items-center gap-3">
+<div class="size-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-background-dark font-bold">rocket_launch</span>
+</div>
+<h2 class="text-xl font-black tracking-tighter uppercase italic">Imo<span class="text-primary">OS</span></h2>
+</div>
+<div class="flex flex-1 justify-end items-center gap-6">
+<nav class="hidden md:flex gap-8 text-sm font-medium text-slate-400">
+<a class="hover:text-primary transition-colors text-primary" href="#">Dashboard</a>
+<a class="hover:text-primary transition-colors" href="#">Portfólio</a>
+<a class="hover:text-primary transition-colors" href="#">Mercado</a>
+<a class="hover:text-primary transition-colors" href="#">Suporte</a>
+</nav>
+<div class="flex items-center gap-4">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">search</span>
+<input class="bg-white/5 border border-white/10 rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-primary/50 w-64 transition-all" placeholder="Buscar ativos..." type="text"/>
+</div>
+<button class="p-2 rounded-lg glass hover:bg-white/10 transition-all relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 size-2 bg-primary rounded-full shadow-[0_0_8px_rgba(0,212,255,1)]"></span>
+</button>
+<div class="size-10 rounded-full border-2 border-secondary/50 p-0.5 overflow-hidden">
+<img class="w-full h-full object-cover rounded-full" data-alt="User profile picture with professional look" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAVhc7pVt57nfYCnGk1lvv-5k0WxxBqX5lA0nB7T9S9uQUbZNCXlwBmaEsD7bK2zR-mH6XR6XZb7ERV0KDgJMB3n9eWENMjYFjdQkBpPDXWeE_--Ozeqg2fCE-Zo-sencCsoVrQnDIcKBqhgXdI7h6Tb7vee2J-ApGYgwNAfSy82mmjsDBYcHrZy9jqAx5PiRwpoV5hDYiu_RqMjd-B9xVN8iaeF082M5otCOGys-KHH4k22FjMF1IXkqR3O3z5m9ZyYn9pVUKAtVmN"/>
+</div>
+</div>
+</div>
+</header>
+<main class="flex-1 px-6 lg:px-10 py-8 max-w-[1600px] mx-auto w-full">
+<div class="mb-10">
+<h1 class="text-4xl font-black tracking-tight mb-2">Dashboard do <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Investidor</span></h1>
+<p class="text-slate-400 font-medium">Controle total sobre seus ativos imobiliários tokenizados.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+<div class="glass p-6 rounded-xl border-l-4 border-primary shadow-2xl shadow-primary/5">
+<div class="flex justify-between items-start mb-4">
+<p class="text-slate-400 text-sm font-bold uppercase tracking-wider">Capital Investido</p>
+<span class="material-symbols-outlined text-primary">account_balance_wallet</span>
+</div>
+<p class="text-3xl font-black text-slate-100 mb-1 leading-none">R$ 2.450.000</p>
+<div class="flex items-center gap-2">
+<span class="text-primary text-sm font-bold bg-primary/10 px-2 py-0.5 rounded">+12.4%</span>
+<span class="text-slate-500 text-xs italic">vs. último mês</span>
+</div>
+</div>
+<div class="glass p-6 rounded-xl border-l-4 border-secondary shadow-2xl shadow-secondary/5">
+<div class="flex justify-between items-start mb-4">
+<p class="text-slate-400 text-sm font-bold uppercase tracking-wider">Retorno Projetado (IRR)</p>
+<span class="material-symbols-outlined text-secondary">trending_up</span>
+</div>
+<p class="text-3xl font-black text-slate-100 mb-1 leading-none">18.5% <span class="text-sm font-normal text-slate-500">a.a.</span></p>
+<div class="flex items-center gap-2">
+<span class="text-secondary text-sm font-bold bg-secondary/10 px-2 py-0.5 rounded">+2.1%</span>
+<span class="text-slate-500 text-xs italic">meta superada</span>
+</div>
+</div>
+<div class="glass p-6 rounded-xl border-l-4 border-white/20 shadow-2xl">
+<div class="flex justify-between items-start mb-4">
+<p class="text-slate-400 text-sm font-bold uppercase tracking-wider">Próxima Distribuição</p>
+<span class="material-symbols-outlined text-slate-400">calendar_today</span>
+</div>
+<p class="text-3xl font-black text-slate-100 mb-1 leading-none">12 Out 2024</p>
+<div class="flex items-center gap-2">
+<span class="text-slate-100 text-sm font-bold bg-white/10 px-2 py-0.5 rounded">Previsão: R$ 14.200</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+<div class="lg:col-span-8 flex flex-col gap-6">
+<div class="glass rounded-xl p-8 relative overflow-hidden group">
+<div class="absolute top-0 right-0 w-64 h-64 bg-primary/10 blur-[120px] rounded-full pointer-events-none"></div>
+<div class="flex items-center justify-between mb-8">
+<div>
+<h3 class="text-xl font-bold">Valor da Participação</h3>
+<p class="text-slate-400 text-sm">Performance histórica do portfólio</p>
+</div>
+<div class="flex gap-2">
+<button class="px-3 py-1 rounded text-xs font-bold glass bg-white/5 border-primary/40 text-primary">1A</button>
+<button class="px-3 py-1 rounded text-xs font-bold glass hover:bg-white/5 transition-colors">5A</button>
+<button class="px-3 py-1 rounded text-xs font-bold glass hover:bg-white/5 transition-colors">MAX</button>
+</div>
+</div>
+<div class="relative h-[300px] w-full">
+<svg class="w-full h-full preserve-3d" viewbox="0 0 1000 400">
+<defs>
+<lineargradient id="grad-line" x1="0%" x2="100%" y1="0%" y2="0%">
+<stop offset="0%" stop-color="#00d4ff"></stop>
+<stop offset="100%" stop-color="#7c3aed"></stop>
+</lineargradient>
+<lineargradient id="grad-fill" x1="0%" x2="0%" y1="0%" y2="100%">
+<stop offset="0%" stop-color="#00d4ff" stop-opacity="0.2"></stop>
+<stop offset="100%" stop-color="#00d4ff" stop-opacity="0"></stop>
+</lineargradient>
+</defs>
+<path d="M0,350 Q100,340 200,280 T400,200 T600,220 T800,100 T1000,50 L1000,400 L0,400 Z" fill="url(#grad-fill)"></path>
+<path class="drop-shadow-[0_0_8px_rgba(0,212,255,0.8)]" d="M0,350 Q100,340 200,280 T400,200 T600,220 T800,100 T1000,50" fill="none" stroke="url(#grad-line)" stroke-linecap="round" stroke-width="4"></path>
+<circle class="animate-pulse" cx="200" cy="280" fill="#00d4ff" r="5"></circle>
+<circle cx="400" cy="200" fill="#00d4ff" r="5"></circle>
+<circle cx="800" cy="100" fill="#7c3aed" r="5"></circle>
+<circle class="shadow-lg shadow-secondary/50" cx="1000" cy="50" fill="#7c3aed" r="6"></circle>
+</svg>
+<div class="flex justify-between mt-4 text-[10px] uppercase font-bold text-slate-500 tracking-widest">
+<span>Jan</span><span>Mar</span><span>Mai</span><span>Jul</span><span>Set</span><span>Nov</span><span>Dez</span>
+</div>
+</div>
+</div>
+<div class="glass rounded-xl p-0 overflow-hidden">
+<div class="flex border-b border-white/10">
+<button class="px-8 py-4 text-sm font-bold border-b-2 border-primary text-primary">Resumo</button>
+<button class="px-8 py-4 text-sm font-medium text-slate-400 hover:text-slate-100 transition-colors">Documentos</button>
+<button class="px-8 py-4 text-sm font-medium text-slate-400 hover:text-slate-100 transition-colors">Transações</button>
+</div>
+<div class="p-6">
+<table class="w-full text-left">
+<thead>
+<tr class="text-slate-500 text-xs font-black uppercase tracking-widest">
+<th class="pb-4">Ativo</th>
+<th class="pb-4">Data</th>
+<th class="pb-4">Status</th>
+<th class="pb-4 text-right">Valor</th>
+</tr>
+</thead>
+<tbody class="text-sm font-medium divide-y divide-white/5">
+<tr>
+<td class="py-4 flex items-center gap-3">
+<div class="size-8 rounded bg-primary/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-sm">apartment</span>
+</div>
+                                            Skyline Towers - Unidade 402
+                                        </td>
+<td class="py-4 text-slate-400 text-xs">15 Set 2024</td>
+<td class="py-4"><span class="px-2 py-1 rounded-full bg-green-500/10 text-green-400 text-[10px] font-bold uppercase tracking-tight">Integralizado</span></td>
+<td class="py-4 text-right font-bold">R$ 450.000</td>
+</tr>
+<tr>
+<td class="py-4 flex items-center gap-3">
+<div class="size-8 rounded bg-secondary/20 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-sm">home_work</span>
+</div>
+                                            Vila Nova Corporate
+                                        </td>
+<td class="py-4 text-slate-400 text-xs">02 Ago 2024</td>
+<td class="py-4"><span class="px-2 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-tight">Em Processo</span></td>
+<td class="py-4 text-right font-bold">R$ 1.200.000</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="lg:col-span-4 flex flex-col gap-6">
+<div class="glass rounded-xl p-6 glow-border">
+<div class="flex items-center justify-between mb-6">
+<h3 class="text-lg font-bold">Progresso de Obras</h3>
+<span class="text-xs font-bold text-primary px-2 py-1 rounded bg-primary/10">Ao vivo</span>
+</div>
+<div class="space-y-6">
+<div class="relative group cursor-pointer overflow-hidden rounded-lg h-40">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="Under construction modern building showing concrete structure" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQToOabFkIf3YISjN9c4fukbfxe1kq3I2mydUTrYff4zbYhBhA7TSKnAR69bj5bcGMFxJgP75a0l4fj0wNuk_l-O5-6hlNfU9k-R0lGeFZfFuZT4zKgZi5K0k5-zYzuZce4Z3SYcR-Ghv90ktvmxkTO1pJ1IQe4vxZYE-M81kq8uCcj5xjYHN7AoeokGiemXC94KwFXorxZj7lxBbROmhxMsBBwa6YMBNGSW8XYkDDwD6wX6pCzdT1KHkh-xPrpu4S2TC-U-QmXRe3"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background-dark/80 to-transparent"></div>
+<div class="absolute bottom-3 left-3">
+<p class="text-xs font-bold text-white mb-0.5">Skyline Towers</p>
+<p class="text-[10px] text-slate-300">Fundação concluída - Fase 3/10</p>
+</div>
+<div class="absolute top-3 right-3 bg-primary/80 backdrop-blur-md px-2 py-1 rounded text-[10px] font-black">74%</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-xs font-bold tracking-tight">
+<span class="text-slate-300">Estrutura Global</span>
+<span class="text-primary">74%</span>
+</div>
+<div class="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-primary to-secondary w-[74%] shadow-[0_0_15px_rgba(0,212,255,0.6)]"></div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<div class="glass p-3 rounded-lg text-center">
+<p class="text-[10px] text-slate-500 uppercase font-black mb-1">Início</p>
+<p class="text-xs font-bold">Mar 2023</p>
+</div>
+<div class="glass p-3 rounded-lg text-center">
+<p class="text-[10px] text-slate-500 uppercase font-black mb-1">Previsão</p>
+<p class="text-xs font-bold text-primary">Dez 2025</p>
+</div>
+</div>
+</div>
+</div>
+<div class="glass rounded-xl p-6">
+<h3 class="text-lg font-bold mb-6">Localização dos Ativos</h3>
+<div class="h-64 rounded-lg bg-slate-800 relative overflow-hidden group">
+<div class="absolute inset-0 grayscale opacity-40 group-hover:grayscale-0 transition-all duration-700 bg-[url('https://placeholder.pics/svg/600x400')]" data-location="São Paulo, Brazil" style=""></div>
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="size-4 bg-primary rounded-full animate-ping"></div>
+<div class="size-3 bg-primary rounded-full absolute"></div>
+</div>
+<div class="absolute bottom-4 left-1/2 -translate-x-1/2 bg-background-dark/90 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 text-xs font-bold flex items-center gap-2 whitespace-nowrap">
+<span class="material-symbols-outlined text-primary text-sm">location_on</span>
+                                Vila Olímpia, SP
+                            </div>
+</div>
+<button class="w-full mt-6 py-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold transition-all uppercase tracking-widest">Abrir Mapa Interativo</button>
+</div>
+<div class="bg-gradient-to-br from-primary/20 to-secondary/20 rounded-xl p-6 border border-white/10 relative overflow-hidden group">
+<div class="absolute -top-10 -right-10 size-40 bg-white/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors"></div>
+<h3 class="text-lg font-black mb-2">Suporte Premium</h3>
+<p class="text-slate-400 text-xs mb-4 leading-relaxed">Seu Advisor exclusivo está disponível para tirar dúvidas sobre seus rendimentos.</p>
+<div class="flex items-center gap-3 mb-6">
+<img class="size-10 rounded-full object-cover grayscale" data-alt="Professional advisor headshot" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAuRBYBEG2hbL8w9TyirHlIXP8k6h1DynwR8D-EkAhgyU7vfNmMW2KCunHei1JD5xyxyjiH8wX5Ih9vEmyK_N95TVkN3wXqoqbk6-MmSOsn0SBbejz-LDukvACE3X_avM1W_R5iZ8PGvCSMnR4-7WZyPz_M0ZkAOUmHajdPJFaJBCluyOxhLyiaxzTSATAoyLN5-muYuqIfsORKK2E6PGdNIbtKPYZA2q1RA4mTZHTkVTudKgJTik4aj08M5FQ5V1TkHDW9JB78U_Zn"/>
+<div>
+<p class="text-sm font-bold">Roberto Mendes</p>
+<p class="text-[10px] text-primary uppercase font-black">Private Capital Advisor</p>
+</div>
+</div>
+<button class="w-full py-3 rounded-lg bg-primary text-background-dark font-black text-xs uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform active:scale-[0.98]">Falar agora</button>
+</div>
+</div>
+</div>
+</main>
+<footer class="mt-20 border-t border-white/10 px-10 py-10 bg-black/40 backdrop-blur-xl">
+<div class="max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+<div class="flex items-center gap-3">
+<div class="size-6 bg-slate-700 rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px]">shield</span>
+</div>
+<p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Ambiente Criptográfico Seguro</p>
+</div>
+<div class="flex gap-8 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+<a class="hover:text-primary transition-colors" href="#">Políticas</a>
+<a class="hover:text-primary transition-colors" href="#">Termos</a>
+<a class="hover:text-primary transition-colors" href="#">Ajuda</a>
+</div>
+<p class="text-[10px] text-slate-600 font-medium">© 2024 ImoOS Platform. All assets tokenized via Ethereum L2.</p>
+</div>
+</footer>
+</div>
+</body></html>

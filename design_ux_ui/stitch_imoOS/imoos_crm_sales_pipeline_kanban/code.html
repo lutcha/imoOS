@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-PT"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ImoOS - Pipeline de Vendas</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#00d4ff",
+                        "accent-purple": "#7c3aed",
+                        "background-light": "#f5f8f8",
+                        "background-dark": "#0f2023",
+                        "card-dark": "rgba(25, 39, 42, 0.6)",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .glass {
+            background: rgba(25, 39, 42, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 212, 255, 0.1);
+        }
+        .kanban-column {
+            min-width: 280px;
+            max-width: 280px;
+        }
+        .glow-cyan {
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+            border-left: 4px solid #00d4ff;
+        }
+        .glow-purple {
+            box-shadow: 0 0 15px rgba(124, 58, 237, 0.3);
+            border-left: 4px solid #7c3aed;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 212, 255, 0.2);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 overflow-hidden">
+<div class="flex h-screen w-full">
+<!-- SideNavBar -->
+<aside class="w-64 border-r border-primary/10 bg-background-light dark:bg-background-dark flex flex-col">
+<div class="p-6 flex items-center gap-3">
+<div class="size-10 rounded-lg bg-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-background-dark font-bold">domain</span>
+</div>
+<div>
+<h1 class="text-lg font-bold leading-none tracking-tight">ImoOS</h1>
+<p class="text-xs text-primary/70">CRM Imobiliário</p>
+</div>
+</div>
+<nav class="flex-1 px-4 space-y-2 mt-4">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:bg-primary/10 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/20 text-primary border border-primary/20" href="#">
+<span class="material-symbols-outlined">view_kanban</span>
+<span class="text-sm font-medium">Pipeline</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:bg-primary/10 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="text-sm font-medium">Clientes</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:bg-primary/10 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">real_estate_agent</span>
+<span class="text-sm font-medium">Imóveis</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:bg-primary/10 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="text-sm font-medium">Agenda</span>
+</a>
+</nav>
+<div class="p-4 mt-auto">
+<button class="w-full py-3 rounded-xl bg-primary text-background-dark font-bold text-sm shadow-[0_0_20px_rgba(0,212,255,0.4)] flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">add</span>
+                    Novo Lead
+                </button>
+<div class="mt-6 flex items-center gap-3 px-2">
+<div class="size-8 rounded-full bg-primary/20 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="User avatar profile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBHqZwCV2pkCC5rqpqyljLBpUE2WIOLpnsxmPNtMUjNYyclMH7AoUG5DSHiVxX7S6qAEKkfYwtOt30P9y8F4cBkfTXQPqpFkpOM7Y1Z9k--Fp6ts2IIZZDLHinNtmckRkORxkwRKnNJ93VH5KSNTuqW7091QP6GMBTB7wsbr5O7xIEtO4LfE2ZMEg-DM5FLaiXDxIqRtCXSIMFrs2u-7RtiLVMOlfYbro2kYDNFXnIoQ9MS6uMzu9E1BSWZ6u6XGX4Odmp9c2nuS9rH"/>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-xs font-semibold truncate">Ricardo Costa</p>
+<p class="text-[10px] text-slate-500">Admin</p>
+</div>
+<span class="material-symbols-outlined text-slate-500 text-lg">settings</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+<!-- Topbar -->
+<header class="h-16 border-b border-primary/10 flex items-center justify-between px-8 bg-background-light/50 dark:bg-background-dark/50 backdrop-blur-md z-20">
+<div class="flex items-center gap-4">
+<h2 class="text-xl font-bold tracking-tight">Vendas <span class="text-primary">Pipeline</span></h2>
+<div class="h-6 w-[1px] bg-primary/20 mx-2"></div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm">location_on</span>
+<span class="text-xs text-slate-400">Lisboa, Portugal</span>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative">
+<input class="bg-primary/5 border border-primary/20 rounded-lg py-1.5 pl-10 pr-4 text-sm focus:ring-primary focus:border-primary w-64" placeholder="Pesquisar leads..." type="text"/>
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-lg">search</span>
+</div>
+<div class="flex gap-3">
+<button class="size-9 rounded-lg border border-primary/20 flex items-center justify-center text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="size-9 rounded-lg border border-primary/20 flex items-center justify-center text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">filter_list</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Metrics Bar (Floating) -->
+<div class="px-8 py-4 z-10">
+<div class="glass rounded-xl p-4 flex items-center justify-around shadow-2xl border border-primary/20">
+<div class="flex items-center gap-4">
+<div class="size-10 rounded-lg bg-primary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">analytics</span>
+</div>
+<div>
+<p class="text-[10px] uppercase tracking-wider text-slate-500">Taxa de Conversão</p>
+<p class="text-lg font-bold">34% <span class="text-xs text-emerald-400 font-normal ml-1">+5.2%</span></p>
+</div>
+</div>
+<div class="h-8 w-[1px] bg-primary/10"></div>
+<div class="flex items-center gap-4">
+<div class="size-10 rounded-lg bg-primary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">schedule</span>
+</div>
+<div>
+<p class="text-[10px] uppercase tracking-wider text-slate-500">Tempo Médio</p>
+<p class="text-lg font-bold">12 dias</p>
+</div>
+</div>
+<div class="h-8 w-[1px] bg-primary/10"></div>
+<div class="flex items-center gap-4">
+<div class="size-10 rounded-lg bg-primary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">monetization_on</span>
+</div>
+<div>
+<p class="text-[10px] uppercase tracking-wider text-slate-500">Valor em Pipeline</p>
+<p class="text-lg font-bold">€1.2M <span class="text-xs text-emerald-400 font-normal ml-1">+12%</span></p>
+</div>
+</div>
+</div>
+</div>
+<!-- Kanban Board -->
+<div class="flex-1 overflow-x-auto p-8 pt-0">
+<div class="flex gap-6 h-full pb-4">
+<!-- Column: Leads Novos -->
+<div class="kanban-column flex flex-col gap-4">
+<div class="flex items-center justify-between px-2">
+<div class="flex items-center gap-2">
+<span class="size-2 rounded-full bg-primary animate-pulse"></span>
+<h3 class="font-bold text-sm">Leads Novos</h3>
+<span class="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full font-bold">12</span>
+</div>
+<span class="material-symbols-outlined text-slate-500 cursor-pointer hover:text-primary transition-colors">add_circle</span>
+</div>
+<div class="flex-1 space-y-4 overflow-y-auto">
+<!-- Card 1 -->
+<div class="glass p-4 rounded-xl glow-cyan cursor-grab active:cursor-grabbing border-primary/20 group hover:border-primary/40 transition-all">
+<div class="flex justify-between items-start mb-2">
+<h4 class="font-bold text-sm">João Silva</h4>
+<span class="material-symbols-outlined text-primary/40 text-xs">more_vert</span>
+</div>
+<p class="text-xs text-slate-400 mb-1">Skyline - 402</p>
+<p class="text-sm font-bold text-primary">€145.000</p>
+<div class="flex justify-between items-center mt-4">
+<div class="flex -space-x-2">
+<div class="size-6 rounded-full border border-background-dark bg-slate-700 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="User avatar 1" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDUSyzTDYaNCLpxlmM-LpHd1S7J0HbWonNu5QC_P_0h76DA1B1NP8xXiBb3zqX6ZNb1Otq-L-pQI6Gk4mLRBzkDGQIZlMBsu0HGV9NLbJV9M03C1DQnBJdYI2PA-WoFXAGNCA5lOlzKJIPF_Frm-LBW-t73yDFwvKBUIxpE16guq7eo80GDfRRXOA-pxoSgmKe2-cFM2P-sIDUgll8E6wBtP11r-aOyUgieb18yyoJGgCyfhWvYmYmUvnyczXER1gTSV1Ynw9R_RPkV"/>
+</div>
+</div>
+<div class="flex gap-2">
+<span class="material-symbols-outlined text-primary text-lg">chat</span>
+<span class="material-symbols-outlined text-slate-500 text-lg">call</span>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="glass p-4 rounded-xl glow-purple cursor-grab border-primary/20 group hover:border-primary/40 transition-all">
+<div class="flex justify-between items-start mb-2">
+<h4 class="font-bold text-sm">Marta Ramos</h4>
+<span class="material-symbols-outlined text-primary/40 text-xs">more_vert</span>
+</div>
+<p class="text-xs text-slate-400 mb-1">Terraço Mar - Penthouse</p>
+<p class="text-sm font-bold text-primary">€890.000</p>
+<div class="flex justify-between items-center mt-4">
+<div class="flex -space-x-2">
+<div class="size-6 rounded-full border border-background-dark bg-slate-700 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="User avatar 2" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBd03M78iPg9nbn5eA7i6PaUwA4olQWfQf8dKhi4jDOpfFL_AaYeo2rtjLFGHxR53KPbQ3l_8A45gm5jhiOY2kDTN1Xfvw8Z-jrZbiY-qrtq0JSvGlf6KgdPh5bd4w6ab5mF_kQK452fGixB5LwefmdBpsFq-A-JobvK5eRjEQTP1G33_dy4ayAtbKQcGc70TU4oMAf9sIMwCucezssV-UGxA9p4iEnWL1OLnvJrl-0QOjpgh8Dg5-JQEoDmzwka7ETiBTNzLNu3iSb"/>
+</div>
+</div>
+<div class="flex gap-2">
+<span class="material-symbols-outlined text-slate-500 text-lg">mail</span>
+<span class="material-symbols-outlined text-primary text-lg">call</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Column: Contactados -->
+<div class="kanban-column flex flex-col gap-4">
+<div class="flex items-center justify-between px-2">
+<div class="flex items-center gap-2">
+<h3 class="font-bold text-sm text-slate-400">Contactados</h3>
+<span class="bg-primary/5 text-slate-500 text-[10px] px-2 py-0.5 rounded-full">8</span>
+</div>
+<span class="material-symbols-outlined text-slate-500 cursor-pointer">add_circle</span>
+</div>
+<div class="flex-1 space-y-4 overflow-y-auto">
+<div class="glass p-4 rounded-xl border-primary/10 opacity-80 hover:opacity-100 transition-opacity">
+<h4 class="font-bold text-sm">Carlos Mendes</h4>
+<p class="text-xs text-slate-400 mb-1">The Wall - T2</p>
+<p class="text-sm font-bold text-primary">€220.000</p>
+<div class="flex justify-end mt-4">
+<span class="material-symbols-outlined text-primary text-lg">chat</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Column: Visita Agendada -->
+<div class="kanban-column flex flex-col gap-4">
+<div class="flex items-center justify-between px-2">
+<div class="flex items-center gap-2">
+<h3 class="font-bold text-sm text-slate-400">Visita Agendada</h3>
+<span class="bg-primary/5 text-slate-500 text-[10px] px-2 py-0.5 rounded-full">3</span>
+</div>
+<span class="material-symbols-outlined text-slate-500 cursor-pointer">add_circle</span>
+</div>
+<div class="flex-1 space-y-4 overflow-y-auto">
+<div class="glass p-4 rounded-xl glow-cyan border-primary/20">
+<div class="bg-primary/10 rounded px-2 py-1 mb-3 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-xs">calendar_month</span>
+<span class="text-[10px] text-primary font-bold">HOJE, 15:30</span>
+</div>
+<h4 class="font-bold text-sm">Inês Ferreira</h4>
+<p class="text-xs text-slate-400 mb-1">Green Resort - Villa</p>
+<p class="text-sm font-bold text-primary">€1.450.000</p>
+<div class="flex justify-end mt-4">
+<span class="material-symbols-outlined text-primary text-lg">call</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Column: Proposta -->
+<div class="kanban-column flex flex-col gap-4">
+<div class="flex items-center justify-between px-2">
+<div class="flex items-center gap-2">
+<h3 class="font-bold text-sm text-slate-400">Proposta</h3>
+<span class="bg-primary/5 text-slate-500 text-[10px] px-2 py-0.5 rounded-full">5</span>
+</div>
+<span class="material-symbols-outlined text-slate-500 cursor-pointer">add_circle</span>
+</div>
+<div class="flex-1 space-y-4 overflow-y-auto">
+<div class="glass p-4 rounded-xl border-primary/10">
+<h4 class="font-bold text-sm">Miguel Ângelo</h4>
+<p class="text-xs text-slate-400 mb-1">Skyline - 801</p>
+<p class="text-sm font-bold text-primary">€160.000</p>
+<div class="mt-3 h-1.5 w-full bg-primary/10 rounded-full overflow-hidden">
+<div class="h-full bg-primary w-3/4"></div>
+</div>
+<p class="text-[10px] text-primary mt-1 text-right">75% probabilidade</p>
+</div>
+</div>
+</div>
+<!-- Column: Reserva -->
+<div class="kanban-column flex flex-col gap-4">
+<div class="flex items-center justify-between px-2">
+<div class="flex items-center gap-2">
+<h3 class="font-bold text-sm text-slate-400">Reserva</h3>
+<span class="bg-primary/5 text-slate-500 text-[10px] px-2 py-0.5 rounded-full">2</span>
+</div>
+<span class="material-symbols-outlined text-slate-500 cursor-pointer">add_circle</span>
+</div>
+</div>
+<!-- Column: Contrato -->
+<div class="kanban-column flex flex-col gap-4">
+<div class="flex items-center justify-between px-2">
+<div class="flex items-center gap-2">
+<h3 class="font-bold text-sm text-slate-400">Contrato</h3>
+<span class="bg-primary/5 text-slate-500 text-[10px] px-2 py-0.5 rounded-full">1</span>
+</div>
+<span class="material-symbols-outlined text-slate-500 cursor-pointer">add_circle</span>
+</div>
+</div>
+<!-- Column: Fechado -->
+<div class="kanban-column flex flex-col gap-4">
+<div class="flex items-center justify-between px-2">
+<div class="flex items-center gap-2">
+<h3 class="font-bold text-sm text-emerald-400">Fechado</h3>
+<span class="bg-emerald-400/10 text-emerald-400 text-[10px] px-2 py-0.5 rounded-full font-bold">24</span>
+</div>
+<span class="material-symbols-outlined text-slate-500 cursor-pointer">add_circle</span>
+</div>
+<div class="flex-1 space-y-4 overflow-y-auto">
+<div class="glass p-4 rounded-xl border-emerald-400/20 bg-emerald-400/5">
+<div class="flex justify-between items-start mb-2">
+<h4 class="font-bold text-sm">Ana Santos</h4>
+<span class="material-symbols-outlined text-emerald-400 text-xs">verified</span>
+</div>
+<p class="text-xs text-slate-400">Ocean Breeze - T1</p>
+<p class="text-sm font-bold text-emerald-400">€310.000</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Background Glow Decorations -->
+<div class="absolute -bottom-24 -right-24 size-[500px] bg-primary/10 rounded-full blur-[120px] pointer-events-none"></div>
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-[800px] bg-accent-purple/5 rounded-full blur-[150px] pointer-events-none"></div>
+</main>
+</div>
+</body></html>

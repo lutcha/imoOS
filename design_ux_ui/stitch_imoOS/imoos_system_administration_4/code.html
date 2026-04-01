@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html class="dark" lang="pt"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ImoOS - Compliance &amp; Audit Hub</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;family=Merriweather:wght@300;400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#FFFFFF",
+                        "security-red": "#FF3B30",
+                        "security-amber": "#FF9F0A",
+                        "background-dark": "#0A0A0B",
+                        "charcoal": "#1A1A1E",
+                        "glass-border": "rgba(255, 255, 255, 0.1)",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "serif": ["Merriweather", "serif"]
+                    }
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        .glass-card {
+            background: rgba(26, 26, 30, 0.6);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .audit-border-left {
+            border-left: 2px solid theme('colors.security-amber');
+        }
+        .critical-border-left {
+            border-left: 2px solid theme('colors.security-red');
+        }
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .body-serif {
+            font-family: 'Merriweather', serif;
+        }
+    </style>
+</head>
+<body class="bg-background-dark text-slate-200 antialiased overflow-x-hidden">
+<div class="flex h-screen overflow-hidden">
+<aside class="w-64 flex-shrink-0 border-r border-glass-border bg-background-dark flex flex-col z-20">
+<div class="p-6 flex items-center gap-3 border-b border-glass-border">
+<div class="w-10 h-10 rounded bg-white flex items-center justify-center">
+<span class="material-symbols-outlined text-background-dark font-bold">shield</span>
+</div>
+<div>
+<h1 class="text-xl font-black tracking-tighter text-white">ImoOS</h1>
+<p class="text-[10px] uppercase tracking-widest text-security-amber font-bold">Security Hub</p>
+</div>
+</div>
+<nav class="flex-1 px-4 space-y-1 mt-6 overflow-y-auto">
+<a class="flex items-center gap-3 px-4 py-3 rounded text-slate-400 hover:text-white hover:bg-white/5 transition-all" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="text-sm font-medium">Monitorização</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded text-slate-400 hover:text-white hover:bg-white/5 transition-all" href="#">
+<span class="material-symbols-outlined">rule</span>
+<span class="text-sm font-medium">Políticas de Acesso</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded text-slate-400 hover:text-white hover:bg-white/5 transition-all" href="#">
+<span class="material-symbols-outlined">gpp_maybe</span>
+<span class="text-sm font-medium">Alertas Críticos</span>
+</a>
+<div class="pt-6 pb-2 px-4">
+<p class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Configuração Central</p>
+</div>
+<a class="flex items-center gap-3 px-4 py-3 rounded bg-white/10 text-white border border-white/20" href="#">
+<span class="material-symbols-outlined text-security-amber">admin_panel_settings</span>
+<span class="text-sm font-medium">Compliance &amp; Audit</span>
+</a>
+</nav>
+<div class="p-4 mt-auto border-t border-glass-border">
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined text-security-red text-sm">lock</span>
+<span class="text-[10px] uppercase tracking-wider text-slate-500">Security Clearance: Lvl 4</span>
+</div>
+<button class="w-full py-2 border border-white/10 text-white text-xs font-bold rounded hover:bg-white/5 transition-all">
+                Logout do Sistema
+            </button>
+</div>
+</aside>
+<main class="flex-1 flex flex-col min-w-0 bg-[#070708] relative">
+<header class="h-16 border-b border-glass-border flex items-center justify-between px-8 bg-background-dark/80 backdrop-blur-md sticky top-0 z-10">
+<div class="flex items-center gap-4 flex-1">
+<div class="relative w-full max-w-lg">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">search</span>
+<input class="w-full bg-charcoal border-white/10 rounded-none pl-10 pr-4 py-2 text-sm text-slate-200 focus:ring-1 focus:ring-security-amber transition-all placeholder:text-slate-600" placeholder="Pesquisar Logs de Acesso, UUIDs ou Eventos de Segurança..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2 px-3 py-1 bg-security-red/10 border border-security-red/20 rounded">
+<span class="w-1.5 h-1.5 rounded-full bg-security-red animate-pulse"></span>
+<span class="text-[10px] font-bold text-security-red">3 Ameaças Ativas</span>
+</div>
+<div class="h-8 w-[1px] bg-glass-border"></div>
+<div class="flex items-center gap-3">
+<div class="text-right">
+<p class="text-xs font-bold text-white uppercase tracking-tight">C. Officer - Ricardo Mendes</p>
+<p class="text-[10px] text-security-amber font-mono">ID: SEC-88921-AF</p>
+</div>
+<div class="w-10 h-10 rounded-sm bg-charcoal border border-white/20 p-0.5">
+<img alt="User Avatar" class="w-full h-full object-cover grayscale opacity-80" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxWCNqveNgjZXbYO4o8wvibx-_B3DsdGVFM0SNG4LZz53b2rX7yRgIXsmG_b3tM4T0hFVnNCNci_Xk4nWal0SREmR966cutUpx2w3S9N-gl8UiIfPW_Lpr1WUESJfGK-VHy7PpBY3FcK7tShxB5B9-GcpIfXfBSlMp6PXxNlcMCwdg4-62lka0ecjvuD5dPFRn12nc7CAExUGw27RTlIIHvZ9R5HvAy5nLAmSuKXp7-uEcf_XSYTbq9XgXfJC5SjoW1jrEmgga2fD6"/>
+</div>
+</div>
+</div>
+</header>
+<div class="flex-1 overflow-y-auto p-8">
+<div class="max-w-[1400px] mx-auto">
+<div class="flex items-end justify-between mb-10 border-b border-glass-border pb-6">
+<div>
+<nav class="flex items-center gap-2 text-[10px] font-bold text-slate-500 mb-3 uppercase tracking-[0.2em]">
+<span>Segurança</span>
+<span class="material-symbols-outlined text-[10px]">arrow_right_alt</span>
+<span class="text-white">Audit Hub</span>
+</nav>
+<h2 class="text-3xl font-bold tracking-tight text-white mb-2 uppercase">Compliance &amp; Audit Hub</h2>
+<p class="text-slate-500 body-serif text-sm">Terminal de auditoria centralizado para monitorização de Logs de Acesso Detalhados e Histórico de Permissões.</p>
+</div>
+<div class="flex gap-4">
+<button class="px-6 py-2.5 rounded bg-transparent border border-white/20 text-xs font-bold text-white hover:bg-white/5 transition-all flex items-center gap-2 uppercase tracking-widest">
+<span class="material-symbols-outlined text-lg">terminal</span>
+                            Exportar Report Audit
+                        </button>
+<button class="px-6 py-2.5 rounded bg-white text-background-dark text-xs font-black hover:bg-slate-200 transition-all flex items-center gap-2 uppercase tracking-widest">
+<span class="material-symbols-outlined text-lg">key</span>
+                            Gerir Chaves API
+                        </button>
+</div>
+</div>
+<div class="flex gap-6 h-[700px]">
+<div class="w-1/3 flex flex-col gap-4">
+<div class="flex items-center justify-between mb-2">
+<h3 class="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500">Membros &amp; Entidades</h3>
+<span class="text-[10px] text-security-amber px-2 py-0.5 border border-security-amber/20 bg-security-amber/5">128 Total</span>
+</div>
+<div class="glass-card flex-1 overflow-y-auto">
+<div class="divide-y divide-glass-border">
+<div class="p-4 bg-white/5 border-l-4 border-security-amber cursor-pointer group">
+<div class="flex items-center gap-4">
+<img alt="User" class="w-10 h-10 rounded-none object-cover grayscale" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDl8m7HBYVdlNsoCxMBvfm-Cq_NVnq1cxUjGH30EvoqW3k2dxUPs5vUOe7NZRII3TAfB3mcCjtggIKYrxqm99J4TKxqw-hq0ZbgC2KippHGrbnk_Pa6Su1WFAh65i9KEE2MRaMyHq2t8JeY_SjstxDw1OcATKwTg9h_EZM2eN-X4bV3rDCdt4Odho-ZWeysjfBVWWzP89cKfthVKTmTbBC2m6gvQypkzcklu-DPWtTpq5_aIhsXJaEwiXVi7A0MXbmaTj1NMSXnjTec"/>
+<div class="flex-1">
+<p class="text-sm font-bold text-white uppercase tracking-tighter">André Silva</p>
+<p class="text-[10px] text-slate-500 font-mono">andre.silva@imoos.com</p>
+</div>
+<span class="material-symbols-outlined text-security-amber text-sm">verified_user</span>
+</div>
+</div>
+<div class="p-4 hover:bg-white/5 cursor-pointer transition-all border-l-4 border-transparent">
+<div class="flex items-center gap-4">
+<img alt="User" class="w-10 h-10 rounded-none object-cover grayscale opacity-50" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCurBLP4upUU36NUmBjjRTX6BlB5Qjp07xKLyj3EWlH4imsMmgD7JdzEYIRoVmPht2EG4X-TaMubsVXcFEvIYCGnapgmu5jS1TsiYT4ZKDi8DBmv7c-q3XEsCzB6x94gJu4EZ7l0tTqtTaS7Mw07LbX13-tL1SsusHFozzGXOCSUlEweA9yVAsbhWkgfFnXuDcaqSshH0L4xMQOC6c_0-62AUodWjUevJaTu50WJBs-ku9JAPbU0JxPU0faI2yOOnquDHpa7Mjg732w"/>
+<div class="flex-1">
+<p class="text-sm font-bold text-slate-300 uppercase tracking-tighter">Sofia Costa</p>
+<p class="text-[10px] text-slate-500 font-mono">sofia.costa@imoos.com</p>
+</div>
+<span class="material-symbols-outlined text-slate-700 text-sm">lock_open</span>
+</div>
+</div>
+<div class="p-4 hover:bg-white/5 cursor-pointer transition-all border-l-4 border-transparent">
+<div class="flex items-center gap-4">
+<img alt="User" class="w-10 h-10 rounded-none object-cover grayscale opacity-50" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDVbFFsBC1vV8o6egLplNMTTpRjvOKxLPuz_ojZu56iWshnq4sVtdnhfL8djX3tcV0Tf4_9qml66o2tvKZ2SppFOy9E2kYyhvatVU0vHsGf5rLeIBGFHuMMGu0D61Zi9lckKr5AtiTOIZw6Mt0VdCLiWf7D45NcXdHMxhS8XkxvaDRcuJwVE7gVRvqzlKsB3_Jip1w-WrilHmAdxU3eEJmIu_0gqOjA1v96k9BHFWsxAFB7zRS2N0vflMuJps-bB8NrtRBXxKDKKua1"/>
+<div class="flex-1">
+<p class="text-sm font-bold text-slate-300 uppercase tracking-tighter">Paulo Freire</p>
+<p class="text-[10px] text-slate-500 font-mono">p.freire@imoos.com</p>
+</div>
+<span class="material-symbols-outlined text-security-red text-sm">report</span>
+</div>
+</div>
+<div class="p-4 hover:bg-white/5 cursor-pointer transition-all border-l-4 border-transparent">
+<div class="flex items-center gap-4">
+<img alt="User" class="w-10 h-10 rounded-none object-cover grayscale opacity-50" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCqhhwfRIvkb6KlHJixffFukygfnocxH48-OMPhYINzW-cDzsHDR9jQUbiga3fkRXyBXxNHMgjd1_H18EM9mmiBmI3xSXd8BND7X01v4P5LUaC0jXMotSSGSvl_WMjHu5DHy32TH0wNabReA5aiqwoaDC-mobitaKUT_0HuI2sB6TW6UoGRYvhjj6RSMjj4Yyp-PEWplA4wOhBeW9z2zjCQaZRCU7o58ujNy5WTPDqCDy8Dd-OoEoQ1IzdIW6iTNoBpixELKLJmNM02"/>
+<div class="flex-1">
+<p class="text-sm font-bold text-slate-300 uppercase tracking-tighter">Beatriz Nunes</p>
+<p class="text-[10px] text-slate-500 font-mono">b.nunes@imoos.com</p>
+</div>
+<span class="material-symbols-outlined text-slate-700 text-sm">lock_open</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="flex-1 flex flex-col gap-4">
+<div class="flex gap-1 border-b border-glass-border">
+<button class="px-6 py-3 text-[10px] font-black uppercase tracking-[0.2em] border-b-2 border-white text-white">Perfil &amp; Acessos</button>
+<button class="px-6 py-3 text-[10px] font-black uppercase tracking-[0.2em] border-b-2 border-transparent text-slate-500 hover:text-white">Audit Log</button>
+<button class="px-6 py-3 text-[10px] font-black uppercase tracking-[0.2em] border-b-2 border-transparent text-slate-500 hover:text-white flex items-center gap-2">
+                                Alertas de Segurança
+                                <span class="bg-security-red text-white text-[9px] px-1.5 py-0.5 rounded-full">2</span>
+</button>
+</div>
+<div class="glass-card flex-1 p-8 overflow-y-auto">
+<div class="flex items-start justify-between mb-8">
+<div class="flex gap-6 items-center">
+<div class="w-24 h-24 bg-charcoal border border-white/10 p-1">
+<img alt="Large User" class="w-full h-full object-cover grayscale" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDl8m7HBYVdlNsoCxMBvfm-Cq_NVnq1cxUjGH30EvoqW3k2dxUPs5vUOe7NZRII3TAfB3mcCjtggIKYrxqm99J4TKxqw-hq0ZbgC2KippHGrbnk_Pa6Su1WFAh65i9KEE2MRaMyHq2t8JeY_SjstxDw1OcATKwTg9h_EZM2eN-X4bV3rDCdt4Odho-ZWeysjfBVWWzP89cKfthVKTmTbBC2m6gvQypkzcklu-DPWtTpq5_aIhsXJaEwiXVi7A0MXbmaTj1NMSXnjTec"/>
+</div>
+<div>
+<h3 class="text-2xl font-black text-white uppercase tracking-tighter">André Silva</h3>
+<p class="text-security-amber font-mono text-xs uppercase mb-2">Internal UUID: 4f9e-2231-11a9-bb90</p>
+<div class="flex gap-2">
+<span class="px-2 py-0.5 bg-white/5 border border-white/20 text-[9px] font-bold text-white uppercase">System Admin</span>
+<span class="px-2 py-0.5 bg-white/5 border border-white/20 text-[9px] font-bold text-white uppercase">Full Encryption Key</span>
+</div>
+</div>
+</div>
+<div class="text-right">
+<p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Status de Integridade</p>
+<div class="flex items-center justify-end gap-2 text-emerald-400">
+<span class="text-xs font-black uppercase">Seguro</span>
+<span class="material-symbols-outlined text-sm">verified</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-8">
+<div>
+<h4 class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">history</span>
+                                        Logs de Acesso Detalhados
+                                    </h4>
+<div class="space-y-3 body-serif text-sm">
+<div class="p-3 border border-white/5 bg-white/[0.02] audit-border-left">
+<p class="text-white font-bold text-xs mb-1">Tentativa de Login (MFA Sucesso)</p>
+<p class="text-slate-500 text-[10px] font-mono">IP: 187.12.92.11 • 14:22:10 UTC</p>
+</div>
+<div class="p-3 border border-white/5 bg-white/[0.02] audit-border-left">
+<p class="text-white font-bold text-xs mb-1">Consulta de BD Clientes</p>
+<p class="text-slate-500 text-[10px] font-mono">Query ID: #8892 • 12:45:00 UTC</p>
+</div>
+<div class="p-3 border border-white/5 bg-white/[0.02] audit-border-left opacity-60">
+<p class="text-white font-bold text-xs mb-1">Sessão Iniciada</p>
+<p class="text-slate-500 text-[10px] font-mono">Device: MacBook Pro M2 • 09:12:33 UTC</p>
+</div>
+</div>
+</div>
+<div>
+<h4 class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">security</span>
+                                        Histórico de Permissões
+                                    </h4>
+<div class="space-y-4">
+<div class="relative pl-6 before:content-[''] before:absolute before:left-[3px] before:top-2 before:bottom-0 before:w-[1px] before:bg-white/10">
+<div class="absolute left-0 top-1 w-2 h-2 rounded-full bg-security-amber"></div>
+<p class="text-xs font-bold text-white uppercase tracking-tight">Privilégios Elevados</p>
+<p class="text-[10px] body-serif text-slate-500">Autorizado por: Security Officer #1</p>
+<p class="text-[9px] font-mono text-slate-600 mt-1">20 Out 2023</p>
+</div>
+<div class="relative pl-6 before:content-[''] before:absolute before:left-[3px] before:top-2 before:bottom-0 before:w-[1px] before:bg-white/10">
+<div class="absolute left-0 top-1 w-2 h-2 rounded-full bg-slate-700"></div>
+<p class="text-xs font-bold text-slate-400 uppercase tracking-tight">Acesso Remoto Habilitado</p>
+<p class="text-[10px] body-serif text-slate-500">Política de conformidade padrão v2.1</p>
+<p class="text-[9px] font-mono text-slate-600 mt-1">15 Out 2023</p>
+</div>
+<div class="relative pl-6">
+<div class="absolute left-0 top-1 w-2 h-2 rounded-full bg-slate-700"></div>
+<p class="text-xs font-bold text-slate-400 uppercase tracking-tight">Criação de Conta</p>
+<p class="text-[10px] body-serif text-slate-500">Provisionamento automatizado</p>
+<p class="text-[9px] font-mono text-slate-600 mt-1">01 Out 2023</p>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-8 p-4 bg-security-red/5 border critical-border-left">
+<div class="flex items-center gap-3 mb-2">
+<span class="material-symbols-outlined text-security-red text-lg">warning</span>
+<h5 class="text-xs font-black text-white uppercase">Anomalia de Fluxo de Dados Detectada</h5>
+</div>
+<p class="text-xs body-serif text-slate-400 leading-relaxed">
+                                    Este utilizador tentou aceder a volumes encriptados fora do horário de serviço regular. Recomenda-se verificação de identidade manual imediata.
+                                </p>
+</div>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-4 gap-6 mt-10">
+<div class="p-6 border border-white/5 bg-charcoal">
+<p class="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2">Logs Processados</p>
+<p class="text-2xl font-black text-white">42.8k</p>
+<div class="w-full h-1 bg-white/5 mt-4">
+<div class="h-full bg-security-amber w-3/4"></div>
+</div>
+</div>
+<div class="p-6 border border-white/5 bg-charcoal">
+<p class="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2">Integridade do Sistema</p>
+<p class="text-2xl font-black text-white">99.98%</p>
+<p class="text-[9px] text-emerald-500 font-bold mt-2 uppercase">Stable Connection</p>
+</div>
+<div class="p-6 border border-white/5 bg-charcoal">
+<p class="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2">Alertas Amber</p>
+<p class="text-2xl font-black text-security-amber">12</p>
+<p class="text-[9px] text-slate-500 mt-2 uppercase">Últimas 24h</p>
+</div>
+<div class="p-6 border border-white/5 bg-charcoal">
+<p class="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2">Alertas Críticos</p>
+<p class="text-2xl font-black text-security-red">03</p>
+<p class="text-[9px] text-security-red font-bold mt-2 uppercase">Ação Requerida</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<div class="fixed top-0 right-0 w-1/2 h-full bg-gradient-to-l from-white/[0.02] to-transparent pointer-events-none -z-10"></div>
+<div class="fixed bottom-0 left-0 w-64 h-64 bg-security-amber/5 blur-[100px] pointer-events-none -z-10"></div>
+
+</body></html>

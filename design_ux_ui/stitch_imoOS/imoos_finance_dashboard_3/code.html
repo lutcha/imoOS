@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html class="dark" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ImoOS | Gamified Financial Explorer</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style type="text/tailwindcss">
+        :root {
+            --neon-cyan: #00d4ff;
+            --neon-purple: #7C3AED;
+            --neon-pink: #EC4899;
+            --bg-deep: #050508;
+            --glass-panel: rgba(10, 10, 20, 0.6);
+        }
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+        .scanline-effect::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, transparent, rgba(0, 212, 255, 0.05), transparent);
+            height: 100px;
+            width: 100%;
+            animation: scanline 4s linear infinite;
+            pointer-events: none;
+        }
+        .perspective-chart {
+            perspective: 1200px;
+            transform-style: preserve-3d;
+        }
+        .chart-3d-rotate {
+            transform: rotateX(25deg) rotateY(-5deg) rotateZ(-2deg);
+        }
+        .glow-cyan { filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.8)); }
+        .glow-purple { filter: drop-shadow(0 0 10px rgba(124, 58, 237, 0.8)); }
+        .glow-pink { filter: drop-shadow(0 0 10px rgba(236, 72, 153, 0.8)); }
+        .grid-bg {
+            background-image: linear-gradient(rgba(0, 212, 255, 0.05) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0, 212, 255, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            background-position: center center;
+        }
+        .data-stream {
+            scrollbar-width: thin;
+            scrollbar-color: var(--neon-cyan) transparent;
+        }
+        .data-stream::-webkit-scrollbar {
+            width: 4px;
+        }
+        .data-stream::-webkit-scrollbar-thumb {
+            background: var(--neon-cyan);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-[var(--bg-deep)] text-slate-100 font-['Inter'] overflow-hidden selection:bg-[var(--neon-pink)] selection:text-white">
+<div class="flex h-screen w-full relative">
+<div class="fixed inset-0 grid-bg pointer-events-none opacity-40 z-0"></div>
+<div class="fixed inset-0 bg-gradient-to-b from-transparent via-transparent to-[var(--bg-deep)] pointer-events-none z-0"></div>
+<aside class="w-20 lg:w-24 border-r border-white/10 bg-black/40 backdrop-blur-xl flex flex-col items-center py-8 z-50">
+<div class="size-12 bg-gradient-to-br from-[var(--neon-cyan)] to-[var(--neon-purple)] rounded-full flex items-center justify-center mb-12 glow-cyan ring-4 ring-black">
+<span class="material-symbols-outlined font-bold text-black">rocket_launch</span>
+</div>
+<nav class="flex flex-col gap-8 flex-1">
+<button class="group relative">
+<span class="material-symbols-outlined text-slate-500 group-hover:text-[var(--neon-cyan)] transition-colors">query_stats</span>
+<span class="absolute -right-2 top-0 size-1 bg-[var(--neon-cyan)] rounded-full glow-cyan animate-pulse"></span>
+</button>
+<button class="group"><span class="material-symbols-outlined text-slate-500 group-hover:text-[var(--neon-purple)] transition-colors">account_tree</span></button>
+<button class="group border-y border-white/10 py-4"><span class="material-symbols-outlined text-[var(--neon-cyan)] glow-cyan">monitoring</span></button>
+<button class="group"><span class="material-symbols-outlined text-slate-500 group-hover:text-[var(--neon-pink)] transition-colors">model_training</span></button>
+<button class="group"><span class="material-symbols-outlined text-slate-500 group-hover:text-white transition-colors">settings_input_antenna</span></button>
+</nav>
+<div class="mt-auto space-y-6">
+<div class="size-10 rounded-xl overflow-hidden border border-white/20">
+<img alt="Analyst Profile" class="size-full object-cover grayscale hover:grayscale-0 transition-all cursor-pointer" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC-e2dRBH2RzhjrMod2pOA6-XEl_NvVHJ9ccgs8E7u06naqNu3IMV8EtdB-4DU4LwTyywpDjy8yyamA-e914alv5SgcvzvKOwNmyeyKnZTqW5lZl6BIMpT2YkWgzTT42oOFCoSfhhZn0mvN6c0_xKElk9hZ7qkNV7M1mZ15HYil57t_wbe5t95UUQgXHw6BnKG_0mn9CQsdcMrXCkFHphPN9xWCvYoVpPYdEWgiSqEMWJJE7SjWnwcdXG5UojQhlC2A-WO11M5a2G3r"/>
+</div>
+</div>
+</aside>
+<main class="flex-1 flex flex-col overflow-hidden relative z-10 perspective-chart">
+<header class="h-20 flex items-center justify-between px-10 border-b border-white/5 bg-black/20 backdrop-blur-sm">
+<div class="flex flex-col">
+<h1 class="text-xs font-black uppercase tracking-[0.4em] text-[var(--neon-cyan)]">Neural Net Finance v2.4</h1>
+<div class="flex items-center gap-2">
+<span class="size-2 rounded-full bg-[var(--neon-cyan)] animate-ping"></span>
+<p class="text-sm font-bold tracking-tight">CENÁRIO: PROJEÇÃO OTIMISTA 2025</p>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4 bg-white/5 px-6 py-2 rounded-full border border-white/10">
+<div class="text-right">
+<span class="block text-[8px] text-slate-500 uppercase font-black">Confidence Factor</span>
+<span class="text-xs font-bold text-[var(--neon-cyan)]">94.8% ACCURACY</span>
+</div>
+<div class="w-16 h-1 bg-white/10 rounded-full overflow-hidden">
+<div class="h-full bg-[var(--neon-cyan)] w-[94.8%]"></div>
+</div>
+</div>
+<button class="size-10 flex items-center justify-center bg-[var(--neon-pink)] text-black rounded-full glow-pink hover:scale-110 transition-transform">
+<span class="material-symbols-outlined font-bold">bolt</span>
+</button>
+</div>
+</header>
+<div class="flex-1 p-10 flex flex-col items-center justify-center relative">
+<div class="absolute top-20 left-20 z-20 group">
+<div class="bg-black/60 backdrop-blur-md p-5 rounded-2xl border border-[var(--neon-cyan)]/30 glow-cyan transform hover:-translate-y-2 transition-all">
+<p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">CASHFLOW_ALPHA</p>
+<h2 class="text-4xl font-black tracking-tighter text-white">€85.000<span class="text-sm text-[var(--neon-cyan)] ml-1">▲</span></h2>
+<div class="h-1 w-full bg-slate-800 mt-3 rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-transparent to-[var(--neon-cyan)] w-[70%]"></div>
+</div>
+</div>
+</div>
+<div class="absolute top-24 right-24 z-20 group">
+<div class="bg-black/60 backdrop-blur-md p-5 rounded-2xl border border-[var(--neon-purple)]/30 glow-purple transform hover:-translate-y-2 transition-all">
+<p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">RECEIVABLES_BETA</p>
+<h2 class="text-4xl font-black tracking-tighter text-white">€245.000<span class="text-sm text-[var(--neon-purple)] ml-1">●</span></h2>
+<p class="text-[10px] font-bold mt-2 text-[var(--neon-purple)]">15% PENDING CLEARANCE</p>
+</div>
+</div>
+<div class="absolute bottom-40 left-24 z-20 group">
+<div class="bg-black/60 backdrop-blur-md p-5 rounded-2xl border border-[var(--neon-pink)]/30 glow-pink transform hover:-translate-y-2 transition-all">
+<p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">RISK_EXPOSURE</p>
+<h2 class="text-4xl font-black tracking-tighter text-white">3.2%<span class="text-sm text-[var(--neon-pink)] ml-1">▼</span></h2>
+<p class="text-[10px] font-bold mt-2 text-[var(--neon-pink)] tracking-tighter">CRITICAL DELAY ALERT</p>
+</div>
+</div>
+<div class="absolute bottom-44 right-32 z-20 group">
+<div class="bg-black/60 backdrop-blur-md p-5 rounded-2xl border border-white/30 transform hover:-translate-y-2 transition-all">
+<p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">PROJECT_ROI_INDEX</p>
+<h2 class="text-4xl font-black tracking-tighter text-white">18.5%</h2>
+<div class="flex gap-1 mt-3">
+<div class="h-4 w-1 bg-[var(--neon-cyan)]"></div>
+<div class="h-4 w-1 bg-[var(--neon-cyan)]"></div>
+<div class="h-4 w-1 bg-[var(--neon-cyan)]"></div>
+<div class="h-4 w-1 bg-slate-700"></div>
+<div class="h-4 w-1 bg-slate-700"></div>
+</div>
+</div>
+</div>
+<div class="relative w-full max-w-5xl h-[500px] chart-3d-rotate flex items-center justify-center">
+<div class="absolute inset-0 bg-[var(--neon-cyan)]/5 rounded-full blur-[120px] opacity-30"></div>
+<div class="absolute inset-0 border border-[var(--neon-cyan)]/20 bg-black/10 rounded-3xl overflow-hidden scanline-effect">
+<div class="absolute inset-0 grid-bg opacity-20"></div>
+</div>
+<div class="w-full h-full relative p-12 flex flex-col justify-end">
+<div class="flex items-end justify-between h-full w-full gap-4">
+<div class="flex-1 flex flex-col justify-end h-full">
+<div class="w-full bg-gradient-to-t from-transparent to-[var(--neon-cyan)]/20 border-x border-t border-[var(--neon-cyan)] rounded-t-lg h-[40%] glow-cyan transition-all duration-700 group-hover:h-[45%]"></div>
+<span class="text-[10px] text-center mt-2 font-black uppercase">Q1_25</span>
+</div>
+<div class="flex-1 flex flex-col justify-end h-full">
+<div class="w-full bg-gradient-to-t from-transparent to-[var(--neon-purple)]/20 border-x border-t border-[var(--neon-purple)] rounded-t-lg h-[65%] glow-purple"></div>
+<span class="text-[10px] text-center mt-2 font-black uppercase">Q2_25</span>
+</div>
+<div class="flex-1 flex flex-col justify-end h-full relative">
+<div class="absolute -top-10 left-0 right-0 text-center animate-bounce">
+<span class="bg-[var(--neon-pink)] text-black text-[10px] px-2 py-1 font-black rounded">PEAK FORECAST</span>
+</div>
+<div class="w-full bg-gradient-to-t from-transparent to-[var(--neon-cyan)]/20 border-x border-t border-[var(--neon-cyan)] rounded-t-lg h-[90%] glow-cyan"></div>
+<span class="text-[10px] text-center mt-2 font-black uppercase">Q3_25</span>
+</div>
+<div class="flex-1 flex flex-col justify-end h-full">
+<div class="w-full bg-gradient-to-t from-transparent to-[var(--neon-purple)]/20 border-x border-t border-[var(--neon-purple)] rounded-t-lg h-[55%] glow-purple opacity-50 border-dashed"></div>
+<span class="text-[10px] text-center mt-2 font-black uppercase">Q4_25</span>
+</div>
+</div>
+</div>
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
+<p class="text-slate-500 text-[10px] font-black tracking-[1em] mb-4">DATA_MODEL_RUNNING</p>
+<div class="w-px h-24 bg-gradient-to-b from-transparent via-[var(--neon-cyan)] to-transparent"></div>
+</div>
+</div>
+</div>
+<div class="h-64 border-t border-white/10 bg-black/60 backdrop-blur-xl relative z-30">
+<div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[var(--neon-cyan)] to-transparent opacity-50"></div>
+<div class="flex h-full">
+<div class="w-1/3 border-r border-white/10 flex flex-col">
+<div class="p-4 bg-white/5 border-b border-white/10 flex justify-between items-center">
+<span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Fluxo_Operacional.log</span>
+<div class="flex gap-2">
+<span class="size-2 rounded-full bg-[var(--neon-cyan)]"></span>
+<span class="size-2 rounded-full bg-slate-700"></span>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto data-stream p-4 space-y-3">
+<div class="flex items-center gap-3 text-xs border-l-2 border-[var(--neon-cyan)] pl-3 py-1">
+<span class="text-slate-500">14:22:01</span>
+<span class="font-bold">LIQUID_TRANS: +€4.500</span>
+<span class="bg-white/5 px-2 rounded font-black text-[8px]">ED_CYAN</span>
+</div>
+<div class="flex items-center gap-3 text-xs border-l-2 border-[var(--neon-pink)] pl-3 py-1">
+<span class="text-slate-500">14:20:55</span>
+<span class="font-bold text-[var(--neon-pink)]">WARNING: DELAY_UNIT_402</span>
+<span class="bg-white/5 px-2 rounded font-black text-[8px]">RE_PURPLE</span>
+</div>
+<div class="flex items-center gap-3 text-xs border-l-2 border-[var(--neon-purple)] pl-3 py-1 opacity-60">
+<span class="text-slate-500">14:18:12</span>
+<span class="font-bold">REVENUE_SPLIT: PIX_TRANSFER</span>
+<span class="bg-white/5 px-2 rounded font-black text-[8px]">TORRE_N</span>
+</div>
+<div class="flex items-center gap-3 text-xs border-l-2 border-[var(--neon-cyan)] pl-3 py-1">
+<span class="text-slate-500">14:15:30</span>
+<span class="font-bold">LIQUID_TRANS: +€28.900</span>
+<span class="bg-white/5 px-2 rounded font-black text-[8px]">TORRE_N</span>
+</div>
+</div>
+</div>
+<div class="flex-1 p-6 flex items-center justify-around gap-8">
+<div class="space-y-4">
+<h4 class="text-[10px] font-black uppercase tracking-widest text-[var(--neon-cyan)] mb-2">Simulation_Parameters</h4>
+<div class="flex gap-4">
+<button class="px-6 py-2 border border-[var(--neon-cyan)] bg-[var(--neon-cyan)]/10 rounded font-black text-xs hover:bg-[var(--neon-cyan)] hover:text-black transition-all">NORMAL_MODE</button>
+<button class="px-6 py-2 border border-white/20 rounded font-black text-xs hover:border-[var(--neon-pink)] hover:text-[var(--neon-pink)] transition-all">STRESS_TEST</button>
+<button class="px-6 py-2 border border-white/20 rounded font-black text-xs hover:border-[var(--neon-purple)] hover:text-[var(--neon-purple)] transition-all">PEAK_GROWTH</button>
+</div>
+</div>
+<div class="h-16 w-px bg-white/10"></div>
+<div class="flex flex-col gap-2">
+<span class="text-[10px] font-black text-slate-500 uppercase">Interactive_Range</span>
+<div class="flex items-center gap-4 bg-black/40 border border-white/10 p-2 rounded">
+<span class="material-symbols-outlined text-sm text-[var(--neon-cyan)]">calendar_month</span>
+<span class="text-xs font-bold">2024_Q4 - 2025_Q4</span>
+<span class="material-symbols-outlined text-sm cursor-pointer hover:text-[var(--neon-cyan)]">expand_more</span>
+</div>
+</div>
+</div>
+<div class="w-1/4 border-l border-white/10 bg-[var(--neon-purple)]/5 p-6 flex flex-col justify-center">
+<div class="flex justify-between items-end mb-4">
+<div class="flex flex-col">
+<span class="text-[8px] text-slate-400 font-black uppercase">Projected_End_Balance</span>
+<span class="text-2xl font-black text-white">€1.42M</span>
+</div>
+<span class="text-[10px] font-black text-[var(--neon-cyan)]">+18.2%</span>
+</div>
+<button class="w-full py-3 bg-white text-black font-black text-xs uppercase tracking-widest hover:bg-[var(--neon-cyan)] transition-colors">Generate_Full_Audit</button>
+</div>
+</div>
+</div>
+</main>
+<aside class="w-80 bg-black/60 border-l border-white/10 flex flex-col z-50 overflow-hidden">
+<div class="p-8 border-b border-white/10">
+<h3 class="text-xs font-black uppercase tracking-widest mb-6 flex items-center gap-2">
+<span class="size-2 bg-[var(--neon-pink)] rounded-full glow-pink"></span>
+                Scenario_Planner
+            </h3>
+<div class="space-y-8">
+<div>
+<div class="flex justify-between items-center mb-2">
+<span class="text-[10px] font-black text-slate-400">INTEREST_RATE_FLUX</span>
+<span class="text-[10px] font-bold text-[var(--neon-cyan)]">0.5% STEP</span>
+</div>
+<div class="relative h-1 bg-slate-800 rounded-full">
+<div class="absolute inset-y-0 left-0 w-[40%] bg-[var(--neon-cyan)] glow-cyan"></div>
+<div class="absolute left-[40%] top-1/2 -translate-y-1/2 size-3 bg-white rounded-full border-2 border-[var(--neon-cyan)]"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between items-center mb-2">
+<span class="text-[10px] font-black text-slate-400">COST_VARIANCE_INDEX</span>
+<span class="text-[10px] font-bold text-[var(--neon-pink)]">+12% RISK</span>
+</div>
+<div class="relative h-1 bg-slate-800 rounded-full">
+<div class="absolute inset-y-0 left-0 w-[75%] bg-[var(--neon-pink)] glow-pink"></div>
+<div class="absolute left-[75%] top-1/2 -translate-y-1/2 size-3 bg-white rounded-full border-2 border-[var(--neon-pink)]"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="flex-1 p-8 space-y-6 overflow-y-auto data-stream">
+<h4 class="text-[10px] font-black uppercase tracking-widest text-slate-500">Asset_Performance</h4>
+<div class="p-4 bg-white/5 rounded-xl border border-white/5 group hover:border-[var(--neon-cyan)]/50 transition-colors">
+<div class="flex justify-between mb-2">
+<span class="text-xs font-bold">Edifício Cyan</span>
+<span class="text-[10px] text-[var(--neon-cyan)]">22% ROI</span>
+</div>
+<div class="h-0.5 w-full bg-slate-800 rounded-full">
+<div class="h-full bg-[var(--neon-cyan)] w-[85%]"></div>
+</div>
+</div>
+<div class="p-4 bg-white/5 rounded-xl border border-white/5 group hover:border-[var(--neon-purple)]/50 transition-colors">
+<div class="flex justify-between mb-2">
+<span class="text-xs font-bold">Torre Neon</span>
+<span class="text-[10px] text-[var(--neon-purple)]">15% ROI</span>
+</div>
+<div class="h-0.5 w-full bg-slate-800 rounded-full">
+<div class="h-full bg-[var(--neon-purple)] w-[62%]"></div>
+</div>
+</div>
+<div class="p-4 bg-[var(--neon-pink)]/10 rounded-xl border border-[var(--neon-pink)]/20 animate-pulse">
+<div class="flex justify-between mb-2">
+<span class="text-xs font-bold text-[var(--neon-pink)]">Residencial Purple</span>
+<span class="text-[10px] text-[var(--neon-pink)]">12% ROI</span>
+</div>
+<div class="h-0.5 w-full bg-slate-800 rounded-full">
+<div class="h-full bg-[var(--neon-pink)] w-[45%]"></div>
+</div>
+<p class="text-[8px] font-bold mt-2 text-[var(--neon-pink)] uppercase tracking-tighter">BUDGET OVERRUN DETECTED</p>
+</div>
+</div>
+<div class="p-8 border-t border-white/10 bg-black/40">
+<button class="w-full flex items-center justify-center gap-3 py-4 border-2 border-[var(--neon-cyan)] text-[var(--neon-cyan)] font-black text-xs uppercase tracking-[0.2em] rounded-xl glow-cyan hover:bg-[var(--neon-cyan)] hover:text-black transition-all">
+<span class="material-symbols-outlined">analytics</span>
+                EXECUTE_FORECAST
+            </button>
+</div>
+</aside>
+</div>
+
+</body></html>

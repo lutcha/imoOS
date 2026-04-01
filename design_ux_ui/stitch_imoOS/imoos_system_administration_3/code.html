@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html class="dark" lang="pt"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ImoOS - Collaborative Team Manager</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-muted": "#8B5CF6", // Muted Purple
+                        "secondary-muted": "#10B981", // Muted Green
+                        "accent-purple": "#A78BFA",
+                        "accent-green": "#34D399",
+                        "background-dark": "#0A0A0F",
+                        "glass": "rgba(255, 255, 255, 0.03)",
+                        "glass-border": "rgba(255, 255, 255, 0.08)",
+                    },
+                    fontFamily: {
+                        "sans": ["'Open Sans'", "sans-serif"]
+                    },
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        @layer components {
+            .glass-card {
+                @apply bg-white/[0.03] backdrop-blur-xl border border-white/[0.08];
+            }
+            .gradient-purple {
+                background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%);
+            }
+            .gradient-green {
+                background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            }
+            .gradient-dark-soft {
+                background: linear-gradient(180deg, rgba(139, 92, 246, 0.05) 0%, rgba(16, 185, 129, 0.05) 100%);
+            }
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-background-dark font-sans text-slate-200 antialiased overflow-x-hidden">
+<div class="flex h-screen overflow-hidden">
+<aside class="w-64 flex-shrink-0 border-r border-glass-border bg-background-dark flex flex-col z-20">
+<div class="p-6 flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-muted to-secondary-muted flex items-center justify-center shadow-lg shadow-primary-muted/10">
+<span class="material-symbols-outlined text-white font-bold">diversity_3</span>
+</div>
+<div>
+<h1 class="text-xl font-bold tracking-tight text-white">ImoOS</h1>
+<p class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Team Hub</p>
+</div>
+</div>
+<nav class="flex-1 px-4 space-y-1 mt-4 overflow-y-auto">
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-glass transition-all" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-glass transition-all" href="#">
+<span class="material-symbols-outlined">forum</span>
+<span class="text-sm font-medium">Comunicação da Equipa</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-glass transition-all" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="text-sm font-medium">Disponibilidade</span>
+</a>
+<div class="pt-6 pb-2 px-4">
+<p class="text-[10px] uppercase tracking-widest text-slate-600 font-bold">Gestão</p>
+</div>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary-muted/10 text-accent-purple border border-primary-muted/20" href="#">
+<span class="material-symbols-outlined">manage_accounts</span>
+<span class="text-sm font-medium">Gestão de Funções</span>
+</a>
+</nav>
+<div class="p-4 mt-auto">
+<div class="glass-card rounded-2xl p-4 relative overflow-hidden group">
+<p class="text-xs text-slate-400 mb-2">Bem-estar da Equipa</p>
+<div class="w-full bg-slate-800/50 h-2 rounded-full mb-3">
+<div class="bg-gradient-to-r from-primary-muted to-secondary-muted h-full rounded-full" style="width: 88%"></div>
+</div>
+<button class="w-full py-2 bg-glass border border-glass-border text-slate-200 text-xs font-semibold rounded-lg hover:bg-white/10 transition-all">
+                    Ver Relatório Saúde
+                </button>
+</div>
+</div>
+</aside>
+<main class="flex-1 flex flex-col min-w-0 bg-background-dark relative">
+<header class="h-16 border-b border-glass-border flex items-center justify-between px-8 bg-background-dark/50 backdrop-blur-md sticky top-0 z-10">
+<div class="flex items-center gap-4 flex-1">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">search</span>
+<input class="w-full bg-glass border-glass-border rounded-xl pl-10 pr-4 py-2 text-sm text-slate-200 focus:ring-1 focus:ring-primary-muted focus:border-primary-muted transition-all placeholder:text-slate-600" placeholder="Procurar colegas ou funções..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 flex items-center justify-center rounded-xl bg-glass hover:bg-glass-border text-slate-400 hover:text-white transition-all">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="h-8 w-[1px] bg-glass-border mx-2"></div>
+<div class="flex items-center gap-3 pl-2">
+<div class="text-right">
+<p class="text-xs font-bold text-white">Ricardo Mendes</p>
+<p class="text-[10px] text-slate-500 uppercase">Coordenador de Equipa</p>
+</div>
+<div class="w-10 h-10 rounded-full bg-gradient-to-tr from-primary-muted/20 to-secondary-muted/20 p-0.5 border border-glass-border">
+<img alt="User Avatar" class="w-full h-full rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxWCNqveNgjZXbYO4o8wvibx-_B3DsdGVFM0SNG4LZz53b2rX7yRgIXsmG_b3tM4T0hFVnNCNci_Xk4nWal0SREmR966cutUpx2w3S9N-gl8UiIfPW_Lpr1WUESJfGK-VHy7PpBY3FcK7tShxB5B9-GcpIfXfBSlMp6PXxNlcMCwdg4-62lka0ecjvuD5dPFRn12nc7CAExUGw27RTlIIHvZ9R5HvAy5nLAmSuKXp7-uEcf_XSYTbq9XgXfJC5SjoW1jrEmgga2fD6"/>
+</div>
+</div>
+</div>
+</header>
+<div class="flex-1 overflow-y-auto p-8 gradient-dark-soft">
+<div class="max-w-7xl mx-auto">
+<div class="flex items-end justify-between mb-10">
+<div>
+<nav class="flex items-center gap-2 text-xs font-medium text-slate-500 mb-2 uppercase tracking-widest">
+<span>Admin</span>
+<span class="material-symbols-outlined text-[10px]">chevron_right</span>
+<span class="text-accent-purple">Gestão de Funções Simplificada</span>
+</nav>
+<h2 class="text-3xl font-bold tracking-tight text-white mb-2">Equipa &amp; Colaboração</h2>
+<p class="text-slate-400">Promova o bem-estar e a clareza nas funções de cada membro da sua equipa.</p>
+</div>
+<div class="flex gap-3">
+<button class="px-5 py-2.5 rounded-xl glass-card text-sm font-semibold text-white hover:bg-white/10 transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">chat</span>
+                            Comunicação da Equipa
+                        </button>
+<button class="px-5 py-2.5 rounded-xl gradient-purple text-white text-sm font-bold shadow-lg shadow-primary-muted/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-lg font-bold">add_reaction</span>
+                            Convidar Membro
+                        </button>
+</div>
+</div>
+<div class="flex gap-8">
+<div class="w-72 flex-shrink-0 space-y-3">
+<a class="flex flex-col gap-1 p-5 rounded-2xl glass-card border-transparent text-slate-400 hover:bg-glass transition-all" href="#">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-accent-purple">person</span>
+<span class="text-sm font-bold text-slate-200">Perfil Pessoal</span>
+</div>
+<p class="text-[11px] text-slate-500 mt-1 pl-8">Gerir as suas preferências e dados.</p>
+</a>
+<a class="flex flex-col gap-1 p-5 rounded-2xl border-primary-muted/30 bg-primary-muted/5 shadow-xl shadow-primary-muted/5 transition-all border" href="#">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-accent-purple">groups</span>
+<span class="text-sm font-bold text-white">Equipa &amp; Permissões</span>
+</div>
+<div class="w-2 h-2 rounded-full bg-accent-purple animate-pulse"></div>
+</div>
+<p class="text-[11px] text-slate-400 mt-1 pl-8">Organize e apoie os seus colaboradores.</p>
+</a>
+<a class="flex flex-col gap-1 p-5 rounded-2xl glass-card border-transparent text-slate-400 hover:bg-glass transition-all" href="#">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary-muted">hub</span>
+<span class="text-sm font-bold text-slate-200">Integrações Sociais</span>
+</div>
+<p class="text-[11px] text-slate-500 mt-1 pl-8">Slack, Discord e outras ferramentas.</p>
+</a>
+<a class="flex flex-col gap-1 p-5 rounded-2xl glass-card border-transparent text-slate-400 hover:bg-glass transition-all" href="#">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined">payments</span>
+<span class="text-sm font-bold text-slate-200">Faturação</span>
+</div>
+<p class="text-[11px] text-slate-500 mt-1 pl-8">Gestão de subscrições e custos.</p>
+</a>
+<div class="mt-8 p-6 rounded-2xl bg-gradient-to-br from-secondary-muted/10 to-transparent border border-secondary-muted/20 relative overflow-hidden">
+<h4 class="text-xs font-bold text-accent-green uppercase tracking-wider mb-4">Disponibilidade de Membros</h4>
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<span class="text-[11px] text-slate-400">Em Foco</span>
+<span class="text-[11px] text-white font-bold">82%</span>
+</div>
+<div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+<div class="h-full bg-secondary-muted" style="width: 82%"></div>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-[11px] text-slate-400">Em Pausa</span>
+<span class="text-[11px] text-white font-bold">18%</span>
+</div>
+<div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+<div class="h-full bg-primary-muted" style="width: 18%"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="grid grid-cols-3 gap-6 mb-8">
+<div class="glass-card rounded-2xl p-5 border-l-4 border-primary-muted">
+<p class="text-[11px] text-slate-500 font-bold uppercase tracking-wider mb-1">Colaboradores</p>
+<div class="flex items-baseline gap-2">
+<span class="text-3xl font-bold text-white">128</span>
+<span class="text-xs text-secondary-muted font-semibold">+5 novos este mês</span>
+</div>
+</div>
+<div class="glass-card rounded-2xl p-5 border-l-4 border-secondary-muted">
+<p class="text-[11px] text-slate-500 font-bold uppercase tracking-wider mb-1">Clima da Equipa</p>
+<div class="flex items-baseline gap-2">
+<span class="text-3xl font-bold text-white">Excelente</span>
+<span class="text-xs text-accent-green font-semibold">Mood Estável</span>
+</div>
+</div>
+<div class="glass-card rounded-2xl p-5 border-l-4 border-slate-700">
+<p class="text-[11px] text-slate-500 font-bold uppercase tracking-wider mb-1">Feedback Pendente</p>
+<div class="flex items-baseline gap-2">
+<span class="text-3xl font-bold text-white">14</span>
+<span class="text-xs text-slate-500 font-semibold">Conversas 1:1</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="glass-card rounded-3xl p-6 hover:border-primary-muted/40 transition-all group">
+<div class="flex items-start justify-between mb-6">
+<div class="flex items-center gap-4">
+<div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary-muted/20 to-secondary-muted/20 p-1">
+<img alt="André Silva" class="w-full h-full rounded-xl object-cover bg-slate-800" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDl8m7HBYVdlNsoCxMBvfm-Cq_NVnq1cxUjGH30EvoqW3k2dxUPs5vUOe7NZRII3TAfB3mcCjtggIKYrxqm99J4TKxqw-hq0ZbgC2KippHGrbnk_Pa6Su1WFAh65i9KEE2MRaMyHq2t8JeY_SjstxDw1OcATKwTg9h_EZM2eN-X4bV3rDCdt4Odho-ZWeysjfBVWWzP89cKfthVKTmTbBC2m6gvQypkzcklu-DPWtTpq5_aIhsXJaEwiXVi7A0MXbmaTj1NMSXnjTec"/>
+</div>
+<div>
+<h3 class="text-lg font-bold text-white group-hover:text-accent-purple transition-colors">André Silva</h3>
+<p class="text-xs text-slate-500">andre.silva@imoos.com</p>
+<div class="mt-2 inline-flex items-center px-2.5 py-1 rounded-lg bg-primary-muted/10 text-accent-purple text-[10px] font-bold uppercase tracking-wider border border-primary-muted/20">
+                                                Administrador
+                                            </div>
+</div>
+</div>
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary-muted/10 border border-secondary-muted/20">
+<div class="w-2 h-2 rounded-full bg-accent-green"></div>
+<span class="text-[10px] font-bold text-accent-green uppercase">Disponível</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 mb-6">
+<div class="bg-white/[0.02] rounded-xl p-3 border border-white/[0.04]">
+<p class="text-[10px] text-slate-500 font-semibold mb-1 uppercase">Produtividade</p>
+<p class="text-sm font-bold text-white">98%</p>
+</div>
+<div class="bg-white/[0.02] rounded-xl p-3 border border-white/[0.04]">
+<p class="text-[10px] text-slate-500 font-semibold mb-1 uppercase">Tempo na Equipa</p>
+<p class="text-sm font-bold text-white">2 anos</p>
+</div>
+</div>
+<div class="flex gap-3">
+<button class="flex-1 py-2.5 rounded-xl border border-glass-border text-xs font-bold hover:bg-white/5 transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">edit</span>
+                                        Ajustar Função
+                                    </button>
+<button class="flex-1 py-2.5 rounded-xl gradient-purple text-white text-xs font-bold hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary-muted/10">
+<span class="material-symbols-outlined text-sm">send</span>
+                                        Mensagem
+                                    </button>
+</div>
+</div>
+<div class="glass-card rounded-3xl p-6 hover:border-primary-muted/40 transition-all group">
+<div class="flex items-start justify-between mb-6">
+<div class="flex items-center gap-4">
+<div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary-muted/20 to-secondary-muted/20 p-1">
+<img alt="Sofia Costa" class="w-full h-full rounded-xl object-cover bg-slate-800" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCurBLP4upUU36NUmBjjRTX6BlB5Qjp07xKLyj3EWlH4imsMmgD7JdzEYIRoVmPht2EG4X-TaMubsVXcFEvIYCGnapgmu5jS1TsiYT4ZKDi8DBmv7c-q3XEsCzB6x94gJu4EZ7l0tTqtTaS7Mw07LbX13-tL1SsusHFozzGXOCSUlEweA9yVAsbhWkgfFnXuDcaqSshH0L4xMQOC6c_0-62AUodWjUevJaTu50WJBs-ku9JAPbU0JxPU0faI2yOOnquDHpa7Mjg732w"/>
+</div>
+<div>
+<h3 class="text-lg font-bold text-white group-hover:text-accent-purple transition-colors">Sofia Costa</h3>
+<p class="text-xs text-slate-500">sofia.costa@imoos.com</p>
+<div class="mt-2 inline-flex items-center px-2.5 py-1 rounded-lg bg-secondary-muted/10 text-accent-green text-[10px] font-bold uppercase tracking-wider border border-secondary-muted/20">
+                                                Gestora de Projecto
+                                            </div>
+</div>
+</div>
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary-muted/10 border border-secondary-muted/20">
+<div class="w-2 h-2 rounded-full bg-accent-green"></div>
+<span class="text-[10px] font-bold text-accent-green uppercase">Em Foco</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 mb-6">
+<div class="bg-white/[0.02] rounded-xl p-3 border border-white/[0.04]">
+<p class="text-[10px] text-slate-500 font-semibold mb-1 uppercase">Atividades</p>
+<p class="text-sm font-bold text-white">45 Task</p>
+</div>
+<div class="bg-white/[0.02] rounded-xl p-3 border border-white/[0.04]">
+<p class="text-[10px] text-slate-500 font-semibold mb-1 uppercase">Feedback</p>
+<p class="text-sm font-bold text-white">Excelente</p>
+</div>
+</div>
+<div class="flex gap-3">
+<button class="flex-1 py-2.5 rounded-xl border border-glass-border text-xs font-bold hover:bg-white/5 transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">edit</span>
+                                        Ajustar Função
+                                    </button>
+<button class="flex-1 py-2.5 rounded-xl gradient-purple text-white text-xs font-bold hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary-muted/10">
+<span class="material-symbols-outlined text-sm">send</span>
+                                        Mensagem
+                                    </button>
+</div>
+</div>
+<div class="glass-card rounded-3xl p-6 hover:border-primary-muted/40 transition-all group">
+<div class="flex items-start justify-between mb-6">
+<div class="flex items-center gap-4">
+<div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary-muted/20 to-secondary-muted/20 p-1">
+<img alt="Paulo Freire" class="w-full h-full rounded-xl object-cover bg-slate-800" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDVbFFsBC1vV8o6egLplNMTTpRjvOKxLPuz_ojZu56iWshnq4sVtdnhfL8djX3tcV0Tf4_9qml66o2tvKZ2SppFOy9E2kYyhvatVU0vHsGf5rLeIBGFHuMMGu0D61Zi9lckKr5AtiTOIZw6Mt0VdCLiWf7D45NcXdHMxhS8XkxvaDRcuJwVE7gVRvqzlKsB3_Jip1w-WrilHmAdxU3eEJmIu_0gqOjA1v96k9BHFWsxAFB7zRS2N0vflMuJps-bB8NrtRBXxKDKKua1"/>
+</div>
+<div>
+<h3 class="text-lg font-bold text-white group-hover:text-accent-purple transition-colors">Paulo Freire</h3>
+<p class="text-xs text-slate-500">p.freire@imoos.com</p>
+<div class="mt-2 inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-800 text-slate-400 text-[10px] font-bold uppercase tracking-wider border border-slate-700">
+                                                Consultor
+                                            </div>
+</div>
+</div>
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700">
+<div class="w-2 h-2 rounded-full bg-slate-500"></div>
+<span class="text-[10px] font-bold text-slate-500 uppercase">Ausente</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 mb-6">
+<div class="bg-white/[0.02] rounded-xl p-3 border border-white/[0.04]">
+<p class="text-[10px] text-slate-500 font-semibold mb-1 uppercase">Vendas</p>
+<p class="text-sm font-bold text-white">€12.5k</p>
+</div>
+<div class="bg-white/[0.02] rounded-xl p-3 border border-white/[0.04]">
+<p class="text-[10px] text-slate-500 font-semibold mb-1 uppercase">Follow-up</p>
+<p class="text-sm font-bold text-white">Atrasado</p>
+</div>
+</div>
+<div class="flex gap-3">
+<button class="flex-1 py-2.5 rounded-xl border border-glass-border text-xs font-bold hover:bg-white/5 transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">edit</span>
+                                        Ajustar Função
+                                    </button>
+<button class="flex-1 py-2.5 rounded-xl gradient-purple text-white text-xs font-bold hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary-muted/10">
+<span class="material-symbols-outlined text-sm">send</span>
+                                        Mensagem
+                                    </button>
+</div>
+</div>
+<div class="glass-card rounded-3xl p-6 hover:border-primary-muted/40 transition-all group">
+<div class="flex items-start justify-between mb-6">
+<div class="flex items-center gap-4">
+<div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary-muted/20 to-secondary-muted/20 p-1">
+<img alt="Beatriz Nunes" class="w-full h-full rounded-xl object-cover bg-slate-800" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCqhhwfRIvkb6KlHJixffFukygfnocxH48-OMPhYINzW-cDzsHDR9jQUbiga3fkRXyBXxNHMgjd1_H18EM9mmiBmI3xSXd8BND7X01v4P5LUaC0jXMotSSGSvl_WMjHu5DHy32TH0wNabReA5aiqwoaDC-mobitaKUT_0HuI2sB6TW6UoGRYvhjj6RSMjj4Yyp-PEWplA4wOhBeW9z2zjCQaZRCU7o58ujNy5WTPDqCDy8Dd-OoEoQ1IzdIW6iTNoBpixELKLJmNM02"/>
+</div>
+<div>
+<h3 class="text-lg font-bold text-white group-hover:text-accent-purple transition-colors">Beatriz Nunes</h3>
+<p class="text-xs text-slate-500">b.nunes@imoos.com</p>
+<div class="mt-2 inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-800 text-slate-400 text-[10px] font-bold uppercase tracking-wider border border-slate-700">
+                                                Marketing
+                                            </div>
+</div>
+</div>
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary-muted/10 border border-secondary-muted/20">
+<div class="w-2 h-2 rounded-full bg-accent-green"></div>
+<span class="text-[10px] font-bold text-accent-green uppercase">Disponível</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 mb-6">
+<div class="bg-white/[0.02] rounded-xl p-3 border border-white/[0.04]">
+<p class="text-[10px] text-slate-500 font-semibold mb-1 uppercase">Lead Gen</p>
+<p class="text-sm font-bold text-white">+12%</p>
+</div>
+<div class="bg-white/[0.02] rounded-xl p-3 border border-white/[0.04]">
+<p class="text-[10px] text-slate-500 font-semibold mb-1 uppercase">Campanhas</p>
+<p class="text-sm font-bold text-white">4 Ativas</p>
+</div>
+</div>
+<div class="flex gap-3">
+<button class="flex-1 py-2.5 rounded-xl border border-glass-border text-xs font-bold hover:bg-white/5 transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">edit</span>
+                                        Ajustar Função
+                                    </button>
+<button class="flex-1 py-2.5 rounded-xl gradient-purple text-white text-xs font-bold hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary-muted/10">
+<span class="material-symbols-outlined text-sm">send</span>
+                                        Mensagem
+                                    </button>
+</div>
+</div>
+</div>
+<div class="mt-8 flex items-center justify-between px-2">
+<p class="text-sm text-slate-500 font-medium">Mostrando <span class="text-white">4</span> de 128 membros</p>
+<div class="flex items-center gap-2">
+<button class="w-10 h-10 flex items-center justify-center rounded-xl bg-glass border border-glass-border text-slate-400 hover:text-white transition-all">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-xl gradient-purple text-white font-bold">1</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-xl bg-glass border border-glass-border text-slate-400 hover:text-white transition-all">2</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-xl bg-glass border border-glass-border text-slate-400 hover:text-white transition-all">3</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-xl bg-glass border border-glass-border text-slate-400 hover:text-white transition-all">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<div class="fixed top-[-20%] left-[-10%] w-[60%] h-[60%] bg-primary-muted/5 blur-[160px] rounded-full pointer-events-none -z-10"></div>
+<div class="fixed bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-secondary-muted/5 blur-[160px] rounded-full pointer-events-none -z-10"></div>
+
+</body></html>

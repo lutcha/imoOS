@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ImoOS - System Administration</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#00d4ff",
+                        "secondary": "#7c3aed",
+                        "background-light": "#f5f8f8",
+                        "background-dark": "#0A0A0F",
+                        "glass": "rgba(255, 255, 255, 0.03)",
+                        "glass-border": "rgba(255, 255, 255, 0.08)",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .neon-glow-primary {
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+        }
+        .neon-glow-purple {
+            box-shadow: 0 0 15px rgba(124, 58, 237, 0.3);
+        }
+        .active-tab-glow {
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.15);
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-background-dark font-display text-slate-100 antialiased overflow-x-hidden">
+<div class="flex h-screen overflow-hidden">
+<!-- Sidebar Navigation -->
+<aside class="w-64 flex-shrink-0 border-r border-glass-border bg-background-dark flex flex-col z-20">
+<div class="p-6 flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary via-secondary to-primary bg-[length:200%_200%] flex items-center justify-center">
+<span class="material-symbols-outlined text-background-dark font-bold">corporate_fare</span>
+</div>
+<div>
+<h1 class="text-xl font-black tracking-tighter text-white">ImoOS</h1>
+<p class="text-[10px] uppercase tracking-widest text-primary font-bold">Admin Portal</p>
+</div>
+</div>
+<nav class="flex-1 px-4 space-y-1 mt-4 overflow-y-auto">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-white hover:bg-glass transition-all" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-white hover:bg-glass transition-all" href="#">
+<span class="material-symbols-outlined">real_estate_agent</span>
+<span class="text-sm font-medium">Propriedades</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-white hover:bg-glass transition-all" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="text-sm font-medium">Clientes</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-white hover:bg-glass transition-all" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="text-sm font-medium">Relatórios</span>
+</a>
+<div class="pt-4 pb-2 px-4">
+<p class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Configurações</p>
+</div>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg bg-primary/10 text-primary border border-primary/20" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-sm font-medium">Sistema</span>
+</a>
+</nav>
+<div class="p-4 mt-auto">
+<div class="glass-card rounded-xl p-4 relative overflow-hidden group">
+<div class="absolute -right-4 -top-4 w-16 h-16 bg-secondary/20 rounded-full blur-2xl group-hover:bg-secondary/40 transition-all"></div>
+<p class="text-xs text-slate-400 mb-2">Plano Pro</p>
+<div class="w-full bg-slate-800 h-1.5 rounded-full mb-3">
+<div class="bg-gradient-to-r from-primary to-secondary h-full rounded-full" style="width: 75%"></div>
+</div>
+<button class="w-full py-2 bg-primary text-background-dark text-xs font-bold rounded-lg neon-glow-primary hover:scale-[1.02] transition-transform">
+                        Upgrade
+                    </button>
+</div>
+</div>
+</aside>
+<!-- Main Content Wrapper -->
+<main class="flex-1 flex flex-col min-w-0 bg-background-dark relative">
+<!-- Topbar -->
+<header class="h-16 border-b border-glass-border flex items-center justify-between px-8 bg-background-dark/50 backdrop-blur-md sticky top-0 z-10">
+<div class="flex items-center gap-4 flex-1">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">search</span>
+<input class="w-full bg-glass border-glass-border rounded-lg pl-10 pr-4 py-2 text-sm text-slate-200 focus:ring-1 focus:ring-primary focus:border-primary transition-all placeholder:text-slate-600" placeholder="Pesquisar por membros, funções ou logs..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 flex items-center justify-center rounded-lg bg-glass hover:bg-glass-border text-slate-400 hover:text-white transition-all">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg bg-glass hover:bg-glass-border text-slate-400 hover:text-white transition-all">
+<span class="material-symbols-outlined">chat_bubble</span>
+</button>
+<div class="h-8 w-[1px] bg-glass-border mx-2"></div>
+<div class="flex items-center gap-3 pl-2">
+<div class="text-right">
+<p class="text-xs font-bold text-white">Ricardo Mendes</p>
+<p class="text-[10px] text-slate-500 uppercase">Super Admin</p>
+</div>
+<div class="w-10 h-10 rounded-full bg-gradient-to-tr from-slate-800 to-slate-700 p-0.5 border border-glass-border">
+<img alt="User Avatar" class="w-full h-full rounded-full object-cover" data-alt="Portrait of a professional male administrator avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxWCNqveNgjZXbYO4o8wvibx-_B3DsdGVFM0SNG4LZz53b2rX7yRgIXsmG_b3tM4T0hFVnNCNci_Xk4nWal0SREmR966cutUpx2w3S9N-gl8UiIfPW_Lpr1WUESJfGK-VHy7PpBY3FcK7tShxB5B9-GcpIfXfBSlMp6PXxNlcMCwdg4-62lka0ecjvuD5dPFRn12nc7CAExUGw27RTlIIHvZ9R5HvAy5nLAmSuKXp7-uEcf_XSYTbq9XgXfJC5SjoW1jrEmgga2fD6"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Dashboard Content -->
+<div class="flex-1 overflow-y-auto p-8">
+<div class="max-w-6xl mx-auto">
+<!-- Header Section -->
+<div class="flex items-end justify-between mb-8">
+<div>
+<nav class="flex items-center gap-2 text-xs font-medium text-slate-500 mb-2 uppercase tracking-widest">
+<span>Configurações</span>
+<span class="material-symbols-outlined text-[10px]">chevron_right</span>
+<span class="text-primary">Administração</span>
+</nav>
+<h2 class="text-4xl font-black tracking-tight text-white mb-2">Gestão do Sistema</h2>
+<p class="text-slate-400">Controle permissões de acesso e segurança da infraestrutura ImoOS.</p>
+</div>
+<div class="flex gap-3">
+<button class="px-5 py-2.5 rounded-xl glass-card text-sm font-bold text-white hover:bg-white/10 transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">description</span>
+                                Exportar Logs
+                            </button>
+<button class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-secondary text-background-dark text-sm font-black neon-glow-primary hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-lg font-bold">person_add</span>
+                                Convidar Membro
+                            </button>
+</div>
+</div>
+<!-- Layout with Vertical Tabs -->
+<div class="flex gap-8">
+<!-- Navigation Sidebar (Vertical Tabs) -->
+<div class="w-64 flex-shrink-0 space-y-2">
+<a class="flex items-center justify-between group px-5 py-4 rounded-xl border border-transparent text-slate-400 hover:text-white hover:bg-glass transition-all" href="#">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined">person</span>
+<span class="text-sm font-semibold">Perfil</span>
+</div>
+<span class="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-all text-sm">chevron_right</span>
+</a>
+<a class="flex items-center justify-between group px-5 py-4 rounded-xl border border-primary/20 bg-primary/5 text-primary active-tab-glow transition-all" href="#">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined font-bold">badge</span>
+<span class="text-sm font-bold">Equipa &amp; Permissões</span>
+</div>
+<div class="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_rgba(0,212,255,1)]"></div>
+</a>
+<a class="flex items-center justify-between group px-5 py-4 rounded-xl border border-transparent text-slate-400 hover:text-white hover:bg-glass transition-all" href="#">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined">hub</span>
+<span class="text-sm font-semibold">Integrações</span>
+</div>
+<span class="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-all text-sm">chevron_right</span>
+</a>
+<a class="flex items-center justify-between group px-5 py-4 rounded-xl border border-transparent text-slate-400 hover:text-white hover:bg-glass transition-all" href="#">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined">payments</span>
+<span class="text-sm font-semibold">Faturação</span>
+</div>
+<span class="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-all text-sm">chevron_right</span>
+</a>
+<a class="flex items-center justify-between group px-5 py-4 rounded-xl border border-transparent text-slate-400 hover:text-white hover:bg-glass transition-all" href="#">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined">security</span>
+<span class="text-sm font-semibold">Segurança</span>
+</div>
+<span class="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-all text-sm">chevron_right</span>
+</a>
+<!-- Role Matrix Preview Card -->
+<div class="mt-8 p-5 rounded-2xl glass-card relative overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-br from-secondary/5 to-primary/5 opacity-50"></div>
+<h4 class="relative text-xs font-bold text-white uppercase tracking-wider mb-3">Resumo de Acessos</h4>
+<div class="relative space-y-3">
+<div class="flex items-center justify-between">
+<span class="text-[11px] text-slate-400">Admin Geral</span>
+<span class="text-[11px] text-primary font-bold">4/50</span>
+</div>
+<div class="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
+<div class="h-full bg-primary" style="width: 8%"></div>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-[11px] text-slate-400">Gestores</span>
+<span class="text-[11px] text-secondary font-bold">12/50</span>
+</div>
+<div class="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
+<div class="h-full bg-secondary" style="width: 24%"></div>
+</div>
+<button class="w-full mt-2 text-[10px] text-center font-bold text-slate-500 hover:text-slate-300 transition-colors py-2 border border-dashed border-slate-700 rounded-lg">
+                                        Ver Matriz de Funções
+                                    </button>
+</div>
+</div>
+</div>
+<!-- Content Area (Active Tab) -->
+<div class="flex-1 min-w-0">
+<!-- Stats Strip -->
+<div class="grid grid-cols-3 gap-4 mb-6">
+<div class="glass-card rounded-2xl p-4 border-l-2 border-primary">
+<p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Membros Ativos</p>
+<div class="flex items-end gap-2">
+<span class="text-2xl font-black text-white">128</span>
+<span class="text-[11px] text-emerald-400 font-bold mb-1">+5.2%</span>
+</div>
+</div>
+<div class="glass-card rounded-2xl p-4 border-l-2 border-secondary">
+<p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Taxa de Resposta</p>
+<div class="flex items-end gap-2">
+<span class="text-2xl font-black text-white">92%</span>
+<span class="text-[11px] text-emerald-400 font-bold mb-1">Excellent</span>
+</div>
+</div>
+<div class="glass-card rounded-2xl p-4 border-l-2 border-slate-700">
+<p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Convites Pendentes</p>
+<div class="flex items-end gap-2">
+<span class="text-2xl font-black text-white">14</span>
+<span class="text-[11px] text-slate-500 font-bold mb-1">Aguardando</span>
+</div>
+</div>
+</div>
+<!-- Sophisticated Table Container -->
+<div class="glass-card rounded-2xl overflow-hidden">
+<div class="px-6 py-4 border-b border-glass-border flex items-center justify-between bg-white/5">
+<h3 class="font-bold text-white flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-lg">table_rows</span>
+                                        Membros da Equipa
+                                    </h3>
+<div class="flex gap-2">
+<button class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-glass hover:text-white transition-all">
+<span class="material-symbols-outlined text-sm">filter_list</span>
+</button>
+<button class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-glass hover:text-white transition-all">
+<span class="material-symbols-outlined text-sm">sort</span>
+</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="text-[11px] uppercase tracking-widest text-slate-500 font-bold border-b border-glass-border bg-background-dark/30">
+<th class="px-6 py-4">Membro</th>
+<th class="px-6 py-4">Email</th>
+<th class="px-6 py-4">Função</th>
+<th class="px-6 py-4">Status</th>
+<th class="px-6 py-4 text-right">Ações</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-glass-border">
+<!-- Row 1 -->
+<tr class="hover:bg-white/5 transition-colors group">
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full border border-glass-border p-0.5 overflow-hidden">
+<img alt="User" class="w-full h-full rounded-full object-cover" data-alt="Portrait of a male professional user avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDl8m7HBYVdlNsoCxMBvfm-Cq_NVnq1cxUjGH30EvoqW3k2dxUPs5vUOe7NZRII3TAfB3mcCjtggIKYrxqm99J4TKxqw-hq0ZbgC2KippHGrbnk_Pa6Su1WFAh65i9KEE2MRaMyHq2t8JeY_SjstxDw1OcATKwTg9h_EZM2eN-X4bV3rDCdt4Odho-ZWeysjfBVWWzP89cKfthVKTmTbBC2m6gvQypkzcklu-DPWtTpq5_aIhsXJaEwiXVi7A0MXbmaTj1NMSXnjTec"/>
+</div>
+<div>
+<p class="text-sm font-bold text-white">André Silva</p>
+<p class="text-[11px] text-slate-500">Último acesso: 2m atrás</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-sm text-slate-300">andre.silva@imoos.com</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-primary/10 text-primary border border-primary/20">Admin</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-1.5">
+<div class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div>
+<span class="text-xs font-bold text-emerald-400">Ativo</span>
+</div>
+</td>
+<td class="px-6 py-4 text-right whitespace-nowrap">
+<button class="w-8 h-8 rounded-lg bg-glass hover:bg-glass-border text-slate-400 hover:text-white transition-all">
+<span class="material-symbols-outlined text-lg">more_horiz</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-white/5 transition-colors group">
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full border border-glass-border p-0.5 overflow-hidden">
+<img alt="User" class="w-full h-full rounded-full object-cover" data-alt="Portrait of a female professional user avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCurBLP4upUU36NUmBjjRTX6BlB5Qjp07xKLyj3EWlH4imsMmgD7JdzEYIRoVmPht2EG4X-TaMubsVXcFEvIYCGnapgmu5jS1TsiYT4ZKDi8DBmv7c-q3XEsCzB6x94gJu4EZ7l0tTqtTaS7Mw07LbX13-tL1SsusHFozzGXOCSUlEweA9yVAsbhWkgfFnXuDcaqSshH0L4xMQOC6c_0-62AUodWjUevJaTu50WJBs-ku9JAPbU0JxPU0faI2yOOnquDHpa7Mjg732w"/>
+</div>
+<div>
+<p class="text-sm font-bold text-white">Sofia Costa</p>
+<p class="text-[11px] text-slate-500">Último acesso: 1h atrás</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-sm text-slate-300">sofia.costa@imoos.com</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-secondary/10 text-secondary border border-secondary/20">Gestor</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-1.5">
+<div class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div>
+<span class="text-xs font-bold text-emerald-400">Ativo</span>
+</div>
+</td>
+<td class="px-6 py-4 text-right whitespace-nowrap">
+<button class="w-8 h-8 rounded-lg bg-glass hover:bg-glass-border text-slate-400 hover:text-white transition-all">
+<span class="material-symbols-outlined text-lg">more_horiz</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-white/5 transition-colors group">
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full border border-glass-border p-0.5 overflow-hidden">
+<img alt="User" class="w-full h-full rounded-full object-cover" data-alt="Portrait of a male professional manager avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDVbFFsBC1vV8o6egLplNMTTpRjvOKxLPuz_ojZu56iWshnq4sVtdnhfL8djX3tcV0Tf4_9qml66o2tvKZ2SppFOy9E2kYyhvatVU0vHsGf5rLeIBGFHuMMGu0D61Zi9lckKr5AtiTOIZw6Mt0VdCLiWf7D45NcXdHMxhS8XkxvaDRcuJwVE7gVRvqzlKsB3_Jip1w-WrilHmAdxU3eEJmIu_0gqOjA1v96k9BHFWsxAFB7zRS2N0vflMuJps-bB8NrtRBXxKDKKua1"/>
+</div>
+<div>
+<p class="text-sm font-bold text-white">Paulo Freire</p>
+<p class="text-[11px] text-slate-500">Último acesso: Ontem</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-sm text-slate-300">p.freire@imoos.com</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-slate-800 text-slate-400 border border-slate-700">Vendedor</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-1.5">
+<div class="w-2 h-2 rounded-full bg-slate-600"></div>
+<span class="text-xs font-bold text-slate-500">Inativo</span>
+</div>
+</td>
+<td class="px-6 py-4 text-right whitespace-nowrap">
+<button class="w-8 h-8 rounded-lg bg-glass hover:bg-glass-border text-slate-400 hover:text-white transition-all">
+<span class="material-symbols-outlined text-lg">more_horiz</span>
+</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-white/5 transition-colors group border-b-0">
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full border border-glass-border p-0.5 overflow-hidden">
+<img alt="User" class="w-full h-full rounded-full object-cover" data-alt="Portrait of a female professional lawyer avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCqhhwfRIvkb6KlHJixffFukygfnocxH48-OMPhYINzW-cDzsHDR9jQUbiga3fkRXyBXxNHMgjd1_H18EM9mmiBmI3xSXd8BND7X01v4P5LUaC0jXMotSSGSvl_WMjHu5DHy32TH0wNabReA5aiqwoaDC-mobitaKUT_0HuI2sB6TW6UoGRYvhjj6RSMjj4Yyp-PEWplA4wOhBeW9z2zjCQaZRCU7o58ujNy5WTPDqCDy8Dd-OoEoQ1IzdIW6iTNoBpixELKLJmNM02"/>
+</div>
+<div>
+<p class="text-sm font-bold text-white">Beatriz Nunes</p>
+<p class="text-[11px] text-slate-500">Último acesso: 5d atrás</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-sm text-slate-300">b.nunes@imoos.com</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-slate-800 text-slate-400 border border-slate-700">Vendedor</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-1.5">
+<div class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div>
+<span class="text-xs font-bold text-emerald-400">Ativo</span>
+</div>
+</td>
+<td class="px-6 py-4 text-right whitespace-nowrap">
+<button class="w-8 h-8 rounded-lg bg-glass hover:bg-glass-border text-slate-400 hover:text-white transition-all">
+<span class="material-symbols-outlined text-lg">more_horiz</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="px-6 py-4 border-t border-glass-border flex items-center justify-between text-xs font-medium text-slate-500">
+<span>Mostrando 4 de 128 membros</span>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2">
+<span>Páginas:</span>
+<button class="w-6 h-6 flex items-center justify-center rounded bg-primary text-background-dark font-bold">1</button>
+<button class="w-6 h-6 flex items-center justify-center rounded hover:bg-glass text-slate-400">2</button>
+<button class="w-6 h-6 flex items-center justify-center rounded hover:bg-glass text-slate-400">3</button>
+</div>
+<div class="flex items-center gap-1">
+<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-glass text-slate-400">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-glass text-slate-400">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Background Decoration -->
+<div class="fixed top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 blur-[120px] rounded-full pointer-events-none -z-10"></div>
+<div class="fixed bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-secondary/10 blur-[120px] rounded-full pointer-events-none -z-10"></div>
+</body></html>

@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ImoOS Enterprise - Gestão de Inventário</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#00d4ff",
+                        "electric-purple": "#7C3AED",
+                        "hot-pink": "#EC4899",
+                        "background-light": "#f5f8f8",
+                        "background-dark": "#060b0d",
+                        "glass-dark": "rgba(15, 32, 35, 0.7)",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .neon-glow {
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
+        }
+        .neon-glow-purple {
+            box-shadow: 0 0 15px rgba(124, 58, 237, 0.4);
+        }
+        .bg-cyber-grid {
+            background-size: 40px 40px;
+            background-image: linear-gradient(to right, rgba(0, 212, 255, 0.05) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(0, 212, 255, 0.05) 1px, transparent 1px);
+        }
+        .tech-orb {
+            position: absolute;
+            filter: blur(80px);
+            z-index: -1;
+            opacity: 0.4;
+        }
+    </style>
+</head>
+<body class="bg-background-dark text-slate-100 font-display min-h-screen overflow-x-hidden">
+<!-- Background Decor -->
+<div class="tech-orb w-96 h-96 bg-primary top-[-100px] left-[-100px] rounded-full"></div>
+<div class="tech-orb w-[500px] h-[500px] bg-electric-purple bottom-[-200px] right-[-100px] rounded-full"></div>
+<div class="tech-orb w-64 h-64 bg-hot-pink top-[20%] right-[10%] rounded-full opacity-20"></div>
+<div class="flex min-h-screen bg-cyber-grid">
+<!-- Sidebar Navigation -->
+<aside class="w-72 flex flex-col border-r border-slate-800/50 bg-background-dark/80 backdrop-blur-xl">
+<div class="p-6 flex flex-col h-full">
+<div class="flex items-center gap-3 mb-10">
+<div class="bg-gradient-to-br from-primary via-electric-purple to-hot-pink p-2 rounded-lg">
+<span class="material-symbols-outlined text-background-dark font-bold">rocket_launch</span>
+</div>
+<div>
+<h1 class="text-slate-100 text-lg font-black tracking-tight leading-none">ImoOS <span class="text-primary">ENTERPRISE</span></h1>
+<p class="text-slate-500 text-[10px] uppercase font-bold tracking-widest mt-1">Management Portal</p>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-primary transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-primary transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">apartment</span>
+<span class="text-sm font-medium">Projetos</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 bg-primary/10 text-primary border-r-2 border-primary rounded-l-lg group shadow-[inset_0_0_20px_rgba(0,212,255,0.05)]" href="#">
+<span class="material-symbols-outlined fill-1">inventory_2</span>
+<span class="text-sm font-bold">Inventário</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-primary transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">hub</span>
+<span class="text-sm font-medium">CRM</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-primary transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">construction</span>
+<span class="text-sm font-medium">Construção</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-primary transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">account_balance_wallet</span>
+<span class="text-sm font-medium">Financeiro</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-primary transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">trending_up</span>
+<span class="text-sm font-medium">Investidores</span>
+</a>
+</nav>
+<div class="mt-auto pt-6">
+<button class="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-electric-purple text-background-dark py-3 px-4 rounded-xl font-bold text-sm neon-glow transition-all hover:brightness-110">
+<span class="material-symbols-outlined text-sm">bolt</span>
+                        Upgrade Plan
+                    </button>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col min-w-0">
+<!-- Topbar -->
+<header class="h-20 flex items-center justify-between px-8 border-b border-slate-800/50 bg-background-dark/50 backdrop-blur-md">
+<div class="flex-1 max-w-xl">
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary transition-colors">search</span>
+<input class="w-full bg-slate-900/50 border-slate-800 focus:border-primary focus:ring-1 focus:ring-primary/20 rounded-xl pl-12 pr-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 transition-all" placeholder="Pesquisar unidades por código, projeto ou cliente..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4 border-r border-slate-800 pr-6">
+<button class="px-4 py-2 bg-slate-800/50 hover:bg-slate-700/50 text-slate-200 text-xs font-bold rounded-lg transition-colors border border-slate-700">
+                            Tenant: Cape Verde Ops
+                        </button>
+<div class="relative">
+<button class="p-2 text-slate-400 hover:text-primary transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-hot-pink rounded-full border-2 border-background-dark"></span>
+</button>
+</div>
+</div>
+<div class="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity">
+<div class="text-right">
+<p class="text-sm font-bold text-slate-100 leading-none">Ricardo Silva</p>
+<p class="text-[10px] text-primary font-bold uppercase mt-1">Admin Master</p>
+</div>
+<img class="w-10 h-10 rounded-xl border border-primary/30 object-cover" data-alt="User profile portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBhdAcs6iBc6o7obuOI4vtamZub9Nu9YQFV9ICWrEba3kLJEp6xwje2m0USEL_3QCqit_LXjrkOmrDG-WY-f6yngTKmo8MbgJVinUHKbK8yM1ooj-2G6cEXu8jnxca4-tBcxda-wx7Jc-ibAqeegbwesiRdPLW2o96OWpiGaOOIn0cAu5XptTY2rPglr3oncwV-NkDyFoguorS3sWB5wQj0-WI1lQsDeLEsv1efM5S90swXh-Yfm3yr0WZbK7_60wuLnay1z32PKFwP"/>
+</div>
+</div>
+</header>
+<!-- Page Body -->
+<div class="p-8 space-y-8 overflow-y-auto">
+<!-- Header Actions -->
+<div class="flex flex-wrap items-center justify-between gap-6">
+<div>
+<div class="flex items-center gap-2 text-xs text-slate-500 font-bold uppercase tracking-widest mb-2">
+<span>Dashboard</span>
+<span class="material-symbols-outlined text-[10px]">chevron_right</span>
+<span class="text-primary">Inventário</span>
+</div>
+<h2 class="text-4xl font-black text-white tracking-tight">Gestão de <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-electric-purple">Inventário</span></h2>
+</div>
+<div class="flex items-center gap-3">
+<button class="flex items-center gap-2 px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-100 rounded-xl font-bold text-sm transition-all border border-slate-700">
+<span class="material-symbols-outlined text-sm">upload_file</span>
+                            Importar CSV
+                        </button>
+<button class="flex items-center gap-2 px-6 py-2.5 bg-primary text-background-dark rounded-xl font-bold text-sm transition-all hover:scale-[1.02] active:scale-95 neon-glow">
+<span class="material-symbols-outlined text-sm font-black">add</span>
+                            Adicionar Unidade
+                        </button>
+</div>
+</div>
+<!-- Filters Bar -->
+<div class="glass-panel rounded-2xl p-6 flex flex-wrap items-end gap-6">
+<div class="flex-1 min-w-[200px]">
+<label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Projeto</label>
+<select class="w-full bg-slate-900/50 border-slate-800 focus:border-primary rounded-xl py-2 px-4 text-sm text-slate-200">
+<option>Todos os Projetos</option>
+<option>Skyline Residences - Praia</option>
+<option>Ocean Breeze - Sal</option>
+<option>Boa Vista Oasis</option>
+</select>
+</div>
+<div class="flex-1 min-w-[150px]">
+<label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Tipologia</label>
+<div class="flex flex-wrap gap-2">
+<span class="px-3 py-1 bg-primary/20 text-primary border border-primary/30 rounded-full text-xs font-bold cursor-pointer">T1</span>
+<span class="px-3 py-1 bg-slate-800/50 text-slate-400 border border-slate-700 rounded-full text-xs font-bold hover:border-primary/50 cursor-pointer">T2</span>
+<span class="px-3 py-1 bg-slate-800/50 text-slate-400 border border-slate-700 rounded-full text-xs font-bold hover:border-primary/50 cursor-pointer">T3+</span>
+</div>
+</div>
+<div class="flex-1 min-w-[250px]">
+<div class="flex justify-between items-center mb-2">
+<label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Preço Range</label>
+<span class="text-xs font-bold text-primary">€85k - €450k</span>
+</div>
+<div class="h-2 w-full bg-slate-800 rounded-full relative overflow-hidden">
+<div class="absolute left-1/4 right-1/4 h-full bg-gradient-to-r from-primary via-electric-purple to-hot-pink"></div>
+<div class="absolute left-1/4 top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg cursor-pointer border-2 border-primary"></div>
+<div class="absolute right-1/4 top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg cursor-pointer border-2 border-hot-pink"></div>
+</div>
+</div>
+<div class="flex gap-2 bg-slate-900/80 p-1 rounded-xl border border-slate-800">
+<button class="p-2 bg-primary text-background-dark rounded-lg shadow-sm">
+<span class="material-symbols-outlined">table_rows</span>
+</button>
+<button class="p-2 text-slate-500 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">grid_view</span>
+</button>
+<button class="p-2 text-slate-500 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">map</span>
+</button>
+</div>
+</div>
+<!-- Table Content -->
+<div class="glass-panel rounded-2xl overflow-hidden">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-slate-900/50 border-b border-slate-800/50">
+<th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Código</th>
+<th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Projeto</th>
+<th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tipologia</th>
+<th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Área (m²)</th>
+<th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Piso/Bloco</th>
+<th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Preço</th>
+<th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</th>
+<th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ações</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-800/50">
+<!-- Row 1 -->
+<tr class="hover:bg-primary/[0.03] transition-colors group">
+<td class="px-6 py-4">
+<span class="text-sm font-black text-primary hover:underline cursor-pointer">SK-102-A</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="text-sm font-bold text-slate-200">Skyline Residences</span>
+<span class="text-[10px] text-slate-500 font-medium">Praia, Santiago</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="px-2 py-1 bg-electric-purple/10 text-electric-purple text-[10px] font-bold rounded-md border border-electric-purple/20">Apartamento T2</span>
+</td>
+<td class="px-6 py-4 text-sm font-medium text-slate-300">112.50 m²</td>
+<td class="px-6 py-4 text-sm font-medium text-slate-300">Piso 1 / Bloco A</td>
+<td class="px-6 py-4">
+<span class="text-sm font-black text-primary">€ 145.000</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-500 text-[10px] font-black uppercase tracking-wider rounded-full border border-emerald-500/20">
+<span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                                        Disponível
+                                    </span>
+</td>
+<td class="px-6 py-4">
+<button class="p-2 text-slate-500 hover:text-white transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-primary/[0.03] transition-colors group">
+<td class="px-6 py-4">
+<span class="text-sm font-black text-primary hover:underline cursor-pointer">OB-V-04</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="text-sm font-bold text-slate-200">Ocean Breeze</span>
+<span class="text-[10px] text-slate-500 font-medium">Santa Maria, Sal</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="px-2 py-1 bg-hot-pink/10 text-hot-pink text-[10px] font-bold rounded-md border border-hot-pink/20">Villa T4</span>
+</td>
+<td class="px-6 py-4 text-sm font-medium text-slate-300">320.00 m²</td>
+<td class="px-6 py-4 text-sm font-medium text-slate-300">Térreo / Setor Norte</td>
+<td class="px-6 py-4">
+<span class="text-sm font-black text-primary">€ 420.000</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 text-amber-500 text-[10px] font-black uppercase tracking-wider rounded-full border border-amber-500/20">
+<span class="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>
+                                        Reservado
+                                    </span>
+</td>
+<td class="px-6 py-4">
+<button class="p-2 text-slate-500 hover:text-white transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-primary/[0.03] transition-colors group">
+<td class="px-6 py-4">
+<span class="text-sm font-black text-primary hover:underline cursor-pointer">SK-401-B</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="text-sm font-bold text-slate-200">Skyline Residences</span>
+<span class="text-[10px] text-slate-500 font-medium">Praia, Santiago</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="px-2 py-1 bg-primary/10 text-primary text-[10px] font-bold rounded-md border border-primary/20">Apartamento T1</span>
+</td>
+<td class="px-6 py-4 text-sm font-medium text-slate-300">68.00 m²</td>
+<td class="px-6 py-4 text-sm font-medium text-slate-300">Piso 4 / Bloco B</td>
+<td class="px-6 py-4">
+<span class="text-sm font-black text-primary">€ 89.000</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-500/10 text-rose-500 text-[10px] font-black uppercase tracking-wider rounded-full border border-rose-500/20">
+<span class="w-1.5 h-1.5 bg-rose-500 rounded-full"></span>
+                                        Vendido
+                                    </span>
+</td>
+<td class="px-6 py-4">
+<button class="p-2 text-slate-500 hover:text-white transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-primary/[0.03] transition-colors group">
+<td class="px-6 py-4">
+<span class="text-sm font-black text-primary hover:underline cursor-pointer">OB-A-203</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="text-sm font-bold text-slate-200">Ocean Breeze</span>
+<span class="text-[10px] text-slate-500 font-medium">Santa Maria, Sal</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="px-2 py-1 bg-electric-purple/10 text-electric-purple text-[10px] font-bold rounded-md border border-electric-purple/20">Apartamento T2</span>
+</td>
+<td class="px-6 py-4 text-sm font-medium text-slate-300">105.00 m²</td>
+<td class="px-6 py-4 text-sm font-medium text-slate-300">Piso 2 / Bloco Central</td>
+<td class="px-6 py-4">
+<span class="text-sm font-black text-primary">€ 158.000</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-500 text-[10px] font-black uppercase tracking-wider rounded-full border border-emerald-500/20">
+<span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                                        Disponível
+                                    </span>
+</td>
+<td class="px-6 py-4">
+<button class="p-2 text-slate-500 hover:text-white transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Footer / Pagination -->
+<div class="flex items-center justify-between py-2">
+<p class="text-xs text-slate-500 font-bold uppercase tracking-widest">A mostrar 1-10 de 128 unidades</p>
+<div class="flex items-center gap-2">
+<button class="p-2 text-slate-500 hover:text-primary transition-colors glass-panel rounded-lg">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="w-10 h-10 bg-primary text-background-dark font-black rounded-lg text-sm neon-glow shadow-primary/20">1</button>
+<button class="w-10 h-10 text-slate-400 hover:text-primary transition-colors font-bold rounded-lg text-sm">2</button>
+<button class="w-10 h-10 text-slate-400 hover:text-primary transition-colors font-bold rounded-lg text-sm">3</button>
+<span class="text-slate-600">...</span>
+<button class="w-10 h-10 text-slate-400 hover:text-primary transition-colors font-bold rounded-lg text-sm">13</button>
+<button class="p-2 text-slate-500 hover:text-primary transition-colors glass-panel rounded-lg">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

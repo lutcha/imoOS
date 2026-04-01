@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-CV"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ImoOS | CMS Backoffice</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#00d4ff",
+                        "secondary": "#7c3aed",
+                        "background-light": "#f5f8f8",
+                        "background-dark": "#0a0a0f",
+                        "glass": "rgba(255, 255, 255, 0.03)",
+                        "glass-border": "rgba(255, 255, 255, 0.08)",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(15, 32, 35, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 212, 255, 0.1);
+        }
+        .neon-glow-cyan {
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.15);
+        }
+        .neon-glow-purple {
+            box-shadow: 0 0 15px rgba(124, 58, 237, 0.15);
+        }
+        body {
+            background-color: #0a0a0f;
+            background-image: 
+                radial-gradient(circle at 0% 0%, rgba(0, 212, 255, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(124, 58, 237, 0.05) 0%, transparent 50%);
+            background-attachment: fixed;
+        }
+    </style>
+</head>
+<body class="font-display text-slate-100 min-h-screen flex">
+<aside class="w-64 border-r border-glass-border flex flex-col h-screen sticky top-0 bg-background-dark/80 backdrop-blur-xl z-50">
+<div class="p-6 flex items-center gap-3">
+<div class="size-10 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center text-background-dark shadow-lg neon-glow-cyan">
+<span class="material-symbols-outlined font-bold">rocket_launch</span>
+</div>
+<div>
+<h1 class="text-xl font-black tracking-tighter text-white">ImoOS</h1>
+<p class="text-[10px] uppercase tracking-widest text-primary font-bold">PropTech Engine</p>
+</div>
+</div>
+<nav class="flex-1 px-4 space-y-2 mt-4">
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 transition-all text-slate-400" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 transition-all text-slate-400" href="#">
+<span class="material-symbols-outlined">domain</span>
+<span class="text-sm font-medium">Imóveis</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 text-primary border border-primary/20 neon-glow-cyan transition-all" href="#">
+<span class="material-symbols-outlined">article</span>
+<span class="text-sm font-semibold">CMS / Conteúdo</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 transition-all text-slate-400" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="text-sm font-medium">CRM</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 transition-all text-slate-400" href="#">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="text-sm font-medium">Financeiro</span>
+</a>
+<div class="pt-4 pb-2 px-4">
+<p class="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold">System</p>
+</div>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 transition-all text-slate-400" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-sm font-medium">Configurações</span>
+</a>
+</nav>
+<div class="p-4 border-t border-glass-border">
+<button class="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-slate-800/50 hover:bg-red-500/20 hover:text-red-400 transition-all text-slate-400 text-sm font-bold">
+<span class="material-symbols-outlined text-lg">logout</span> Sair
+            </button>
+</div>
+</aside>
+<main class="flex-1 flex flex-col min-w-0">
+<header class="h-20 border-b border-glass-border bg-background-dark/40 backdrop-blur-md px-8 flex items-center justify-between sticky top-0 z-40">
+<div class="flex items-center gap-6 flex-1">
+<div class="relative w-full max-w-md group">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary transition-colors">search</span>
+<input class="w-full bg-white/5 border-glass-border rounded-xl pl-12 pr-4 py-2.5 text-sm focus:ring-1 focus:ring-primary focus:border-primary transition-all outline-none text-slate-200" placeholder="Pesquisar em conteúdos..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex bg-white/5 p-1 rounded-lg border border-glass-border">
+<button class="px-3 py-1 text-xs font-bold rounded bg-primary text-background-dark">PT</button>
+<button class="px-3 py-1 text-xs font-bold rounded text-slate-400 hover:text-white">EN</button>
+</div>
+<button class="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 transition-all border border-glass-border relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2.5 size-2 bg-primary rounded-full neon-glow-cyan"></span>
+</button>
+<div class="h-10 w-[1px] bg-glass-border mx-2"></div>
+<div class="flex items-center gap-3 pl-2 cursor-pointer group">
+<div class="text-right">
+<p class="text-xs font-bold text-white group-hover:text-primary transition-colors">Admin Portal</p>
+<p class="text-[10px] text-slate-500">Super Admin</p>
+</div>
+<div class="size-10 rounded-full border-2 border-primary/30 p-0.5 overflow-hidden">
+<img class="size-full rounded-full object-cover" data-alt="User profile avatar silhouette" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDp3fN4dFosCrzHJ0lrAGt2-q2HXY7cWrdjrcet9qGdNvImOefBDnbIe81dkkOrMnMUvAclxlW6uyvjy4KM1hr18y6EiEbCXltbjXvrBIVsVkFWn0FYx3qX-dgTPSbcMxSfAp4WxZB8eQJXH9ibvJ7OLMDLzEcWai7cvsRv-8Wjc1ujtrqD7MYRwQYO_60oGF5aGF0E9SqMTidoXlTFahQlxPiZtuzL-3sAkcX4eJXWecW0hPHJhnvqflM9wXfqkJlRho57JuQyTyTt"/>
+</div>
+</div>
+</div>
+</header>
+<div class="p-8 space-y-8">
+<div class="flex items-end justify-between">
+<div>
+<h2 class="text-4xl font-black text-white tracking-tight">Gestão de Conteúdo</h2>
+<p class="text-slate-400 mt-1">Gerencie artigos, listagens e mídia do portal <span class="text-primary font-mono">imo.cv</span> em tempo real.</p>
+</div>
+<button class="group flex items-center gap-2 bg-gradient-to-r from-primary to-cyan-400 text-background-dark font-black px-6 py-3 rounded-xl shadow-lg neon-glow-cyan hover:scale-105 transition-all">
+<span class="material-symbols-outlined font-bold">add</span>
+                    Novo Conteúdo
+                </button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<div class="glass-panel p-6 rounded-2xl relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-6xl text-primary">article</span>
+</div>
+<p class="text-slate-400 text-sm font-medium">Artigos Ativos</p>
+<div class="flex items-baseline gap-3 mt-2">
+<h3 class="text-3xl font-black text-white">1,284</h3>
+<span class="text-xs font-bold text-emerald-400 flex items-center gap-0.5">
+<span class="material-symbols-outlined text-sm">trending_up</span> 12%
+                        </span>
+</div>
+</div>
+<div class="glass-panel p-6 rounded-2xl relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-6xl text-amber-400">pending_actions</span>
+</div>
+<p class="text-slate-400 text-sm font-medium">Listagens Pendentes</p>
+<div class="flex items-baseline gap-3 mt-2">
+<h3 class="text-3xl font-black text-white">42</h3>
+<span class="text-xs font-bold text-rose-400 flex items-center gap-0.5">
+<span class="material-symbols-outlined text-sm">trending_down</span> 5%
+                        </span>
+</div>
+</div>
+<div class="glass-panel p-6 rounded-2xl relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-6xl text-secondary">cloud_done</span>
+</div>
+<p class="text-slate-400 text-sm font-medium">Uso de Mídia</p>
+<div class="flex items-baseline gap-3 mt-2">
+<h3 class="text-3xl font-black text-white">85%</h3>
+<div class="flex-1 h-1.5 bg-white/5 rounded-full mt-1 overflow-hidden">
+<div class="h-full bg-secondary w-[85%] neon-glow-purple"></div>
+</div>
+</div>
+</div>
+<div class="glass-panel p-6 rounded-2xl border-secondary/20 relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-6xl text-primary">insights</span>
+</div>
+<p class="text-slate-400 text-sm font-medium">Saúde de SEO</p>
+<div class="flex items-baseline gap-3 mt-2">
+<h3 class="text-3xl font-black text-white">92/100</h3>
+<span class="text-xs font-bold text-primary flex items-center gap-0.5">Excelente</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div class="lg:col-span-2 glass-panel rounded-2xl p-6">
+<div class="flex items-center justify-between mb-6">
+<h4 class="text-lg font-bold text-white flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">bar_chart</span>
+                            Content Performance
+                        </h4>
+<div class="flex gap-2">
+<button class="px-3 py-1 rounded bg-white/5 text-[10px] font-bold text-slate-400 uppercase">Weekly</button>
+<button class="px-3 py-1 rounded bg-primary/20 text-[10px] font-bold text-primary uppercase border border-primary/30">Monthly</button>
+</div>
+</div>
+<div class="h-48 flex items-end justify-between gap-2 px-2">
+<!-- Mock Chart Bars -->
+<div class="flex-1 bg-primary/20 border-t-2 border-primary rounded-t-sm h-[40%] relative group">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-[10px] px-2 py-1 rounded hidden group-hover:block">1.2k</div>
+</div>
+<div class="flex-1 bg-secondary/20 border-t-2 border-secondary rounded-t-sm h-[65%]"></div>
+<div class="flex-1 bg-primary/20 border-t-2 border-primary rounded-t-sm h-[45%]"></div>
+<div class="flex-1 bg-secondary/20 border-t-2 border-secondary rounded-t-sm h-[80%]"></div>
+<div class="flex-1 bg-primary/20 border-t-2 border-primary rounded-t-sm h-[55%]"></div>
+<div class="flex-1 bg-secondary/20 border-t-2 border-secondary rounded-t-sm h-[90%]"></div>
+<div class="flex-1 bg-primary/20 border-t-2 border-primary rounded-t-sm h-[30%]"></div>
+<div class="flex-1 bg-secondary/20 border-t-2 border-secondary rounded-t-sm h-[70%]"></div>
+<div class="flex-1 bg-primary/20 border-t-2 border-primary rounded-t-sm h-[50%]"></div>
+<div class="flex-1 bg-secondary/20 border-t-2 border-secondary rounded-t-sm h-[100%] neon-glow-purple"></div>
+</div>
+<div class="flex justify-center gap-8 mt-6">
+<div class="flex items-center gap-2">
+<span class="size-2 rounded-full bg-primary shadow-sm"></span>
+<span class="text-xs text-slate-400">Visualizações</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="size-2 rounded-full bg-secondary shadow-sm"></span>
+<span class="text-xs text-slate-400">Engajamento</span>
+</div>
+</div>
+</div>
+<div class="glass-panel rounded-2xl p-6 flex flex-col">
+<h4 class="text-lg font-bold text-white mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary">imagesmode</span>
+                        Mídia Recente
+                    </h4>
+<div class="grid grid-cols-2 gap-3 flex-1">
+<div class="aspect-square rounded-xl overflow-hidden relative group cursor-pointer border border-glass-border">
+<img class="size-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="Modern luxury house exterior at sunset" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDFhBU8p6vmdssFWj9OjL-FyNHAedaF3OHXKisIm8wPuQVknx9YBXnBr4OTr3YGgjh5SW2h-SrvhqR2S6MJp9K3tSt_5nnIOEPWOB-FjvzKR--gn7InxcDSpLrJm7jA8kKGv8lmC6ZCW1Mi6JQNjq4AwOlUsLmK0FVSQVMBW8UEkEkHATTjEtpzxYrhmA15K-rAgVIMuQCUiEIUjZ-RC9Yq8P2Z3eQBP0EurCRu0Boq1HzZiYHpqvKTdxhwcYwwUqSarxESVAEq_Vsb"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background-dark/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
+<p class="text-[10px] font-bold truncate">exterior_v01.jpg</p>
+</div>
+</div>
+<div class="aspect-square rounded-xl overflow-hidden relative group cursor-pointer border border-glass-border">
+<img class="size-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="Modern minimalist interior living room" src="https://lh3.googleusercontent.com/aida-public/AB6AXuClbl9yLsTiSH0Pl0v1xHQDeSTf1IP9LaSjC1o7nxBs_eJgmZcUKU47nidHTN_gph32dFAKo4CZloTCGF-R9Zm1M7uydL3C8mKg1h4mgC6VXv7hmOws_heMiuBgL7KHmE8QHS8ntXsvraEZOVaIOfyiGwwFHOpcozT_rz1MDqAWdodFMnq83g4IIOjj3D4y2-WkEsHlMrhPuHwyM7kdQhNdzV7dKysshqnp1z5UtbOOp1PCT7xFlWWz3lW-1wV3tjwKSKAlx6lOq6I7"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background-dark/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
+<p class="text-[10px] font-bold truncate">living_room.jpg</p>
+</div>
+</div>
+<div class="aspect-square rounded-xl overflow-hidden relative group cursor-pointer border border-glass-border">
+<img class="size-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="Luxury villa with pool aerial view" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjle8lAiAZNR6UjZkeD2vLXSl1GZC4tEHCTABL0mRPo2UtAdX1otFkDR5mVehHWAOZscwEXyKPhQG2D2Kj5Sh9TAX5g3S_uTaVeD7S9MLxYkFz0VRJyhsOmzZpZmi8mtRRnAp7euvs_7ySEHEQrM_XfJKgq90ejPy1eyCZhYgQ7cG_t4sgyGeGr8fzZFNNaApvrHWG5X_W5QikFFrLCI6_BMwhyxPWlF8YOtZPXEjr-CkH-u_A_dfEehNMDwPvqzgvXQk8qKZnyrx4"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background-dark/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
+<p class="text-[10px] font-bold truncate">villa_pool.jpg</p>
+</div>
+</div>
+<div class="aspect-square rounded-xl bg-white/5 flex flex-col items-center justify-center border-2 border-dashed border-glass-border hover:border-primary/50 hover:bg-white/10 transition-all cursor-pointer group">
+<span class="material-symbols-outlined text-slate-500 group-hover:text-primary mb-1">add_circle</span>
+<span class="text-[10px] font-bold text-slate-500 uppercase">Upload</span>
+</div>
+</div>
+</div>
+</div>
+<div class="glass-panel rounded-2xl overflow-hidden border border-glass-border">
+<div class="p-6 border-b border-glass-border flex flex-wrap items-center justify-between gap-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">filter_list</span>
+<div class="flex gap-2">
+<select class="bg-white/5 border-glass-border rounded-lg text-xs font-bold text-slate-300 px-4 py-2 outline-none focus:ring-1 focus:ring-primary">
+<option>Todas as Categorias</option>
+<option>Residencial</option>
+<option>Comercial</option>
+<option>Lotes</option>
+</select>
+<select class="bg-white/5 border-glass-border rounded-lg text-xs font-bold text-slate-300 px-4 py-2 outline-none focus:ring-1 focus:ring-primary">
+<option>Todos os Projetos</option>
+<option>Atlantis Bay</option>
+<option>Skyline Tower</option>
+<option>EcoVillage</option>
+</select>
+<button class="bg-white/5 hover:bg-white/10 border-glass-border rounded-lg text-xs font-bold text-slate-300 px-4 py-2 transition-all">
+                                Data: Últimos 30 Dias
+                            </button>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="p-2 rounded-lg bg-white/5 border border-glass-border hover:text-primary transition-all">
+<span class="material-symbols-outlined text-sm">download</span>
+</button>
+<button class="p-2 rounded-lg bg-white/5 border border-glass-border hover:text-primary transition-all">
+<span class="material-symbols-outlined text-sm">print</span>
+</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-white/[0.02] text-[10px] uppercase tracking-widest text-slate-500 font-black">
+<th class="px-6 py-4">Título do Conteúdo</th>
+<th class="px-6 py-4">Tipo</th>
+<th class="px-6 py-4">Projeto</th>
+<th class="px-6 py-4">Status</th>
+<th class="px-6 py-4">Autor</th>
+<th class="px-6 py-4 text-right">Ações</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-glass-border">
+<tr class="hover:bg-white/[0.02] transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="size-8 rounded bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-lg">house</span>
+</div>
+<div>
+<p class="text-sm font-bold text-white">Penthouse Luxo - Sal Rei</p>
+<p class="text-[10px] text-slate-500">ID: #CON-9021</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-xs font-medium text-slate-300">Listing</td>
+<td class="px-6 py-4 text-xs text-slate-400">Atlantis Residences</td>
+<td class="px-6 py-4">
+<span class="px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-400 text-[10px] font-black uppercase border border-emerald-500/20">Publicado</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<div class="size-6 rounded-full bg-slate-700"></div>
+<span class="text-xs text-slate-300">Carlos M.</span>
+</div>
+</td>
+<td class="px-6 py-4 text-right">
+<div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1.5 hover:text-primary"><span class="material-symbols-outlined text-lg">edit</span></button>
+<button class="p-1.5 hover:text-secondary"><span class="material-symbols-outlined text-lg">visibility</span></button>
+<button class="p-1.5 hover:text-rose-500"><span class="material-symbols-outlined text-lg">delete</span></button>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-white/[0.02] transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="size-8 rounded bg-secondary/10 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-lg">article</span>
+</div>
+<div>
+<p class="text-sm font-bold text-white">Guia de Investimento 2024</p>
+<p class="text-[10px] text-slate-500">ID: #CON-8842</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-xs font-medium text-slate-300">Artigo</td>
+<td class="px-6 py-4 text-xs text-slate-400">Global Market</td>
+<td class="px-6 py-4">
+<span class="px-2 py-1 rounded-md bg-amber-500/10 text-amber-400 text-[10px] font-black uppercase border border-amber-500/20">Agendado</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<div class="size-6 rounded-full bg-slate-700"></div>
+<span class="text-xs text-slate-300">Ana Silva</span>
+</div>
+</td>
+<td class="px-6 py-4 text-right">
+<div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1.5 hover:text-primary"><span class="material-symbols-outlined text-lg">edit</span></button>
+<button class="p-1.5 hover:text-secondary"><span class="material-symbols-outlined text-lg">visibility</span></button>
+<button class="p-1.5 hover:text-rose-500"><span class="material-symbols-outlined text-lg">delete</span></button>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-white/[0.02] transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="size-8 rounded bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-lg">villa</span>
+</div>
+<div>
+<p class="text-sm font-bold text-white">Eco-Villa Sustainable Living</p>
+<p class="text-[10px] text-slate-500">ID: #CON-9105</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-xs font-medium text-slate-300">Listing</td>
+<td class="px-6 py-4 text-xs text-slate-400">Green Cape Verde</td>
+<td class="px-6 py-4">
+<span class="px-2 py-1 rounded-md bg-slate-500/10 text-slate-400 text-[10px] font-black uppercase border border-slate-500/20">Rascunho</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<div class="size-6 rounded-full bg-slate-700"></div>
+<span class="text-xs text-slate-300">Carlos M.</span>
+</div>
+</td>
+<td class="px-6 py-4 text-right">
+<div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1.5 hover:text-primary"><span class="material-symbols-outlined text-lg">edit</span></button>
+<button class="p-1.5 hover:text-secondary"><span class="material-symbols-outlined text-lg">visibility</span></button>
+<button class="p-1.5 hover:text-rose-500"><span class="material-symbols-outlined text-lg">delete</span></button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-4 border-t border-glass-border flex items-center justify-between">
+<p class="text-xs text-slate-500">Mostrando <span class="text-slate-300 font-bold">1-10</span> de <span class="text-slate-300 font-bold">1,284</span> itens</p>
+<div class="flex gap-2">
+<button class="size-8 flex items-center justify-center rounded bg-white/5 border border-glass-border text-slate-400 hover:text-primary transition-all">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<button class="size-8 flex items-center justify-center rounded bg-primary text-background-dark font-bold text-xs">1</button>
+<button class="size-8 flex items-center justify-center rounded bg-white/5 border border-glass-border text-slate-400 hover:text-primary transition-all">2</button>
+<button class="size-8 flex items-center justify-center rounded bg-white/5 border border-glass-border text-slate-400 hover:text-primary transition-all">3</button>
+<button class="size-8 flex items-center justify-center rounded bg-white/5 border border-glass-border text-slate-400 hover:text-primary transition-all">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<footer class="mt-auto p-8 border-t border-glass-border bg-background-dark/20 flex items-center justify-between text-[10px] uppercase tracking-widest text-slate-500 font-bold">
+<p>© 2024 ImoOS PropTech Platform. All Rights Reserved.</p>
+<div class="flex gap-6">
+<a class="hover:text-primary transition-colors" href="#">API Status: Operational</a>
+<a class="hover:text-primary transition-colors" href="#">System Logs</a>
+<a class="hover:text-primary transition-colors" href="#">Documentation</a>
+</div>
+</footer>
+</main>
+<div class="fixed bottom-8 right-8 z-50">
+<button class="size-14 rounded-full bg-secondary shadow-xl neon-glow-purple flex items-center justify-center text-white hover:scale-110 active:scale-95 transition-all group">
+<span class="material-symbols-outlined text-3xl font-bold group-hover:rotate-90 transition-transform">bolt</span>
+</button>
+</div>
+</body></html>

@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ImoOS - Projetos &amp; Desenvolvimento</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#00d4ff",
+                        "secondary": "#7C3AED",
+                        "accent": "#EC4899",
+                        "background-light": "#f5f8f8",
+                        "background-dark": "#0A0A0F",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .glass {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .glow-cyan {
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+        }
+        .glow-purple {
+            box-shadow: 0 0 15px rgba(124, 58, 237, 0.3);
+        }
+        .neon-border-cyan {
+            border: 1px solid rgba(0, 212, 255, 0.5);
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0A0A0F;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1A1A24;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00d4ff;
+        }
+    </style>
+</head>
+<body class="bg-background-dark text-slate-100 font-display selection:bg-primary/30">
+<div class="flex h-screen overflow-hidden">
+<!-- Sidebar Navigation -->
+<aside class="w-64 flex-shrink-0 flex flex-col border-r border-slate-800 bg-[#0A0A0F] z-20">
+<div class="p-6 flex items-center gap-3">
+<div class="w-10 h-10 bg-gradient-to-br from-primary via-secondary to-accent rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-background-dark font-bold">rocket_launch</span>
+</div>
+<div>
+<h1 class="text-xl font-black tracking-tighter text-white">ImoOS</h1>
+<p class="text-[10px] uppercase tracking-widest text-primary font-bold">Enterprise</p>
+</div>
+</div>
+<nav class="flex-1 px-4 space-y-2 mt-4">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all group" href="#">
+<span class="material-symbols-outlined transition-transform group-hover:scale-110">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-primary bg-primary/10 border border-primary/20 rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">apartment</span>
+<span class="text-sm font-medium">Projetos</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-secondary hover:bg-secondary/5 rounded-lg transition-all group" href="#">
+<span class="material-symbols-outlined transition-transform group-hover:scale-110">payments</span>
+<span class="text-sm font-medium">Vendas</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-accent hover:bg-accent/5 rounded-lg transition-all group" href="#">
+<span class="material-symbols-outlined transition-transform group-hover:scale-110">account_balance_wallet</span>
+<span class="text-sm font-medium">Financeiro</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800 rounded-lg transition-all group" href="#">
+<span class="material-symbols-outlined transition-transform group-hover:scale-110">hub</span>
+<span class="text-sm font-medium">CRM</span>
+</a>
+</nav>
+<div class="p-4 space-y-4">
+<button class="w-full flex items-center justify-between px-4 py-3 bg-slate-900/50 border border-slate-800 rounded-xl hover:border-primary/50 transition-colors group">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded bg-primary/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-[16px] text-primary">domain</span>
+</div>
+<span class="text-xs font-semibold text-slate-300">Porto Office</span>
+</div>
+<span class="material-symbols-outlined text-slate-500 group-hover:text-primary text-sm transition-transform group-hover:rotate-180">swap_horiz</span>
+</button>
+<div class="pt-4 border-t border-slate-800 flex items-center gap-3 px-2">
+<div class="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="User profile avatar male professional" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAKFZ6-B2ccY-KFCbphB6ifVohwkO1737UYbw8Ug2UrI8ca2i608QJ4ueGytKnIviQDZJg8ASZFyA_gEpY6wJV-k-A5UYT0tub2NNzjWwdm2Dv9Yj5SitJru3tpY1qAJFBtXI9mU60cVnuj2tN13GYytMODamw4a2I7bmVUZBG27SM2XDnMZA5bQWy_kQRaMI3FT0KTqxpCeEbgWNmj3P164Cms9puoiQ1STfD8YFlII0wOKV3GYvZB2OGjjg9yhRi23s4WtoHoGVxG"/>
+</div>
+<div class="flex-1 overflow-hidden">
+<p class="text-sm font-bold text-white truncate">Alex Silva</p>
+<p class="text-[10px] text-slate-500 uppercase font-bold">Project Admin</p>
+</div>
+<button class="text-slate-500 hover:text-accent">
+<span class="material-symbols-outlined text-lg">logout</span>
+</button>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col min-w-0 bg-background-dark relative">
+<!-- Background Gradients -->
+<div class="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 blur-[120px] rounded-full pointer-events-none"></div>
+<div class="absolute bottom-0 left-0 w-[500px] h-[500px] bg-secondary/5 blur-[120px] rounded-full pointer-events-none"></div>
+<!-- Topbar -->
+<header class="h-16 flex items-center justify-between px-8 border-b border-slate-800/50 glass z-10">
+<div class="flex items-center gap-4">
+<nav class="flex items-center text-xs font-medium space-x-2 text-slate-500">
+<a class="hover:text-primary transition-colors" href="#">Dashboard</a>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-slate-100">Projetos</span>
+</nav>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative w-72">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-lg">search</span>
+<input class="w-full bg-slate-900/50 border border-slate-800 rounded-full py-1.5 pl-10 pr-4 text-sm focus:ring-1 focus:ring-primary focus:border-primary transition-all text-slate-200 placeholder:text-slate-600" placeholder="Pesquisar em tudo..." type="text"/>
+</div>
+<div class="flex items-center gap-3">
+<button class="w-9 h-9 flex items-center justify-center rounded-lg border border-slate-800 hover:border-primary/50 text-slate-400 hover:text-primary transition-all relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-accent rounded-full border-2 border-background-dark"></span>
+</button>
+<button class="w-9 h-9 flex items-center justify-center rounded-lg border border-slate-800 hover:border-primary/50 text-slate-400 hover:text-primary transition-all">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Page Content -->
+<div class="flex-1 overflow-y-auto p-8 relative">
+<!-- Header Section -->
+<div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8">
+<div>
+<h2 class="text-3xl font-black text-white tracking-tight flex items-center gap-3">
+                            Projetos &amp; Desenvolvimento
+                            <span class="bg-primary/10 text-primary text-[10px] uppercase px-2 py-1 rounded border border-primary/20 tracking-widest font-bold">Live Data</span>
+</h2>
+<p class="text-slate-400 mt-1">Gestão centralizada de ativos e cronogramas de construção.</p>
+</div>
+<div class="flex items-center gap-3">
+<button class="flex items-center gap-2 px-6 py-2.5 bg-primary text-background-dark font-bold rounded-lg hover:shadow-[0_0_20px_rgba(0,212,255,0.4)] transition-all transform hover:-translate-y-0.5 glow-cyan">
+<span class="material-symbols-outlined">add</span>
+<span>Novo Projeto</span>
+</button>
+</div>
+</div>
+<!-- Stats Summary -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+<div class="glass p-5 rounded-xl border-l-4 border-l-primary hover:neon-border-cyan transition-all group">
+<p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Total de Projetos</p>
+<div class="flex items-end justify-between mt-2">
+<h3 class="text-3xl font-black text-white group-hover:text-primary transition-colors">42</h3>
+<span class="text-emerald-400 text-xs font-bold flex items-center gap-1 bg-emerald-400/10 px-2 py-1 rounded">
+<span class="material-symbols-outlined text-sm">trending_up</span> +12%
+                            </span>
+</div>
+</div>
+<div class="glass p-5 rounded-xl border-l-4 border-l-secondary hover:border-secondary transition-all group">
+<p class="text-xs font-bold text-slate-500 uppercase tracking-wider">No Prazo</p>
+<div class="flex items-end justify-between mt-2">
+<h3 class="text-3xl font-black text-white group-hover:text-secondary transition-colors">38</h3>
+<span class="text-emerald-400 text-xs font-bold flex items-center gap-1 bg-emerald-400/10 px-2 py-1 rounded">
+<span class="material-symbols-outlined text-sm">check_circle</span> 90%
+                            </span>
+</div>
+</div>
+<div class="glass p-5 rounded-xl border-l-4 border-l-accent hover:border-accent transition-all group">
+<p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Em Risco</p>
+<div class="flex items-end justify-between mt-2">
+<h3 class="text-3xl font-black text-white group-hover:text-accent transition-colors">4</h3>
+<span class="text-accent text-xs font-bold flex items-center gap-1 bg-accent/10 px-2 py-1 rounded">
+<span class="material-symbols-outlined text-sm">warning</span> Crítico
+                            </span>
+</div>
+</div>
+</div>
+<!-- Filters -->
+<div class="glass rounded-xl p-4 mb-6 flex flex-wrap items-center gap-4">
+<div class="flex-1 min-w-[200px] relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-lg">filter_list</span>
+<input class="w-full bg-slate-800/30 border border-slate-700/50 rounded-lg py-2 pl-10 text-sm focus:ring-primary focus:border-primary text-slate-200" placeholder="Filtrar projetos..." type="text"/>
+</div>
+<select class="bg-slate-800/30 border border-slate-700/50 rounded-lg py-2 pl-4 pr-10 text-sm text-slate-200 focus:ring-primary">
+<option>Todos os Status</option>
+<option>Planeamento</option>
+<option>Em Construção</option>
+<option>Concluído</option>
+</select>
+<select class="bg-slate-800/30 border border-slate-700/50 rounded-lg py-2 pl-4 pr-10 text-sm text-slate-200 focus:ring-primary">
+<option>Lisboa</option>
+<option>Porto</option>
+<option>Braga</option>
+<option>Algarve</option>
+</select>
+<button class="flex items-center gap-2 px-4 py-2 border border-slate-700/50 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
+<span class="material-symbols-outlined text-lg">calendar_today</span>
+<span>Intervalo de Datas</span>
+</button>
+<div class="flex border border-slate-700/50 rounded-lg p-1 bg-slate-900/30">
+<button class="p-1.5 bg-primary text-background-dark rounded shadow-sm">
+<span class="material-symbols-outlined text-lg">view_list</span>
+</button>
+<button class="p-1.5 text-slate-500 hover:text-slate-300 rounded">
+<span class="material-symbols-outlined text-lg">grid_view</span>
+</button>
+</div>
+</div>
+<!-- Main Data Table -->
+<div class="glass rounded-xl overflow-hidden border border-slate-800/50">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-slate-900/50 border-b border-slate-800">
+<th class="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">Projeto</th>
+<th class="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">Localização</th>
+<th class="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">Tipologias</th>
+<th class="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">Progresso</th>
+<th class="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">Status</th>
+<th class="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">Responsável</th>
+<th class="px-6 py-4 text-right"></th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-800/50">
+<!-- Row 1 -->
+<tr class="hover:bg-primary/5 transition-colors group cursor-pointer">
+<td class="px-6 py-5">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg overflow-hidden border border-slate-700 group-hover:border-primary/50 transition-all">
+<img class="w-full h-full object-cover" data-alt="Modern glass skyscraper architecture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCt3ka1ZxrgGn_T9hb41qNse3pjwoOXu1abtoa7XbPIuQU-6heXwea2qvXlQk6SBMU-Lb8rQtoD5_JHdqRQ57FMBu9HfXJXOyLn1FOYavlToXg-O5qr6t2Scu6t9SxHS8cCZfNGQQTt2r3ZUtBCEwauqLW7L6HT8W2O7pAHlxMH8p-EXdBUbRJ-hyJBVqDqMrclOOMPpXnCf4Z8a6fFgujQJDaDhqMmaSJ6AeegRBSuxLHelLWqfOmLy-AzebjIjVEkyZzB3m2NrO5i"/>
+</div>
+<div>
+<p class="text-sm font-bold text-white group-hover:text-primary transition-colors">Skyline Residences</p>
+<p class="text-[11px] text-slate-500">ID: PJ-2024-001</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-2 text-slate-300">
+<span class="material-symbols-outlined text-sm text-primary">location_on</span>
+<span class="text-xs font-medium">Parque das Nações, Lisboa</span>
+</div>
+</td>
+<td class="px-6 py-5">
+<div class="flex flex-wrap gap-1">
+<span class="text-[10px] px-2 py-0.5 rounded border border-primary/20 bg-primary/10 text-primary font-bold">T2</span>
+<span class="text-[10px] px-2 py-0.5 rounded border border-secondary/20 bg-secondary/10 text-secondary font-bold">T3</span>
+<span class="text-[10px] px-2 py-0.5 rounded border border-accent/20 bg-accent/10 text-accent font-bold">Penthouse</span>
+</div>
+</td>
+<td class="px-6 py-5">
+<div class="w-32">
+<div class="flex items-center justify-between mb-1.5">
+<span class="text-[10px] font-bold text-primary">65%</span>
+</div>
+<div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-primary to-secondary w-[65%] shadow-[0_0_8px_rgba(0,212,255,0.5)]"></div>
+</div>
+</div>
+</td>
+<td class="px-6 py-5">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]">
+<span class="w-1 h-1 rounded-full bg-emerald-400 animate-pulse"></span>
+                                            Em Construção
+                                        </span>
+</td>
+<td class="px-6 py-5">
+<div class="flex -space-x-2">
+<img class="w-7 h-7 rounded-full border-2 border-background-dark ring-1 ring-slate-800" data-alt="Team member avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDddcoGkoJG4tqSGMETzMGwdtU8IIhNgrUdR9ysqGbQXB5viPTOaeSSWZjS8vNFRyrZoPIdAWNnKyS37xBhVnB3ky8NFV4XKIvlIeNo0XRqOPEJL-PUX3RQUvMOUXewP5C7kXyqUU9uIGoyxnzsUmBs84IINGwbAqI3yRSh12nQuZxzfPAgTadLj14OJmKicC2iPu5NvjUGEWOOOya_YTfhGSEoLe1CBCVUKjrJBHGrWpgLrUGjlo3qYqj4xt8dP3hQOoMXw43_LgJq"/>
+<img class="w-7 h-7 rounded-full border-2 border-background-dark ring-1 ring-slate-800" data-alt="Team member avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCEbPXUVsXw6NdZmIlmCcQH29w21pQHDyXoh1_XZoETomqeGaDDyDWJbgAds3T6byzU5x8sSpCAx59TnsaTiMxYoF6R7FEftgF1ScShmmyJ48tq0qqYjTXyrUk6-kmFMOzeDoxqekIUvb_GOatcCYckmn2_aEUd2hky8aYnH8bdpACO-lHYJvNJY02oWucp1GNCvnGLfGU7QKUJrEpqvtmERFpNev3G7pk2XrHmDa5NQ-KriJhBRxmJYa1E0rJgzdx65KrKgquyVSO1"/>
+<div class="w-7 h-7 rounded-full bg-slate-800 border-2 border-background-dark ring-1 ring-slate-800 flex items-center justify-center text-[8px] font-bold text-slate-400">+3</div>
+</div>
+</td>
+<td class="px-6 py-5 text-right">
+<button class="p-2 hover:bg-slate-800 rounded-lg text-slate-500 hover:text-white transition-all">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-primary/5 transition-colors group cursor-pointer">
+<td class="px-6 py-5">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg overflow-hidden border border-slate-700 group-hover:border-primary/50 transition-all">
+<img class="w-full h-full object-cover" data-alt="Luxurious beachfront villa development" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3XJkFU3NEUsUAMIPaWnzqgekKiZ5spXamGL5xuYD387Oi8qJZuYWU1THLTKRLgwXtILcdNv_7mlyWL75UtMXEc9l-0lVubS8U0zbXbmIKXnydl3P4SKCbseKyXfKaX9kX9Y1-7pSp4Cj5dIyE2ipZVcW2LzpfB16StpU14nWUVHv5cpfsqfSXcVfJAJoJ8gXfZrPqfFaNHAMBTR6fpB9X9F2wYfARQ5rhQi3j0pljuSLBYKd3wIEHkH0_Yr6X88iH0e4rQF6bpvbV"/>
+</div>
+<div>
+<p class="text-sm font-bold text-white group-hover:text-primary transition-colors">Ocean Breeze Villa</p>
+<p class="text-[11px] text-slate-500">ID: PJ-2024-002</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-2 text-slate-300">
+<span class="material-symbols-outlined text-sm text-primary">location_on</span>
+<span class="text-xs font-medium">Vilamoura, Algarve</span>
+</div>
+</td>
+<td class="px-6 py-5">
+<div class="flex flex-wrap gap-1">
+<span class="text-[10px] px-2 py-0.5 rounded border border-accent/20 bg-accent/10 text-accent font-bold">V4 Lux</span>
+</div>
+</td>
+<td class="px-6 py-5">
+<div class="w-32">
+<div class="flex items-center justify-between mb-1.5">
+<span class="text-[10px] font-bold text-primary">15%</span>
+</div>
+<div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-primary to-secondary w-[15%] shadow-[0_0_8px_rgba(0,212,255,0.5)]"></div>
+</div>
+</div>
+</td>
+<td class="px-6 py-5">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shadow-[0_0_10px_rgba(6,182,212,0.1)]">
+                                            Planeamento
+                                        </span>
+</td>
+<td class="px-6 py-5">
+<div class="flex -space-x-2">
+<img class="w-7 h-7 rounded-full border-2 border-background-dark ring-1 ring-slate-800" data-alt="Team member avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAy0YL134H_bcdX6eD-E0uOKX3_pk53-E8Q5EnOowcgTT9UmrG-5vv6dj8077bIyXrm-le3hncbgOUObNxu3QIrqlnCSUIsM5qRlPuES44b1STUJCv-zh1qh8h3sxdiiU3K7-BokN0zwpuYs_MDkT6Y2foixeIbtW8DZvIWlCSnjArQRYVhjbRiQRFDJzeJcJ9k2XYVNNQTvRtjUaFKAqgxJjDjOLO6utAU9j8d_OvPZh5rynECiU_EDsBbWPIqX2k5NRuP0eMF2g08"/>
+<img class="w-7 h-7 rounded-full border-2 border-background-dark ring-1 ring-slate-800" data-alt="Team member avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDFrFTTR7zxut4SnxiLz_WiIIw3nk9LR9pHAAW0adQ2eshHuf9oJmIqF_72kzM2AHP9cy-HS35vNZO5WO9PGxc06XIip2yQLfxKuet7tjJVyNX67b6smsFUj31iS-UEJmwn7Ht4UxI_p10fK4ByVsvkCK-YxmYgHjcevgb2xiz8N21-F7Fr6RqwkAza6KiL2JamCaw1KlSsvS8tUjGUBRwM1ReEDioBnw6TsuNYowXWa7u8IRcBt0hRwuSB3h7x3Tzkg8Vut-uWCvYh"/>
+</div>
+</td>
+<td class="px-6 py-5 text-right">
+<button class="p-2 hover:bg-slate-800 rounded-lg text-slate-500 hover:text-white transition-all">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 (Concluded) -->
+<tr class="hover:bg-primary/5 transition-colors group cursor-pointer">
+<td class="px-6 py-5">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg overflow-hidden border border-slate-700 group-hover:border-primary/50 transition-all">
+<img class="w-full h-full object-cover" data-alt="Renovated urban residential building" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBDJtckqIpIEoZrfAFlHjdLvMr9ejj5mhDAa3NBrerAr1odDccZG-1JKK3tF8_VLyPtGGKOEfSsbqMcjwbAbrL5QXEX0fG8A6ewVSZfwDQKPh3S7GhRhTbfXucokMOB1FTwXTDD7KpgoUaoOxyQ2CI_7acFxi-nZ4lUDNDFDfIJdwb2Vdz4NCzfoaADsQh8-turENIQSxeoh9s6KsOaQnr1BxhpaHh9S80YJ7ypJcFyfBZiVguHH5fylgbQtFVz_igdV9hJk41Mr-Rn"/>
+</div>
+<div>
+<p class="text-sm font-bold text-white group-hover:text-primary transition-colors">Urban Loft Porto</p>
+<p class="text-[11px] text-slate-500">ID: PJ-2023-089</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-2 text-slate-300">
+<span class="material-symbols-outlined text-sm text-primary">location_on</span>
+<span class="text-xs font-medium">Baixa, Porto</span>
+</div>
+</td>
+<td class="px-6 py-5">
+<div class="flex flex-wrap gap-1">
+<span class="text-[10px] px-2 py-0.5 rounded border border-primary/20 bg-primary/10 text-primary font-bold">Studio</span>
+<span class="text-[10px] px-2 py-0.5 rounded border border-secondary/20 bg-secondary/10 text-secondary font-bold">T1</span>
+</div>
+</td>
+<td class="px-6 py-5">
+<div class="w-32">
+<div class="flex items-center justify-between mb-1.5">
+<span class="text-[10px] font-bold text-primary">100%</span>
+</div>
+<div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[100%] shadow-[0_0_8px_rgba(0,212,255,0.5)]"></div>
+</div>
+</div>
+</td>
+<td class="px-6 py-5">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-primary/10 text-primary border border-primary/20">
+                                            Concluído
+                                        </span>
+</td>
+<td class="px-6 py-5">
+<div class="flex -space-x-2">
+<img class="w-7 h-7 rounded-full border-2 border-background-dark ring-1 ring-slate-800" data-alt="Team member avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAqmPNxC4RNDEPcLR9K-7bIcn2O1ZpKVabuQeeMXxczo40QB8Vm6YmQSzOLadrqDZF5S5PZ4t4w2NUWJnXN6DDPSGa34Rj5O9DnJV5d3onZX0uoN6OqIGkIHo4p6C-ilANxFGQtfQQXAH5XTlx1h8NbdygGcYqpR-3wIdwPcaxU3STb-iMSh5nfHzs016CS7_fyAcJYjtsT5FBhCX7wxB_SU18VOro6jB9iEC0py8-mtN8oNjBPoIpD8Ddz5VEe3IIUESRrQE1re1Qq"/>
+</div>
+</td>
+<td class="px-6 py-5 text-right">
+<button class="p-2 hover:bg-slate-800 rounded-lg text-slate-500 hover:text-white transition-all">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="bg-slate-900/30 px-6 py-4 flex items-center justify-between border-t border-slate-800">
+<p class="text-xs text-slate-500">Mostrando <span class="text-slate-200 font-bold">1-10</span> de <span class="text-slate-200 font-bold">42</span> projetos</p>
+<div class="flex items-center gap-2">
+<button class="p-1 border border-slate-700 rounded hover:bg-slate-800 transition-colors disabled:opacity-30" disabled="">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center text-xs font-bold rounded bg-primary text-background-dark">1</button>
+<button class="w-8 h-8 flex items-center justify-center text-xs font-bold rounded text-slate-400 hover:bg-slate-800">2</button>
+<button class="w-8 h-8 flex items-center justify-center text-xs font-bold rounded text-slate-400 hover:bg-slate-800">3</button>
+<span class="text-slate-600">...</span>
+<button class="w-8 h-8 flex items-center justify-center text-xs font-bold rounded text-slate-400 hover:bg-slate-800">5</button>
+<button class="p-1 border border-slate-700 rounded hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Subtle Decorative Elements -->
+<div class="mt-12 opacity-30 flex flex-col items-center">
+<div class="h-px w-full max-w-lg bg-gradient-to-r from-transparent via-slate-700 to-transparent"></div>
+<p class="text-[10px] uppercase tracking-widest text-slate-600 mt-4 font-bold italic">ImoOS High-Tech Infrastructure v2.4.0</p>
+</div>
+</div>
+</main>
+</div>
+<!-- Background Pattern -->
+<div class="fixed inset-0 pointer-events-none z-0 overflow-hidden opacity-20">
+<svg class="absolute w-full h-full" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<pattern height="40" id="grid" patternunits="userSpaceOnUse" width="40">
+<path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(0, 212, 255, 0.1)" stroke-width="1"></path>
+</pattern>
+</defs>
+<rect fill="url(#grid)" height="100%" width="100%"></rect>
+</svg>
+</div>
+</body></html>

@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ImoOS - Skyline Residences Detail</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#00d4ff",
+                        "secondary": "#7c3aed",
+                        "accent": "#ec4899",
+                        "background-light": "#f5f8f8",
+                        "background-dark": "#0a0a0f",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .neon-glow-cyan {
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+        }
+        .neon-glow-purple {
+            box-shadow: 0 0 15px rgba(124, 58, 237, 0.3);
+        }
+        .sidebar-item-active {
+            background: linear-gradient(90deg, rgba(0, 212, 255, 0.15) 0%, transparent 100%);
+            border-left: 3px solid #00d4ff;
+        }
+    </style>
+</head>
+<body class="bg-background-dark font-display text-slate-100 antialiased overflow-x-hidden">
+<div class="flex h-screen overflow-hidden">
+<!-- Sidebar -->
+<aside class="w-64 glass border-r border-white/5 flex flex-col z-20">
+<div class="p-6 flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary via-secondary to-accent p-[2px]">
+<div class="w-full h-full bg-background-dark rounded-[10px] flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-2xl">rocket_launch</span>
+</div>
+</div>
+<div>
+<h1 class="font-black text-xl tracking-tight text-white leading-none">ImoOS</h1>
+<p class="text-[10px] text-primary/70 font-bold uppercase tracking-widest mt-1">Admin Console</p>
+</div>
+</div>
+<nav class="flex-1 px-4 mt-4 space-y-1">
+<div class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white transition-colors cursor-pointer group">
+<span class="material-symbols-outlined group-hover:text-primary">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 text-white sidebar-item-active cursor-pointer">
+<span class="material-symbols-outlined text-primary">apartment</span>
+<span class="text-sm font-medium">Projetos</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white transition-colors cursor-pointer group">
+<span class="material-symbols-outlined group-hover:text-primary">sensor_door</span>
+<span class="text-sm font-medium">Unidades</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white transition-colors cursor-pointer group">
+<span class="material-symbols-outlined group-hover:text-primary">event_note</span>
+<span class="text-sm font-medium">Cronograma</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white transition-colors cursor-pointer group">
+<span class="material-symbols-outlined group-hover:text-primary">account_balance_wallet</span>
+<span class="text-sm font-medium">Orçamento</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white transition-colors cursor-pointer group">
+<span class="material-symbols-outlined group-hover:text-primary">group</span>
+<span class="text-sm font-medium">Equipa</span>
+</div>
+</nav>
+<div class="p-4 border-t border-white/5">
+<button class="w-full py-3 px-4 bg-primary text-background-dark font-bold rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-lg">add_circle</span>
+<span class="text-sm">Novo Projeto</span>
+</button>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col overflow-y-auto relative">
+<!-- Background Glows -->
+<div class="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 blur-[120px] rounded-full -mr-64 -mt-64 pointer-events-none"></div>
+<div class="absolute bottom-0 left-0 w-[500px] h-[500px] bg-secondary/10 blur-[120px] rounded-full -ml-64 -mb-64 pointer-events-none"></div>
+<!-- Header -->
+<header class="p-8 pb-4">
+<div class="flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500 uppercase tracking-widest mb-4">
+<span>Dashboard</span>
+<span class="material-symbols-outlined text-[10px]">chevron_right</span>
+<span>Projetos</span>
+<span class="material-symbols-outlined text-[10px]">chevron_right</span>
+<span class="text-primary">Skyline Residences</span>
+</div>
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+<div>
+<div class="flex items-center gap-4 mb-2">
+<h2 class="text-4xl md:text-5xl font-black text-white tracking-tighter">Skyline Residences</h2>
+<span class="px-3 py-1 bg-primary/10 border border-primary/30 text-primary text-[10px] font-black rounded-full uppercase tracking-widest">Em Construção</span>
+</div>
+<p class="text-slate-400 max-w-xl">Desenvolvimento residencial de luxo no centro financeiro, integrando sustentabilidade e tecnologia de ponta.</p>
+</div>
+<div class="flex items-center gap-3">
+<button class="px-5 py-2.5 glass text-white text-sm font-bold rounded-lg border border-white/10 hover:bg-white/5 transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">edit</span> Editar
+                        </button>
+<button class="px-5 py-2.5 glass text-white text-sm font-bold rounded-lg border border-white/10 hover:bg-white/5 transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">more_horiz</span>
+</button>
+<button class="px-6 py-2.5 bg-primary text-background-dark text-sm font-bold rounded-lg neon-glow-cyan hover:opacity-90 transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">share</span> Partilhar
+                        </button>
+</div>
+</div>
+<!-- Tabs -->
+<div class="mt-10 flex border-b border-white/5 gap-8 overflow-x-auto no-scrollbar">
+<a class="pb-4 border-b-2 border-primary text-primary font-bold text-sm tracking-wide whitespace-nowrap" href="#">Visão Geral</a>
+<a class="pb-4 border-b-2 border-transparent text-slate-500 hover:text-slate-300 font-bold text-sm tracking-wide whitespace-nowrap transition-colors" href="#">Unidades</a>
+<a class="pb-4 border-b-2 border-transparent text-slate-500 hover:text-slate-300 font-bold text-sm tracking-wide whitespace-nowrap transition-colors" href="#">Cronograma</a>
+<a class="pb-4 border-b-2 border-transparent text-slate-500 hover:text-slate-300 font-bold text-sm tracking-wide whitespace-nowrap transition-colors" href="#">Orçamento</a>
+<a class="pb-4 border-b-2 border-transparent text-slate-500 hover:text-slate-300 font-bold text-sm tracking-wide whitespace-nowrap transition-colors" href="#">Documentos</a>
+<a class="pb-4 border-b-2 border-transparent text-slate-500 hover:text-slate-300 font-bold text-sm tracking-wide whitespace-nowrap transition-colors" href="#">Equipa</a>
+</div>
+</header>
+<!-- Grid Content -->
+<div class="p-8 space-y-8">
+<!-- Info Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<div class="glass p-6 rounded-2xl border-l-4 border-primary">
+<div class="flex items-center justify-between mb-4">
+<span class="text-slate-500 text-xs font-bold uppercase tracking-widest">Área Total</span>
+<span class="material-symbols-outlined text-primary">square_foot</span>
+</div>
+<div class="text-3xl font-black text-white">12.450 <span class="text-sm font-medium text-slate-500">m²</span></div>
+</div>
+<div class="glass p-6 rounded-2xl border-l-4 border-secondary">
+<div class="flex items-center justify-between mb-4">
+<span class="text-slate-500 text-xs font-bold uppercase tracking-widest">Nº Unidades</span>
+<span class="material-symbols-outlined text-secondary">domain</span>
+</div>
+<div class="text-3xl font-black text-white">84</div>
+</div>
+<div class="glass p-6 rounded-2xl border-l-4 border-accent">
+<div class="flex items-center justify-between mb-4">
+<span class="text-slate-500 text-xs font-bold uppercase tracking-widest">Investimento</span>
+<span class="material-symbols-outlined text-accent">payments</span>
+</div>
+<div class="text-3xl font-black text-white">€4.2M</div>
+</div>
+<div class="glass p-6 rounded-2xl border-l-4 border-emerald-400">
+<div class="flex items-center justify-between mb-4">
+<span class="text-slate-500 text-xs font-bold uppercase tracking-widest">ROI Projetado</span>
+<span class="material-symbols-outlined text-emerald-400">trending_up</span>
+</div>
+<div class="text-3xl font-black text-white">18.5%</div>
+</div>
+</div>
+<!-- Two Column Grid: Map & Timeline -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- BIM/Map Preview -->
+<div class="lg:col-span-2 glass rounded-2xl overflow-hidden relative group">
+<div class="absolute top-4 left-4 z-10 flex gap-2">
+<span class="px-3 py-1 bg-background-dark/80 backdrop-blur-md rounded-lg text-[10px] font-bold text-primary border border-primary/20 flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">3d_rotation</span> 3D BIM ACTIVE
+                            </span>
+<span class="px-3 py-1 bg-background-dark/80 backdrop-blur-md rounded-lg text-[10px] font-bold text-white/70 border border-white/10">GPS: 38.7223° N, 9.1393° W</span>
+</div>
+<div class="w-full h-96 bg-slate-900 flex items-center justify-center relative">
+<div class="absolute inset-0 bg-gradient-to-t from-background-dark/80 to-transparent pointer-events-none"></div>
+<img alt="3D BIM Construction Map" class="w-full h-full object-cover opacity-50 grayscale contrast-125" data-alt="Futuristic 3D wireframe terrain model and construction site visualization" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAqJ0QLyK2adoa4theWH0Yu6PYNW1rsUJTUs8BSeUp5vA78hYu8Lwc1R8tsG4a7Gw96tC-GXMCCGJBzZ-49uN-EgU680am4Xms8P5dQQ-LhR8tg3qpJDYLtVZbqsHCepsNcFsjXvVyVypWaQ2yTxjwkZ3s-KxVVwyKoQry85aauqL82S1NP7PAiZ3epVH2auLAqTeHnOgwp7IU3QCW6TeYm2jMtl7J26nMjr4w6YHlaUsGszu7nb9MpvxqWMvfcMv5akUwy_g52_CDo"/>
+<!-- Overlay UI elements -->
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="w-48 h-48 border-2 border-primary/20 rounded-full animate-pulse flex items-center justify-center">
+<div class="w-32 h-32 border border-primary/40 rounded-full flex items-center justify-center">
+<div class="w-2 h-2 bg-primary rounded-full neon-glow-cyan"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="absolute bottom-4 right-4 flex flex-col gap-2">
+<button class="w-10 h-10 glass rounded-lg flex items-center justify-center text-white hover:bg-primary/20 transition-colors">
+<span class="material-symbols-outlined">zoom_in</span>
+</button>
+<button class="w-10 h-10 glass rounded-lg flex items-center justify-center text-white hover:bg-primary/20 transition-colors">
+<span class="material-symbols-outlined">zoom_out</span>
+</button>
+<button class="w-10 h-10 glass rounded-lg flex items-center justify-center text-white hover:bg-primary/20 transition-colors">
+<span class="material-symbols-outlined">layers</span>
+</button>
+</div>
+</div>
+<!-- Timeline -->
+<div class="glass rounded-2xl p-6 flex flex-col">
+<div class="flex items-center justify-between mb-8">
+<h3 class="text-lg font-black text-white tracking-tight uppercase">Marcos do Projeto</h3>
+<span class="material-symbols-outlined text-slate-500">timeline</span>
+</div>
+<div class="space-y-8 relative flex-1">
+<!-- Timeline line -->
+<div class="absolute left-[11px] top-2 bottom-2 w-0.5 bg-white/5"></div>
+<!-- Milestone 1 -->
+<div class="flex gap-4 relative">
+<div class="w-6 h-6 rounded-full bg-primary flex items-center justify-center z-10 neon-glow-cyan">
+<span class="material-symbols-outlined text-[16px] text-background-dark font-bold">check</span>
+</div>
+<div>
+<p class="text-sm font-black text-white">Início do Projeto</p>
+<p class="text-[10px] text-primary font-bold uppercase mt-0.5">Jan 2024 • Concluído</p>
+</div>
+</div>
+<!-- Milestone 2 -->
+<div class="flex gap-4 relative">
+<div class="w-6 h-6 rounded-full bg-primary flex items-center justify-center z-10 neon-glow-cyan">
+<span class="material-symbols-outlined text-[16px] text-background-dark font-bold">check</span>
+</div>
+<div>
+<p class="text-sm font-black text-white">Fundações</p>
+<p class="text-[10px] text-primary font-bold uppercase mt-0.5">Mar 2024 • Concluído</p>
+</div>
+</div>
+<!-- Milestone 3 -->
+<div class="flex gap-4 relative">
+<div class="w-6 h-6 rounded-full border-2 border-secondary bg-background-dark flex items-center justify-center z-10 neon-glow-purple">
+<div class="w-2 h-2 bg-secondary rounded-full animate-pulse"></div>
+</div>
+<div>
+<p class="text-sm font-black text-white">Estrutura Principal</p>
+<p class="text-[10px] text-secondary font-bold uppercase mt-0.5">Jun 2024 • Em Curso (65%)</p>
+</div>
+</div>
+<!-- Milestone 4 -->
+<div class="flex gap-4 relative opacity-40">
+<div class="w-6 h-6 rounded-full border-2 border-slate-700 bg-background-dark flex items-center justify-center z-10"></div>
+<div>
+<p class="text-sm font-black text-white">Acabamentos</p>
+<p class="text-[10px] text-slate-500 font-bold uppercase mt-0.5">Out 2024 • Pendente</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Gallery Section -->
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<h3 class="text-lg font-black text-white tracking-tight uppercase">Galeria de Renders</h3>
+<button class="text-primary text-xs font-bold flex items-center gap-1 hover:underline">Ver Todos <span class="material-symbols-outlined text-xs">arrow_forward</span></button>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<div class="aspect-video glass rounded-xl overflow-hidden group cursor-pointer border border-white/5">
+<img alt="Exterior Render Front" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-80 group-hover:opacity-100" data-alt="Futuristic skyscraper exterior render with glass facade" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCIVDuF4LC8tbR5mbch9rwPYDeNR5DJp-bNE1LkpWlLYlfP-jwxaRtj-cfIL2pPBjZhFPSN9DUpRiEAEfnre1rlictb0MbBjirtNhhaYaktKJVHlS395_LZEGn1tU8Z64gy7tkcXDXvkPfcpwvjm_Lm7nYqa2AxOElV7ZRurlnKSLkzExN5KAJmi0FKiJxLX_kHXmet8MSCXuJ8DDEVm6DBFzfLvb2Ht_zMaOlj-H61S4VgmSOsu-lEjEV3J0AQWZhfQ9b9oxkSpL5t"/>
+</div>
+<div class="aspect-video glass rounded-xl overflow-hidden group cursor-pointer border border-white/5">
+<img alt="Interior Lobby Render" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-80 group-hover:opacity-100" data-alt="Modern luxury interior lobby design with marble and lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAS5wQvNpavegfWLX6eVr8JMYT0LDIKXO4jwHm_eF5qiVRjoRLTnH511kHIKw2jpvdJ3xsBajrTNLOO5wES2CQoiw9m0kU3iBFtFm3d7fckA-NQNxisLeLbfU6_ajDhFJ798eWj19wL7quO6UXn99fzAMgO_fGd6PrZYMpBIbHlJwG2ZkOp7z3H-qg-2KdXT51jQe_ZjBCTmD0pGmvH_fChDPGKxUHK5Q1ZAR2wWTC_nfHu5RMDJRPA0rXke1Ej4_w-1t6nncDSUU2l"/>
+</div>
+<div class="aspect-video glass rounded-xl overflow-hidden group cursor-pointer border border-white/5">
+<img alt="Penthouse Terrace Render" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-80 group-hover:opacity-100" data-alt="High-end penthouse terrace with city skyline view" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCXHfhdHPLpC_BsM5KoZqHPpIVZHUliTB6xc5p8nNgHHGSsk-HBbw_bVJxu7OEx1RlBfO6Rmn0pf7zyfcd5MFjVYIMMKL1cOAfqDi3BHhrJhZ6cDQJeZYUrQBJVIo51qeVzdNrKp0pIq7cXVdy4286E-ybWkXEI8RWIdtbyRVhtvbdY8m-5WK8hkWYgm30ce6B2t8ila1rn1d9NBrv6ZbhsyqRe2oviYFXfHfCh4lkM93esOaGSHDKUnniuwfnV7lE549W_-E63vfrC"/>
+</div>
+<div class="aspect-video glass rounded-xl overflow-hidden group cursor-pointer border border-white/5">
+<img alt="Site Progress" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-80 group-hover:opacity-100" data-alt="Real construction site progress photo from drone" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAnKU1JPg6-IiYba6E5JYNr2dHw5-DErTZfodo-Op8SHu5oP-WhUmCUOw6j3F6uxcqYYGWHqmNkxtl784zhC_9k2y3pZJYruSQfAi60ZoJ-plwK_3LHq1x4-tKv2HLdyykDawnr8RVZGYIaynUQpYL9RWeULn4Jsvz3SH2RjjvRj-2GlL1NKaypNQPhoQVz_t0xSaiBIInObIj40VoPuoY_dGockXENc-reoQtdWQ7bWLZikBHhwJlQeD7YfnLQamaH0k3u_YIJ-VIx"/>
+</div>
+</div>
+</div>
+<!-- Footer / Team Summary -->
+<div class="glass rounded-2xl p-6 flex flex-wrap items-center justify-between gap-6">
+<div class="flex items-center gap-6">
+<div>
+<h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Equipa Responsável</h4>
+<div class="flex -space-x-3">
+<div class="w-10 h-10 rounded-full border-2 border-background-dark overflow-hidden bg-slate-800">
+<img alt="Team 1" data-alt="Portrait of professional architect male" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAxIjLbV-pFmLtVb2rGSc4nJSy8Bl_K1Sb9tyUbFF9K1NrFbDjuLHaILxIpP19t5orBI9YCRugQcUGDnNSTZ6jC1GZt4q5Qlt3nwvSFzdxzexXhhjmq0jGnoZ2xyEDiAxLxaSi4eTqEXvnzyfGmty9q6C4trhCTAkIkY35kFjg1FIrfOzDvummCCOJClYsEGqlLj81VdJLbImpaeQRz7nR3p4067Jeu3i8SdKH5i6boE9F_CbnLc7I3GfEtlUTVym5RYLUnRLc3NYX7"/>
+</div>
+<div class="w-10 h-10 rounded-full border-2 border-background-dark overflow-hidden bg-slate-800">
+<img alt="Team 2" data-alt="Portrait of female project manager" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAL91VExDYyND_3GxLxjqtLtohCQo47YvCfYQfEmMFWjYDCnqh1rkUDKDPmY64RMk3fVOSUhA5Whinw55BO0F0wgwFm8zJEtNy8gIwr0YQ8ZjF2iWCNsmzyj-wcsANctU_GyU5rIDQuuHcw5eT-xFH3S_obHNNGgH0FSHjTJrlyDAUpyVuAS10EbTS8Xv5qWhkePiKCKrN_wPFtKRWx5Zlgzxtb0IjsAVFjzCY6gGXQGQCj7th-GsB6Qpcgp3gAGjexNkShOsOsnJ3c"/>
+</div>
+<div class="w-10 h-10 rounded-full border-2 border-background-dark overflow-hidden bg-slate-800">
+<img alt="Team 3" data-alt="Portrait of civil engineer male" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCFydNJw3YlU9fTSgEShGUGgIJOM_s1_8CIlOisp7TXnvcFneuHSoYZAWJQKHwLiUlWTaRzJOoUbIezpHVhO2BhiZeETdXxS0aqWd1gYi6UhdUYm5LhuoUIZKdCom2JNdDZ4mgIlPGzcpZu6f4tHmHLDpg4Pz6dzUsjoXRUABTEjdAhSa8MCvLjmD5KQy5Glpczst9bqX3B9IzlaCQ-lRPjjJGzkZDhy4Zq5unCe_1YIRrWYvT6xIggMxoyH_4rc1rQfltZFrqLXitX"/>
+</div>
+<div class="w-10 h-10 rounded-full border-2 border-background-dark bg-secondary flex items-center justify-center text-[10px] font-black text-white">
+                                    +12
+                                </div>
+</div>
+</div>
+<div class="hidden sm:block h-12 w-px bg-white/10"></div>
+<div class="hidden sm:block">
+<p class="text-xs font-bold text-white">Arq. Miguel Silva</p>
+<p class="text-[10px] text-primary font-bold uppercase">Diretor de Projeto</p>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="text-right">
+<p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Última Atualização</p>
+<p class="text-sm font-bold text-white">Há 2 horas por Joana M.</p>
+</div>
+<button class="w-12 h-12 rounded-xl glass border border-white/10 flex items-center justify-center text-white hover:bg-white/5 transition-all">
+<span class="material-symbols-outlined">chat_bubble</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

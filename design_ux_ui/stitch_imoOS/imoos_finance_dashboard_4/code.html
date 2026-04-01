@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html class="dark" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ImoOS - Contadoria Zen</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#00E5FF",
+                        "ledger-bg": "#121214",
+                        "ledger-sidebar": "#0D0D0F",
+                        "ledger-border": "#222226",
+                        "ledger-text": "#E8E8E8",
+                        "ledger-muted": "#8A8A8F",
+                        "status-ok": "#00E5FF",
+                        "status-alert": "#FF2D78",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        body { font-family: 'Inter', sans-serif; background-color: theme('colors.ledger-bg'); color: theme('colors.ledger-text'); }
+        .grid-line { border-color: theme('colors.ledger-border'); }
+        .table-fixed-header th { position: sticky; top: 0; background: theme('colors.ledger-bg'); z-index: 10; }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #333; }
+        input, select { background: transparent !important; border-radius: 0 !important; border: 1px solid #222226 !important; }
+    </style>
+</head>
+<body class="overflow-hidden">
+<div class="flex h-screen border-4 border-ledger-bg">
+<aside class="w-16 hover:w-64 group transition-all duration-300 border-r border-ledger-border bg-ledger-sidebar flex flex-col shrink-0 z-50">
+<div class="p-4 flex flex-col h-full overflow-hidden">
+<div class="flex items-center gap-4 mb-12">
+<div class="size-8 border border-ledger-text flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-sm">account_balance</span>
+</div>
+<div class="opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+<h1 class="text-xs font-bold tracking-widest uppercase">ImoOS Ledger</h1>
+</div>
+</div>
+<nav class="flex-1 space-y-4">
+<a class="flex items-center gap-4 text-ledger-muted hover:text-ledger-text transition-colors" href="#">
+<span class="material-symbols-outlined size-8 flex items-center justify-center">dashboard</span>
+<span class="text-[11px] font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">Consolidado</span>
+</a>
+<a class="flex items-center gap-4 text-ledger-text border-r-2 border-ledger-text -mr-4" href="#">
+<span class="material-symbols-outlined size-8 flex items-center justify-center">table_chart</span>
+<span class="text-[11px] font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">Livro Caixa</span>
+</a>
+<a class="flex items-center gap-4 text-ledger-muted hover:text-ledger-text transition-colors" href="#">
+<span class="material-symbols-outlined size-8 flex items-center justify-center">receipt_long</span>
+<span class="text-[11px] font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">Recebíveis</span>
+</a>
+<a class="flex items-center gap-4 text-ledger-muted hover:text-ledger-text transition-colors" href="#">
+<span class="material-symbols-outlined size-8 flex items-center justify-center">analytics</span>
+<span class="text-[11px] font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">Relatórios</span>
+</a>
+</nav>
+<div class="mt-auto space-y-4">
+<a class="flex items-center gap-4 text-ledger-muted hover:text-ledger-text" href="#">
+<span class="material-symbols-outlined size-8 flex items-center justify-center">settings</span>
+</a>
+<div class="size-8 rounded-full border border-ledger-border overflow-hidden grayscale">
+<img alt="User Profile" class="size-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC-e2dRBH2RzhjrMod2pOA6-XEl_NvVHJ9ccgs8E7u06naqNu3IMV8EtdB-4DU4LwTyywpDjy8yyamA-e914alv5SgcvzvKOwNmyeyKnZTqW5lZl6BIMpT2YkWgzTT42oOFCoSfhhZn0mvN6c0_xKElk9hZ7qkNV7M1mZ15HYil57t_wbe5t95UUQgXHw6BnKG_0mn9CQsdcMrXCkFHphPN9xWCvYoVpPYdEWgiSqEMWJJE7SjWnwcdXG5UojQhlC2A-WO11M5a2G3r"/>
+</div>
+</div>
+</div>
+</aside>
+<main class="flex-1 flex flex-col bg-ledger-bg">
+<header class="h-12 border-b border-ledger-border flex items-center justify-between px-6 bg-ledger-bg">
+<div class="flex items-center gap-8">
+<h2 class="text-[10px] font-bold uppercase tracking-[0.2em] text-ledger-muted">Controladoria de Ativos Financeiros</h2>
+<div class="flex items-center gap-4 text-[10px] text-ledger-muted">
+<span class="flex items-center gap-1.5"><span class="size-1 bg-status-ok"></span> Sistema Operacional</span>
+<span class="flex items-center gap-1.5 text-ledger-text"><span class="material-symbols-outlined text-[10px]">update</span> 12:45 UTC-3</span>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2 border border-ledger-border px-2 py-0.5">
+<span class="material-symbols-outlined text-[14px] text-ledger-muted">search</span>
+<input class="border-none p-0 text-[10px] w-24 bg-transparent focus:ring-0" placeholder="REF#" type="text"/>
+</div>
+<button class="bg-ledger-text text-ledger-bg px-4 py-1 text-[10px] font-bold uppercase tracking-widest hover:bg-white transition-colors">Exportar CSV</button>
+</div>
+</header>
+<div class="flex-1 overflow-hidden grid grid-cols-12">
+<div class="col-span-8 border-r border-ledger-border flex flex-col overflow-hidden">
+<div class="p-4 border-b border-ledger-border flex items-center justify-between">
+<div class="flex items-center gap-6">
+<div class="text-[10px] uppercase font-bold text-ledger-muted">Filtros Ativos:</div>
+<select class="text-[10px] font-bold uppercase py-1 px-2 pr-8 border border-ledger-border">
+<option>Período: FY 2024</option>
+</select>
+<select class="text-[10px] font-bold uppercase py-1 px-2 pr-8 border border-ledger-border">
+<option>Entidade: Todos os Projetos</option>
+</select>
+</div>
+<div class="flex gap-2">
+<div class="size-2 border border-ledger-border bg-status-ok" title="Consistência OK"></div>
+<div class="size-2 border border-ledger-border" title="Processando"></div>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto">
+<div class="grid grid-cols-4 border-b border-ledger-border">
+<div class="p-6 border-r border-ledger-border">
+<div class="text-[9px] uppercase font-bold text-ledger-muted mb-2 tracking-tighter">Fluxo de Caixa (M)</div>
+<div class="text-2xl font-light tracking-tighter">€ 85.000,00</div>
+<div class="text-[9px] text-status-ok mt-1 font-bold">+12.5% PERFORMANCE</div>
+</div>
+<div class="p-6 border-r border-ledger-border">
+<div class="text-[9px] uppercase font-bold text-ledger-muted mb-2 tracking-tighter">Contas a Receber</div>
+<div class="text-2xl font-light tracking-tighter">€ 245.000,00</div>
+<div class="flex items-center gap-1.5 text-[9px] text-status-alert mt-1 font-bold">
+<span class="size-1.5 bg-status-alert rounded-full"></span> 15.0% EM MORA
+                            </div>
+</div>
+<div class="p-6 border-r border-ledger-border bg-white/[0.02]">
+<div class="text-[9px] uppercase font-bold text-ledger-muted mb-2 tracking-tighter">Inadimplência</div>
+<div class="text-2xl font-light tracking-tighter">3,20%</div>
+<div class="text-[9px] text-ledger-muted mt-1 font-bold">LIMITE: 5.0%</div>
+</div>
+<div class="p-6">
+<div class="text-[9px] uppercase font-bold text-ledger-muted mb-2 tracking-tighter">ROI Médio</div>
+<div class="text-2xl font-light tracking-tighter">18,50%</div>
+<div class="flex items-center gap-1.5 text-[9px] text-status-ok mt-1 font-bold">
+<span class="size-1.5 bg-status-ok rounded-full"></span> TARGET MET
+                            </div>
+</div>
+</div>
+<div class="p-6">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-[10px] font-bold uppercase tracking-widest border-l-2 border-ledger-text pl-2">Performance por Empreendimento</h3>
+</div>
+<table class="w-full text-left text-[11px] border-collapse">
+<thead>
+<tr class="text-[9px] text-ledger-muted uppercase border-b border-ledger-border">
+<th class="py-2 font-bold">Projeto</th>
+<th class="py-2 font-bold text-right">Orçamento</th>
+<th class="py-2 font-bold text-right">Realizado</th>
+<th class="py-2 font-bold text-right">Desvio</th>
+<th class="py-2 font-bold text-center">Progresso</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-ledger-border">
+<tr>
+<td class="py-4 font-medium uppercase">Edifício Cyan</td>
+<td class="py-4 text-right">€ 1.500.000,00</td>
+<td class="py-4 text-right">€ 1.200.000,00</td>
+<td class="py-4 text-right text-status-ok">-20.0%</td>
+<td class="py-4">
+<div class="flex items-center justify-center gap-4">
+<div class="w-24 h-1 bg-ledger-border">
+<div class="h-full bg-ledger-text w-[80%]"></div>
+</div>
+<span class="text-[9px] font-bold">80%</span>
+</div>
+</td>
+</tr>
+<tr>
+<td class="py-4 font-medium uppercase">Torre Neon</td>
+<td class="py-4 text-right">€ 900.000,00</td>
+<td class="py-4 text-right">€ 850.000,00</td>
+<td class="py-4 text-right text-status-ok">-5.5%</td>
+<td class="py-4">
+<div class="flex items-center justify-center gap-4">
+<div class="w-24 h-1 bg-ledger-border">
+<div class="h-full bg-ledger-text w-[94%]"></div>
+</div>
+<span class="text-[9px] font-bold">94%</span>
+</div>
+</td>
+</tr>
+<tr>
+<td class="py-4 font-medium uppercase">Residencial Purple</td>
+<td class="py-4 text-right">€ 2.000.000,00</td>
+<td class="py-4 text-right">€ 2.100.000,00</td>
+<td class="py-4 text-right text-status-alert">+5.0%</td>
+<td class="py-4">
+<div class="flex items-center justify-center gap-4">
+<div class="w-24 h-1 bg-ledger-border">
+<div class="h-full bg-status-alert w-[100%]"></div>
+</div>
+<span class="text-[9px] font-bold text-status-alert">105%</span>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-6 border-t border-ledger-border">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-[10px] font-bold uppercase tracking-widest border-l-2 border-ledger-text pl-2">Próximos Recebimentos (Livro Auxiliar)</h3>
+<div class="flex gap-4 text-[9px] font-bold uppercase">
+<span class="text-status-ok flex items-center gap-1"><span class="size-1 rounded-full bg-status-ok"></span> Em Dia</span>
+<span class="text-status-alert flex items-center gap-1"><span class="size-1 rounded-full bg-status-alert"></span> Atraso</span>
+</div>
+</div>
+<div class="border border-ledger-border">
+<table class="w-full text-left text-[11px]">
+<thead class="bg-ledger-sidebar border-b border-ledger-border">
+<tr class="text-[9px] text-ledger-muted uppercase tracking-wider">
+<th class="p-3 border-r border-ledger-border">Data Ref.</th>
+<th class="p-3 border-r border-ledger-border">Unidade / Cliente</th>
+<th class="p-3 border-r border-ledger-border text-right">Valor Nominal</th>
+<th class="p-3 text-center">Status Contábil</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-ledger-border">
+<tr class="hover:bg-white/[0.02]">
+<td class="p-3 border-r border-ledger-border font-mono">2024-10-12</td>
+<td class="p-3 border-r border-ledger-border">
+<span class="font-bold">E. Cyan - 402</span><br/>
+<span class="text-[9px] text-ledger-muted">EDUARDO ALMEIDA</span>
+</td>
+<td class="p-3 border-r border-ledger-border text-right font-mono">€ 4.500,00</td>
+<td class="p-3">
+<div class="flex items-center justify-center gap-2">
+<span class="size-1.5 bg-status-ok"></span>
+<span class="text-[9px] font-bold uppercase">Agendado</span>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-white/[0.02]">
+<td class="p-3 border-r border-ledger-border font-mono">2024-10-15</td>
+<td class="p-3 border-r border-ledger-border">
+<span class="font-bold">T. Neon - L. 12</span><br/>
+<span class="text-[9px] text-ledger-muted">CONSTRUÇÕES SILVA</span>
+</td>
+<td class="p-3 border-r border-ledger-border text-right font-mono">€ 28.900,00</td>
+<td class="p-3 bg-status-alert/5">
+<div class="flex items-center justify-center gap-2 text-status-alert">
+<span class="size-1.5 bg-status-alert"></span>
+<span class="text-[9px] font-bold uppercase">Mora &gt; 3d</span>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-white/[0.02]">
+<td class="p-3 border-r border-ledger-border font-mono">2024-10-18</td>
+<td class="p-3 border-r border-ledger-border">
+<span class="font-bold">R. Purple - C. 05</span><br/>
+<span class="text-[9px] text-ledger-muted">BEATRIZ GOMES</span>
+</td>
+<td class="p-3 border-r border-ledger-border text-right font-mono">€ 3.200,00</td>
+<td class="p-3">
+<div class="flex items-center justify-center gap-2">
+<span class="size-1.5 bg-status-ok"></span>
+<span class="text-[9px] font-bold uppercase">Liquidado</span>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="col-span-4 flex flex-col overflow-hidden">
+<div class="p-6 border-b border-ledger-border">
+<h3 class="text-[10px] font-bold uppercase tracking-widest mb-6">Receita por Fonte de Ingressos</h3>
+<div class="space-y-4">
+<div class="flex flex-col gap-1">
+<div class="flex justify-between text-[11px] mb-1">
+<span class="uppercase font-medium">Boleto Bancário</span>
+<span class="font-mono">58%</span>
+</div>
+<div class="w-full h-1.5 bg-ledger-border">
+<div class="h-full bg-status-ok w-[58%]"></div>
+</div>
+<div class="text-[9px] text-ledger-muted font-mono">€ 696.000,00</div>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex justify-between text-[11px] mb-1">
+<span class="uppercase font-medium">Cartão de Crédito</span>
+<span class="font-mono">24%</span>
+</div>
+<div class="w-full h-1.5 bg-ledger-border">
+<div class="h-full bg-ledger-text w-[24%]"></div>
+</div>
+<div class="text-[9px] text-ledger-muted font-mono">€ 288.000,00</div>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex justify-between text-[11px] mb-1">
+<span class="uppercase font-medium">Transferência PIX</span>
+<span class="font-mono">18%</span>
+</div>
+<div class="w-full h-1.5 bg-ledger-border">
+<div class="h-full bg-ledger-muted w-[18%]"></div>
+</div>
+<div class="text-[9px] text-ledger-muted font-mono">€ 216.000,00</div>
+</div>
+</div>
+<div class="mt-8 pt-4 border-t border-ledger-border">
+<div class="flex justify-between items-baseline">
+<span class="text-[9px] font-bold uppercase text-ledger-muted">Faturamento Consolidado</span>
+<span class="text-xl font-light tracking-tighter">€ 1.200.000,00</span>
+</div>
+</div>
+</div>
+<div class="flex-1 p-6 bg-ledger-sidebar overflow-y-auto">
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-[16px] text-status-alert">notifications_active</span>
+<h3 class="text-[10px] font-bold uppercase tracking-widest">Inconsistências &amp; Alertas</h3>
+</div>
+<div class="space-y-6">
+<div class="p-3 border border-status-alert/30 bg-status-alert/5">
+<div class="flex items-start gap-3">
+<div class="size-1 bg-status-alert mt-1.5 shrink-0"></div>
+<div>
+<p class="text-[11px] leading-relaxed">
+<span class="font-bold text-status-alert">Atraso Crítico:</span> 3 parcelas superam o limite de tolerância de 15 dias no projeto <span class="underline">Ed. Cyan</span>.
+                                    </p>
+<span class="text-[9px] text-ledger-muted mt-2 block font-mono">REF: ALRT-8821</span>
+</div>
+</div>
+</div>
+<div class="p-3 border border-ledger-border">
+<div class="flex items-start gap-3">
+<div class="size-1 bg-ledger-text mt-1.5 shrink-0"></div>
+<div>
+<p class="text-[11px] leading-relaxed">
+<span class="font-bold">Desvio Orçamentário:</span> Verificado gap de 12% na rubrica de insumos da <span class="underline">Torre Neon</span>.
+                                    </p>
+<span class="text-[9px] text-ledger-muted mt-2 block font-mono">REF: BDGT-1102</span>
+</div>
+</div>
+</div>
+<div class="p-3 border border-ledger-border">
+<div class="flex items-start gap-3">
+<div class="size-1 bg-ledger-text mt-1.5 shrink-0"></div>
+<div>
+<p class="text-[11px] leading-relaxed text-ledger-muted italic">
+                                        Fim do período fiscal em 14 dias. Preparação de fechamento recomendada.
+                                    </p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="p-6 border-t border-ledger-border bg-ledger-bg">
+<button class="w-full border border-ledger-border py-2 text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-ledger-text hover:text-ledger-bg transition-all">
+                        Conciliar Lançamentos
+                    </button>
+</div>
+</div>
+</div>
+</main>
+</div>
+
+</body></html>

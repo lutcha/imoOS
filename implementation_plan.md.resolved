@@ -1,0 +1,65 @@
+# Plano de Kickoff — ImoOS Project
+
+Este plano detalha as primeiras ações e a estratégia de execução para o início do projeto ImoOS, assumindo a liderança técnica.
+
+## 1. Plano de Ação — Semana 1 (Dia a Dia)
+
+| Dia | Foco Principal | Atividades Chave |
+|:---:|:---|:---|
+| **Dia 1** | **Fundação & Infra** | Repositório init; Docker Compose (Dev/DB); `django-tenants` scaffolding (Client/Domain). |
+| **Dia 2** | **Segurança & Contexto** | JWT Auth com Tenant Context; Custom Middleware para validação de `is_active`. |
+| **Dia 3** | **Domínio & Geo** | Modelos `Project` e `Unit` (Fase 1); Setup PostGIS; `simple_history` em modelos core. |
+| **Dia 4** | **Qualidade & CI** | Pipeline GitHub Actions (Lint/Test); Scaffolding de testes de isolamento (Tenant A vs B). |
+| **Dia 5** | **Entrega & Handoff** | Primeiro PR "Golden Path" aprovado; Setup Next.js boilerplate; Script de criação de Tenant inicial. |
+
+## 2. Distribuição de Tarefas
+
+| Membro | Responsabilidade Principal (Semanas 1-2) |
+|:---|:---|
+| **BE 1 (Senior)** | Foundation, Tenancy, Security, Audit Trail. |
+| **BE 2 (Mid)** | Inventário (Project/Unit), PostGIS, Bulk Import (CSV), Integração imo.cv. |
+| **FE Dev** | Next.js Shell, Design System (Tailwind), Auth Flow, Layout Global. |
+| **Mobile Dev** | React Native Init, SQLite/WatermelonDB, Sync Engine (Offline-First). |
+| **DevOps/QA** | CI/CD, Containerization, Isolation Tests enforcement, Staging environment. |
+| **Designer** | Figma tokens, Protótipos de Inventário, Handoff de Assets. |
+
+## 3. Top 5 Riscos Técnicos e Mitigações
+
+1. **Vazamento de dados (Cross-tenant leak):**
+   - *Mitigação:* Testes de isolamento mandatórios em cada PR (Pytest markers `tenant_isolation`).
+2. **Complexidade de Sincronização Mobile (Offline-first):**
+   - *Mitigação:* Implementar sync baseado em timestamps/versionamento e fila de retry persistente.
+3. **Gargalos de Performance em DB Multi-tenant:**
+   - *Mitigação:* Estratégia de índices antecipada e monitoramento de "shared" vs "tenant" schemas.
+4. **Dependência Crítica da API imo.cv:**
+   - *Mitigação:* Camada de abstração (Adapter) e mock de dados para desenvolvimento independente.
+5. **Adaptação à Lei de Proteção de Dados (Cape Verde):**
+   - *Mitigação:* Padrões de encriptação em repouso e logs de auditoria (Simple History) estritos.
+
+## 4. Primeiros PRs Esperados (Semana 1)
+
+1. `foundation/tenancy`: Configuração base do Django e modelos de Tenant.
+2. `security/jwt-auth`: Autenticação e permissões vinculadas ao schema do tenant.
+3. `domain/projects-inventory`: CRUD inicial de Projetos e Unidades com suporte GeoJSON.
+4. `infra/docker-ci`: Dockerização total e workflow de CI operacional.
+5. `web/ui-shell`: Estrutura base da Web App com Theme Switcher.
+
+## 5. Perguntas & Bloqueios
+
+1. **Infra de Media:** Utilizaremos AWS S3 ou um provider compatível (S3-compatible) em Cabo Verde (ex: NOSi ou local)?
+2. **Integração:** Temos acesso ao ambiente de Sandbox/Documentação final do `imo.cv`?
+3. **Pagamentos:** Qual o gateway preferencial para o MVP (VinteVinte, PayPal ou outro local)?
+4. **Legislação:** Já existe um DPO (Data Protection Officer) nomeado para validar o fluxo de dados sensíveis?
+
+---
+
+## Plano de Verificação (Semana 1)
+
+### Testes Automatizados
+- Executar `pytest --cov=apps` para garantir >80% coverage nos modelos de Tenancy.
+- Executar `pytest tests/tenant_isolation/` para validar isolamento de DB.
+- Linting via `flake8` e `black --check` no pipeline de CI.
+
+### Verificação Manual
+- Criação de um Tenant via Django Admin e validação de criação de schema no DB.
+- Teste de Login via Postman garantindo retorno de `X-Tenant-Schema` no header.
