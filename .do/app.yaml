@@ -84,6 +84,8 @@ services:
         value: ${_self.COMMIT_HASH}
       - key: TENANT_BASE_DOMAIN
         value: proptech.cv
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://proptech.cv,https://www.proptech.cv,https://demo.proptech.cv
 
 # ------------------------------------------------------------------
 # Workers — Celery (background, no HTTP port)
@@ -168,7 +170,7 @@ jobs:
       branch: develop
     source_dir: /
     dockerfile_path: docker/Dockerfile.staging
-    run_command: "bash -c 'python manage.py migrate_schemas --shared && python manage.py migrate_schemas && python manage.py ensure_public_tenant'"
+    run_command: "bash -c 'python manage.py migrate_schemas --shared && python manage.py migrate_schemas && python manage.py ensure_public_tenant && python manage.py ensure_demo_tenant --schema demo_promotora --name \"Demo Promotora\" --domain demo.proptech.cv --plan pro'"
     envs:
       - key: DJANGO_SETTINGS_MODULE
         value: config.settings.staging
@@ -190,6 +192,8 @@ jobs:
         value: .ondigitalocean.app,proptech.cv,www.proptech.cv,api.proptech.cv
       - key: TENANT_BASE_DOMAIN
         value: proptech.cv
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://proptech.cv,https://www.proptech.cv,https://demo.proptech.cv
       - key: APP_DOMAIN
         value: ${APP_DOMAIN}
       - key: REDIS_URL
