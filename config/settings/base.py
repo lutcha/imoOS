@@ -1,7 +1,5 @@
-"""
-ImoOS — Base Django Settings
-Shared by all environments (development, staging, production).
-"""
+import os
+import ssl
 from pathlib import Path
 from decouple import config, Csv
 from datetime import timedelta
@@ -279,7 +277,7 @@ CACHES = {
 # =============================================================
 # DO Managed Redis/Valkey TLS — ensure rediss:// URLs have ssl_cert_reqs
 def _fix_rediss_url(url):
-    if url.startswith('rediss://') and 'ssl_cert_reqs' not in url:
+    if url and url.startswith('rediss://') and 'ssl_cert_reqs' not in url:
         sep = '&' if '?' in url else '?'
         return f"{url}{sep}ssl_cert_reqs=CERT_NONE"
     return url
@@ -287,9 +285,16 @@ def _fix_rediss_url(url):
 CELERY_BROKER_URL = _fix_rediss_url(config('CELERY_BROKER_URL', default='redis://localhost:6379/1'))
 CELERY_RESULT_BACKEND = _fix_rediss_url(config('CELERY_RESULT_BACKEND', default='django-db'))
 
-if CELERY_BROKER_URL.startswith('rediss://'):
-    CELERY_BROKER_USE_SSL = {'ssl_cert_reqs': None}
-    CELERY_REDIS_BACKEND_USE_SSL = {'ssl_cert_reqs': None}
+# Robust SSL fix for Celery 5.3+ on DigitalOcean
+if CELERY_BROKER_URL and CELERY_BROKER_URL.startswith('rediss://'):
+    CELERY_BROKER_USE_SSL = {
+        'ssl_cert_reqs': ssl.CERT_NONE
+    }
+
+if CELERY_RESULT_BACKEND and CELERY_RESULT_BACKEND.startswith('rediss://'):
+    CELERY_REDIS_BACKEND_USE_SSL = {
+        'ssl_cert_reqs': ssl.CERT_NONE
+    }
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'

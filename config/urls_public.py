@@ -7,6 +7,7 @@ Routes here must be either:
   - Staff-only platform admin endpoints (tenant management)
 """
 from django.urls import path, include
+from django.views.generic import RedirectView
 from rest_framework.routers import DefaultRouter
 from apps.core.views import health_check
 from apps.crm.views_public import LeadCaptureView
@@ -25,6 +26,9 @@ _admin_router = DefaultRouter()
 _admin_router.register(r'admin/tenants', TenantViewSet, basename='tenant')
 
 urlpatterns = [
+    # Redirect root to /app (Frontend)
+    path('', RedirectView.as_view(url='/app', permanent=False)),
+
     # Health check — must be first, hit by DO App Platform on the public domain
     path('api/v1/health/', health_check, name='health-check'),
 
