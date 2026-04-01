@@ -62,14 +62,11 @@ services:
       - key: DB_PORT
         value: ${db.PORT}
       - key: REDIS_URL
-        value: ${REDIS_URL}
-        type: SECRET
+        value: ${redis.DATABASE_URL}
       - key: CELERY_BROKER_URL
-        value: ${REDIS_URL}
-        type: SECRET
+        value: ${redis.DATABASE_URL}
       - key: CELERY_RESULT_BACKEND
-        value: ${REDIS_URL}
-        type: SECRET
+        value: ${redis.DATABASE_URL}
       - key: AWS_ACCESS_KEY_ID
         value: ${AWS_ACCESS_KEY_ID}
         type: SECRET
@@ -120,14 +117,11 @@ workers:
       - key: DB_PORT
         value: ${db.PORT}
       - key: REDIS_URL
-        value: ${REDIS_URL}
-        type: SECRET
+        value: ${redis.DATABASE_URL}
       - key: CELERY_BROKER_URL
-        value: ${REDIS_URL}
-        type: SECRET
+        value: ${redis.DATABASE_URL}
       - key: CELERY_RESULT_BACKEND
-        value: ${REDIS_URL}
-        type: SECRET
+        value: ${redis.DATABASE_URL}
 
   - name: celery-beat
     github:
@@ -157,14 +151,11 @@ workers:
       - key: DB_PORT
         value: ${db.PORT}
       - key: REDIS_URL
-        value: ${REDIS_URL}
-        type: SECRET
+        value: ${redis.DATABASE_URL}
       - key: CELERY_BROKER_URL
-        value: ${REDIS_URL}
-        type: SECRET
+        value: ${redis.DATABASE_URL}
       - key: CELERY_RESULT_BACKEND
-        value: ${REDIS_URL}
-        type: SECRET
+        value: ${redis.DATABASE_URL}
 
 # ------------------------------------------------------------------
 # Pre-deploy Jobs
@@ -202,18 +193,18 @@ jobs:
       - key: APP_DOMAIN
         value: ${APP_DOMAIN}
       - key: REDIS_URL
-        value: ${REDIS_URL}
-        type: SECRET
+        value: ${redis.DATABASE_URL}
 
 # ------------------------------------------------------------------
 # Managed Databases
-# Dev PG is provisioned by App Platform (no extra cost on staging).
-# Redis: configure REDIS_URL / CELERY_BROKER_URL as Secret env vars
-#        pointing to a DO Managed Redis cluster (create separately via
-#        `doctl databases create imos-redis --engine redis --version 7`)
+# PG + Redis provisionados pelo App Platform (sem custo extra em staging).
 # ------------------------------------------------------------------
 databases:
   - name: db
     engine: PG
     version: "15"
+    production: false
+  - name: redis
+    engine: REDIS
+    version: "7"
     production: false
