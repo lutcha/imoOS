@@ -107,6 +107,7 @@ SHARED_APPS = [
     'drf_spectacular',
     'simple_history',
     'django_celery_results',  # Required for task monitoring
+    'django_celery_beat',     # Required for scheduled tasks (Sprint 7)
     
     # Security (Sprint 7 - Prompt 05)
     'csp',
@@ -276,9 +277,16 @@ CACHES = {
 # =============================================================
 # Celery
 # =============================================================
-CELERY_BROKER_URL = config('CELERY_BROKER_URL', default='redis://localhost:6379/1')
-CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default='django-db')  # Sprint 7
-# DO Managed Redis/Valkey TLS — disable cert verification for rediss:// broker
+# DO Managed Redis/Valkey TLS — ensure rediss:// URLs have ssl_cert_reqs
+def _fix_rediss_url(url):
+    if url.startswith('rediss://') and 'ssl_cert_reqs' not in url:
+        sep = '&' if '?' in url else '?'
+        return f"{url}{sep}ssl_cert_reqs=none"
+    return url
+
+CELERY_BROKER_URL = _fix_rediss_url(config('CELERY_BROKER_URL', default='redis://localhost:6379/1'))
+CELERY_RESULT_BACKEND = _fix_rediss_url(config('CELERY_RESULT_BACKEND', default='django-db'))
+
 if CELERY_BROKER_URL.startswith('rediss://'):
     CELERY_BROKER_USE_SSL = {'ssl_cert_reqs': None}
     CELERY_REDIS_BACKEND_USE_SSL = {'ssl_cert_reqs': None}
