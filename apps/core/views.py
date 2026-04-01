@@ -15,11 +15,12 @@ from apps.users.permissions import IsTenantMember
 
 @api_view(['GET'])
 @authentication_classes([])
-@permission_classes([AllowAny])
+@permission_classes([])
 def health_check(request):
     """
     Public health check endpoint for load balancers and deploy smoke tests.
-    Returns 200 if DB and cache are reachable, 503 otherwise.
+    Always returns HTTP 200 — the process being alive is the signal for DO.
+    Individual check results in the body distinguish 'ok' from 'degraded'.
     """
     checks = {}
 
@@ -39,9 +40,12 @@ def health_check(request):
         checks['cache'] = 'error'
 
     all_ok = all(v == 'ok' for v in checks.values())
-    http_status = status.HTTP_200_OK if all_ok else status.HTTP_503_SERVICE_UNAVAILABLE
-
-    return Response({'status': 'ok' if all_ok else 'degraded', 'checks': checks}, status=http_status)
+    response = Response(
+        {'status': 'ok' if all_ok else 'degraded', 'checks': checks},
+        status=status.HTTP_200_OK,
+    )
+    response['Cache-Control'] = 'no-store'
+    return response
 
 
 class DetailedHealthCheckView(APIView):

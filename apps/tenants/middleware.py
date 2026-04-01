@@ -35,6 +35,12 @@ def _schema_from_jwt(request) -> str | None:
         return None
 
 
+_HEALTH_PATHS = frozenset([
+    '/api/v1/health/',
+    '/api/v1/health/detailed/',
+])
+
+
 class ImoOSTenantMiddleware(TenantMainMiddleware):
     """
     Tenant middleware with extra validation.
@@ -43,6 +49,9 @@ class ImoOSTenantMiddleware(TenantMainMiddleware):
     fails.  This lets direct API calls (e.g. from localhost in dev, or from
     the Next.js server via NEXT_PUBLIC_API_URL) work without needing an exact
     Host-to-domain match.
+
+    Health check paths are bypassed entirely — they run on the public schema
+    so load-balancer probes never fail due to missing tenant context.
     """
 
     def get_tenant(self, model, hostname):
@@ -55,6 +64,17 @@ class ImoOSTenantMiddleware(TenantMainMiddleware):
             raise Http404("Tenant não encontrado")
 
     def process_request(self, request):
+        if request.path in _HEALTH_PATHS:
+            # Set public schema — no tenant resolution needed for health probes
+            TenantModel = get_tenant_model()
+            try:
+                public_tenant = TenantModel.objects.get(schema_name=get_public_schema_name())
+                request.tenant = public_tenant
+                connection.set_tenant(public_tenant)
+            except TenantModel.DoesNotExist:
+                pass
+            return None
+
         try:
             return super().process_request(request)
         except Http404:

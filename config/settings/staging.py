@@ -2,11 +2,6 @@
 ImoOS — Staging Settings
 Mirrors production closely; used for pre-release validation on DigitalOcean App Platform.
 """
-import sentry_sdk
-from sentry_sdk.integrations.django import DjangoIntegration
-from sentry_sdk.integrations.celery import CeleryIntegration
-from sentry_sdk.integrations.redis import RedisIntegration
-
 from .base import *  # noqa
 from decouple import config, Csv
 
@@ -39,7 +34,7 @@ DATABASES = {
 # Security Headers
 # =============================================================
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SECURE_SSL_REDIRECT = True
+SECURE_SSL_REDIRECT = False  # DO App Platform terminates SSL at the load balancer
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SECURE_HSTS_SECONDS = 3600          # 1h — lower than prod while validating
@@ -106,6 +101,10 @@ def _scrub_sensitive_data(event, hint):
 SENTRY_DSN = config('SENTRY_DSN', default='')
 
 if SENTRY_DSN and SENTRY_DSN.startswith('https://') and '@sentry.io' in SENTRY_DSN:
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+    from sentry_sdk.integrations.celery import CeleryIntegration
+    from sentry_sdk.integrations.redis import RedisIntegration
     sentry_sdk.init(
         dsn=SENTRY_DSN,
         integrations=[
