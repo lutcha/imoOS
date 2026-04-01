@@ -197,6 +197,10 @@ jobs:
         value: ${db.PORT}
       - key: ALLOWED_HOSTS
         value: .ondigitalocean.app,proptech.cv,www.proptech.cv,api.proptech.cv
+      - key: TENANT_BASE_DOMAIN
+        value: proptech.cv
+      - key: APP_DOMAIN
+        value: ${APP_DOMAIN}
       - key: REDIS_URL
         value: ${REDIS_URL}
         type: SECRET
