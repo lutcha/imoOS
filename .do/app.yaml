@@ -91,7 +91,7 @@ services:
       repo: lutcha/imoOS
       branch: develop
       deploy_on_push: true
-    source_dir: /
+    source_dir: frontend
     dockerfile_path: frontend/Dockerfile.staging
     instance_count: 1
     instance_size_slug: professional-xs
