@@ -10,8 +10,26 @@ from decouple import config, Csv
 # =============================================================
 DEBUG = False
 SECRET_KEY = config('SECRET_KEY')
-# Staging health checks of internal DO IP require lenient ALLOWED_HOSTS
+# Staging health checks use internal DO IPs — wildcard required
 ALLOWED_HOSTS = ['*']
+
+# =============================================================
+# Redis / Celery — fix SSL before Celery reads Django settings
+# DigitalOcean managed Redis uses rediss:// which requires ssl_cert_reqs
+# The fix in celery.py runs after lazy config resolution, so we fix here.
+# =============================================================
+def _fix_rediss_url(url: str) -> str:
+    """Append ssl_cert_reqs=CERT_NONE to rediss:// URLs that lack it."""
+    if url and url.startswith('rediss://') and 'ssl_cert_reqs' not in url:
+        sep = '&' if '?' in url else '?'
+        return f"{url}{sep}ssl_cert_reqs=CERT_NONE"
+    return url
+
+
+_redis_url = _fix_rediss_url(config('REDIS_URL', default=''))
+CELERY_BROKER_URL = _redis_url
+# Result backend uses django-db (via django_celery_results), not Redis
+CELERY_RESULT_BACKEND = 'django-db'
 
 # =============================================================
 # Database
