@@ -12,6 +12,8 @@ domains:
     type: PRIMARY
   - domain: www.proptech.cv
     type: ALIAS
+  - domain: demo.proptech.cv
+    type: ALIAS
 
 # ------------------------------------------------------------------
 # Web Service — Django API
@@ -100,7 +102,9 @@ services:
       - path: /app
     envs:
       - key: NEXT_PUBLIC_API_URL
-        value: https://proptech.cv
+        value: https://demo.proptech.cv
+      - key: NEXT_PUBLIC_TENANT_DOMAIN
+        value: demo.proptech.cv
       - key: NODE_ENV
         value: production
 
