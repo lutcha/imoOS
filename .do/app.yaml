@@ -91,7 +91,8 @@ services:
       repo: lutcha/imoOS
       branch: develop
       deploy_on_push: true
-    source_dir: frontend
+    source_dir: /
+    dockerfile_path: frontend/Dockerfile.staging
     instance_count: 1
     instance_size_slug: professional-xs
     http_port: 3000
@@ -100,8 +101,8 @@ services:
     envs:
       - key: NEXT_PUBLIC_API_URL
         value: https://proptech.cv
-      - key: API_URL
-        value: http://api:8000
+      - key: NODE_ENV
+        value: production
 
 # ------------------------------------------------------------------
 # Workers — Celery (background, no HTTP port)
