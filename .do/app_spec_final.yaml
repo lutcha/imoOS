@@ -1,7 +1,8 @@
 # =============================================================
-# ImoOS — DigitalOcean App Platform Spec
-# Deploy: doctl apps create --spec .do/app.yaml
-# Update: doctl apps update <APP_ID> --spec .do/app.yaml
+# ImoOS — DigitalOcean App Spec (FINAL STABILIZED)
+# =============================================================
+# COPIE ESTE CONTEÚDO INTEGRALMENTE para o painel do DigitalOcean:
+# Settings -> App Spec -> Edit -> Substituir tudo e Salvar.
 # =============================================================
 
 name: imos-staging
@@ -15,9 +16,6 @@ domains:
   - domain: demo.proptech.cv
     type: ALIAS
 
-# ------------------------------------------------------------------
-# Web Service — Django API
-# ------------------------------------------------------------------
 services:
   - name: api
     github:
@@ -29,18 +27,13 @@ services:
     http_port: 8000
     instance_count: 1
     instance_size_slug: professional-xs
-
     routes:
       - path: /
     health_check:
       http_path: /api/v1/health/
       initial_delay_seconds: 60
       period_seconds: 30
-      timeout_seconds: 10
-      failure_threshold: 3
-
     run_command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2 --threads 4 --timeout 120 --log-file -
-
     envs:
       - key: DJANGO_SETTINGS_MODULE
         value: config.settings.staging
@@ -68,25 +61,6 @@ services:
         value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
       - key: CELERY_RESULT_BACKEND
         value: django-db
-      - key: AWS_ACCESS_KEY_ID
-        value: ${AWS_ACCESS_KEY_ID}
-        type: SECRET
-      - key: AWS_SECRET_ACCESS_KEY
-        value: ${AWS_SECRET_ACCESS_KEY}
-        type: SECRET
-      - key: AWS_STORAGE_BUCKET_NAME
-        value: imos-staging-media
-      - key: AWS_S3_ENDPOINT_URL
-        value: https://fra1.digitaloceanspaces.com
-      - key: SENTRY_DSN
-        value: ${SENTRY_DSN}
-        type: SECRET
-      - key: APP_VERSION
-        value: ${_self.COMMIT_HASH}
-      - key: TENANT_BASE_DOMAIN
-        value: proptech.cv
-      - key: CORS_ALLOWED_ORIGINS
-        value: https://proptech.cv,https://www.proptech.cv,https://demo.proptech.cv
 
   - name: frontend
     github:
@@ -94,7 +68,6 @@ services:
       branch: develop
       deploy_on_push: true
     source_dir: frontend
-    dockerfile_path: frontend/Dockerfile.staging
     instance_count: 1
     instance_size_slug: professional-xs
     http_port: 3000
@@ -110,9 +83,6 @@ services:
       - key: NPM_CONFIG_LEGACY_PEER_DEPS
         value: "true"
 
-# ------------------------------------------------------------------
-# Workers — Celery (background, no HTTP port)
-# ------------------------------------------------------------------
 workers:
   - name: celery-worker
     github:
@@ -145,8 +115,6 @@ workers:
         value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
       - key: CELERY_BROKER_URL
         value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
-      - key: CELERY_RESULT_BACKEND
-        value: django-db
 
   - name: celery-beat
     github:
@@ -175,16 +143,7 @@ workers:
         value: ${db.HOSTNAME}
       - key: DB_PORT
         value: ${db.PORT}
-      - key: REDIS_URL
-        value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
-      - key: CELERY_BROKER_URL
-        value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
-      - key: CELERY_RESULT_BACKEND
-        value: django-db
 
-# ------------------------------------------------------------------
-# Pre-deploy Jobs
-# ------------------------------------------------------------------
 jobs:
   - name: migrate
     kind: PRE_DEPLOY
@@ -211,21 +170,7 @@ jobs:
         value: ${db.HOSTNAME}
       - key: DB_PORT
         value: ${db.PORT}
-      - key: ALLOWED_HOSTS
-        value: "*"
-      - key: TENANT_BASE_DOMAIN
-        value: proptech.cv
-      - key: CORS_ALLOWED_ORIGINS
-        value: https://proptech.cv,https://www.proptech.cv,https://demo.proptech.cv
-      - key: APP_DOMAIN
-        value: ${APP_DOMAIN}
-      - key: REDIS_URL
-        value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
 
-# ------------------------------------------------------------------
-# Managed Databases
-# PG + Redis provisionados pelo App Platform (sem custo extra em staging).
-# ------------------------------------------------------------------
 databases:
   - name: db
     engine: PG
