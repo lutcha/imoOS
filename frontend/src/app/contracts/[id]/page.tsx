@@ -1,4 +1,5 @@
 "use client";
+import { use } from "react";
 
 import Link from "next/link";
 import {
@@ -82,9 +83,10 @@ const PAYMENT_TYPE_LABELS: Record<PaymentType, string> = {
 export default function ContractDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const { data: contract, isLoading, isError } = useContract(params.id);
+  const { id } = use(params);
+  const { data: contract, isLoading, isError } = useContract(id);
 
   const generatePlan = useGeneratePaymentPlan();
   const markPaid = useMarkPaymentPaid();
