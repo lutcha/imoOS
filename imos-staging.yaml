@@ -1,274 +1,276 @@
 databases:
-- engine: PG
-  name: db
-  version: "15"
-- cluster_name: imos-redis-staging
-  engine: VALKEY
-  name: redis
-  production: true
+  - engine: PG
+    name: db
+    version: "15"
+  - cluster_name: imos-redis-staging
+    engine: VALKEY
+    name: redis
+    production: true
 domains:
-- domain: proptech.cv
-  type: PRIMARY
-- domain: www.proptech.cv
-  type: ALIAS
-- domain: demo.proptech.cv
-  type: ALIAS
+  - domain: proptech.cv
+    type: PRIMARY
+  - domain: www.proptech.cv
+    type: ALIAS
+  - domain: demo.proptech.cv
+    type: ALIAS
 ingress:
   rules:
-  - component:
-      name: api
-    match:
-      path:
-        prefix: /
-  - component:
-      name: frontend
-    match:
-      path:
-        prefix: /app
+    - component:
+        name: api
+      match:
+        path:
+          prefix: /
+    - component:
+        name: frontend
+      match:
+        path:
+          prefix: /app
 jobs:
-- dockerfile_path: docker/Dockerfile.staging
-  envs:
-  - key: DJANGO_SETTINGS_MODULE
-    scope: RUN_AND_BUILD_TIME
-    value: config.settings.staging
-  - key: SECRET_KEY
-    scope: RUN_AND_BUILD_TIME
-    type: SECRET
-    value: EV[1:/6Nvv0DGA5KvPG+EF1vXGMJ8x3xHzwAA:rf1aY1YBVpOss4wRn+nbSMWUityYwr8vWinh1k0=]
-  - key: DB_NAME
-    scope: RUN_AND_BUILD_TIME
-    value: ${db.DATABASE}
-  - key: DB_USER
-    scope: RUN_AND_BUILD_TIME
-    value: ${db.USERNAME}
-  - key: DB_PASSWORD
-    scope: RUN_AND_BUILD_TIME
-    type: SECRET
-    value: EV[1:7CTugN49f1CVPewvpo5IwiwUuBmVL5xy:iHo3Z4arA4MNEgbwlfi9WVrLT7L4FyzMUDyZP9Ps]
-  - key: DB_HOST
-    scope: RUN_AND_BUILD_TIME
-    value: ${db.HOSTNAME}
-  - key: DB_PORT
-    scope: RUN_AND_BUILD_TIME
-    value: ${db.PORT}
-  - key: ALLOWED_HOSTS
-    scope: RUN_AND_BUILD_TIME
-    value: '*'
-  - key: TENANT_BASE_DOMAIN
-    scope: RUN_AND_BUILD_TIME
-    value: proptech.cv
-  - key: CORS_ALLOWED_ORIGINS
-    scope: RUN_AND_BUILD_TIME
-    value: https://proptech.cv,https://www.proptech.cv,https://demo.proptech.cv
-  - key: APP_DOMAIN
-    scope: RUN_AND_BUILD_TIME
-    value: ${APP_DOMAIN}
-  - key: REDIS_URL
-    scope: RUN_AND_BUILD_TIME
-    value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
-  github:
-    branch: develop
-    repo: lutcha/imoOS
-  instance_count: 1
-  instance_size_slug: apps-s-1vcpu-1gb
-  kind: PRE_DEPLOY
-  name: migrate
-  run_command: bash -c 'python manage.py migrate_schemas --shared && python manage.py
-    migrate_schemas && python manage.py ensure_public_tenant && python manage.py ensure_demo_tenant
-    --schema demo_promotora --name "Demo Promotora" --domain demo.proptech.cv --plan
-    pro'
-  source_dir: /
+  - dockerfile_path: docker/Dockerfile.staging
+    envs:
+      - key: DJANGO_SETTINGS_MODULE
+        scope: RUN_AND_BUILD_TIME
+        value: config.settings.staging
+      - key: SECRET_KEY
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+        value: EV[1:/6Nvv0DGA5KvPG+EF1vXGMJ8x3xHzwAA:rf1aY1YBVpOss4wRn+nbSMWUityYwr8vWinh1k0=]
+      - key: DB_NAME
+        scope: RUN_AND_BUILD_TIME
+        value: ${db.DATABASE}
+      - key: DB_USER
+        scope: RUN_AND_BUILD_TIME
+        value: ${db.USERNAME}
+      - key: DB_PASSWORD
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+        value: EV[1:7CTugN49f1CVPewvpo5IwiwUuBmVL5xy:iHo3Z4arA4MNEgbwlfi9WVrLT7L4FyzMUDyZP9Ps]
+      - key: DB_HOST
+        scope: RUN_AND_BUILD_TIME
+        value: ${db.HOSTNAME}
+      - key: DB_PORT
+        scope: RUN_AND_BUILD_TIME
+        value: ${db.PORT}
+      - key: ALLOWED_HOSTS
+        scope: RUN_AND_BUILD_TIME
+        value: "*"
+      - key: TENANT_BASE_DOMAIN
+        scope: RUN_AND_BUILD_TIME
+        value: proptech.cv
+      - key: CORS_ALLOWED_ORIGINS
+        scope: RUN_AND_BUILD_TIME
+        value: https://proptech.cv,https://www.proptech.cv,https://demo.proptech.cv
+      - key: APP_DOMAIN
+        scope: RUN_AND_BUILD_TIME
+        value: ${APP_DOMAIN}
+      - key: REDIS_URL
+        scope: RUN_AND_BUILD_TIME
+        value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
+    github:
+      branch: develop
+      repo: lutcha/imoOS
+    instance_count: 1
+    instance_size_slug: apps-s-1vcpu-1gb
+    kind: PRE_DEPLOY
+    name: migrate
+    run_command:
+      bash -c 'python manage.py fix_db_permissions && python manage.py migrate_schemas --shared && python manage.py
+      migrate_schemas && python manage.py ensure_public_tenant && python manage.py ensure_demo_tenant
+      --schema demo_promotora --name "Demo Promotora" --domain demo.proptech.cv --plan
+      pro'
+    source_dir: /
 name: imos-staging
 region: ams
 services:
-- dockerfile_path: docker/Dockerfile.staging
-  envs:
-  - key: DJANGO_SETTINGS_MODULE
-    scope: RUN_AND_BUILD_TIME
-    value: config.settings.staging
-  - key: SECRET_KEY
-    scope: RUN_AND_BUILD_TIME
-    type: SECRET
-    value: EV[1:mRLzGLtCClxWvyLeucxL9PPtWbM/+URA:qCPw+rrhX48nwvR1e/sDCcyL0uKxLo/A4ILFNmI=]
-  - key: DEBUG
-    scope: RUN_AND_BUILD_TIME
-    value: "False"
-  - key: ALLOWED_HOSTS
-    scope: RUN_AND_BUILD_TIME
-    value: '*'
-  - key: DB_NAME
-    scope: RUN_AND_BUILD_TIME
-    value: ${db.DATABASE}
-  - key: DB_USER
-    scope: RUN_AND_BUILD_TIME
-    value: ${db.USERNAME}
-  - key: DB_PASSWORD
-    scope: RUN_AND_BUILD_TIME
-    type: SECRET
-    value: EV[1:X/TCOnM2gfYVgJamm4DJ0Osef3M+cLdY:u7gOxA5ZS57HljABZPsSvsDNTfCK3eGf7ff3jTKm]
-  - key: DB_HOST
-    scope: RUN_AND_BUILD_TIME
-    value: ${db.HOSTNAME}
-  - key: DB_PORT
-    scope: RUN_AND_BUILD_TIME
-    value: ${db.PORT}
-  - key: REDIS_URL
-    scope: RUN_AND_BUILD_TIME
-    value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
-  - key: CELERY_BROKER_URL
-    scope: RUN_AND_BUILD_TIME
-    value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
-  - key: CELERY_RESULT_BACKEND
-    scope: RUN_AND_BUILD_TIME
-    value: django-db
-  - key: AWS_ACCESS_KEY_ID
-    scope: RUN_AND_BUILD_TIME
-    type: SECRET
-    value: EV[1:abOkDaXKF4dHnc4yrT6FQdAxFqVbA3d9:Jtg/0Gd//0z7MuttFxBRUG+ZwjPK5EB82Rey04S1UwYIKd6/]
-  - key: AWS_SECRET_ACCESS_KEY
-    scope: RUN_AND_BUILD_TIME
-    type: SECRET
-    value: EV[1:M/xtM/7hACnlfnEyOueAT/Kiy4ixIj9a:21wR4PnKnL04WDiBVtp9O60WBslKGjoRAa3niX0GG9efwxpL4MgL9Q==]
-  - key: AWS_STORAGE_BUCKET_NAME
-    scope: RUN_AND_BUILD_TIME
-    value: imos-staging-media
-  - key: AWS_S3_ENDPOINT_URL
-    scope: RUN_AND_BUILD_TIME
-    value: https://fra1.digitaloceanspaces.com
-  - key: SENTRY_DSN
-    scope: RUN_AND_BUILD_TIME
-    type: SECRET
-    value: EV[1:53HMw9pTthKUWcKT+3RPBkOu1DUwqdy0:WZw75256C6gW9pmpjA/8qQtaclyh3C+Mx0cZ2Kw=]
-  - key: APP_VERSION
-    scope: RUN_AND_BUILD_TIME
-    value: ${_self.COMMIT_HASH}
-  - key: TENANT_BASE_DOMAIN
-    scope: RUN_AND_BUILD_TIME
-    value: proptech.cv
-  - key: CORS_ALLOWED_ORIGINS
-    scope: RUN_AND_BUILD_TIME
-    value: https://proptech.cv,https://www.proptech.cv,https://demo.proptech.cv
-  github:
-    branch: develop
-    deploy_on_push: true
-    repo: lutcha/imoOS
-  health_check:
-    failure_threshold: 3
-    http_path: /api/v1/health/
-    initial_delay_seconds: 60
-    period_seconds: 30
-    timeout_seconds: 10
-  http_port: 8000
-  instance_count: 1
-  instance_size_slug: professional-xs
-  name: api
-  run_command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2 --threads
-    4 --timeout 120 --log-file -
-  source_dir: /
-- dockerfile_path: frontend/Dockerfile.staging
-  envs:
-  - key: NEXT_PUBLIC_API_URL
-    scope: RUN_AND_BUILD_TIME
-    value: https://demo.proptech.cv
-  - key: NEXT_PUBLIC_TENANT_DOMAIN
-    scope: RUN_AND_BUILD_TIME
-    value: demo.proptech.cv
-  - key: NODE_ENV
-    scope: RUN_AND_BUILD_TIME
-    value: production
-  github:
-    branch: develop
-    deploy_on_push: true
-    repo: lutcha/imoOS
-  http_port: 3000
-  instance_count: 1
-  instance_size_slug: professional-xs
-  name: frontend
-  source_dir: frontend
+  - dockerfile_path: docker/Dockerfile.staging
+    envs:
+      - key: DJANGO_SETTINGS_MODULE
+        scope: RUN_AND_BUILD_TIME
+        value: config.settings.staging
+      - key: SECRET_KEY
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+        value: EV[1:mRLzGLtCClxWvyLeucxL9PPtWbM/+URA:qCPw+rrhX48nwvR1e/sDCcyL0uKxLo/A4ILFNmI=]
+      - key: DEBUG
+        scope: RUN_AND_BUILD_TIME
+        value: "False"
+      - key: ALLOWED_HOSTS
+        scope: RUN_AND_BUILD_TIME
+        value: "*"
+      - key: DB_NAME
+        scope: RUN_AND_BUILD_TIME
+        value: ${db.DATABASE}
+      - key: DB_USER
+        scope: RUN_AND_BUILD_TIME
+        value: ${db.USERNAME}
+      - key: DB_PASSWORD
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+        value: EV[1:X/TCOnM2gfYVgJamm4DJ0Osef3M+cLdY:u7gOxA5ZS57HljABZPsSvsDNTfCK3eGf7ff3jTKm]
+      - key: DB_HOST
+        scope: RUN_AND_BUILD_TIME
+        value: ${db.HOSTNAME}
+      - key: DB_PORT
+        scope: RUN_AND_BUILD_TIME
+        value: ${db.PORT}
+      - key: REDIS_URL
+        scope: RUN_AND_BUILD_TIME
+        value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
+      - key: CELERY_BROKER_URL
+        scope: RUN_AND_BUILD_TIME
+        value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
+      - key: CELERY_RESULT_BACKEND
+        scope: RUN_AND_BUILD_TIME
+        value: django-db
+      - key: AWS_ACCESS_KEY_ID
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+        value: EV[1:abOkDaXKF4dHnc4yrT6FQdAxFqVbA3d9:Jtg/0Gd//0z7MuttFxBRUG+ZwjPK5EB82Rey04S1UwYIKd6/]
+      - key: AWS_SECRET_ACCESS_KEY
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+        value: EV[1:M/xtM/7hACnlfnEyOueAT/Kiy4ixIj9a:21wR4PnKnL04WDiBVtp9O60WBslKGjoRAa3niX0GG9efwxpL4MgL9Q==]
+      - key: AWS_STORAGE_BUCKET_NAME
+        scope: RUN_AND_BUILD_TIME
+        value: imos-staging-media
+      - key: AWS_S3_ENDPOINT_URL
+        scope: RUN_AND_BUILD_TIME
+        value: https://fra1.digitaloceanspaces.com
+      - key: SENTRY_DSN
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+        value: EV[1:53HMw9pTthKUWcKT+3RPBkOu1DUwqdy0:WZw75256C6gW9pmpjA/8qQtaclyh3C+Mx0cZ2Kw=]
+      - key: APP_VERSION
+        scope: RUN_AND_BUILD_TIME
+        value: ${_self.COMMIT_HASH}
+      - key: TENANT_BASE_DOMAIN
+        scope: RUN_AND_BUILD_TIME
+        value: proptech.cv
+      - key: CORS_ALLOWED_ORIGINS
+        scope: RUN_AND_BUILD_TIME
+        value: https://proptech.cv,https://www.proptech.cv,https://demo.proptech.cv
+    github:
+      branch: develop
+      deploy_on_push: true
+      repo: lutcha/imoOS
+    health_check:
+      failure_threshold: 3
+      http_path: /api/v1/health/
+      initial_delay_seconds: 60
+      period_seconds: 30
+      timeout_seconds: 10
+    http_port: 8000
+    instance_count: 1
+    instance_size_slug: professional-xs
+    name: api
+    run_command:
+      gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2 --threads
+      4 --timeout 120 --log-file -
+    source_dir: /
+  - dockerfile_path: frontend/Dockerfile.staging
+    envs:
+      - key: NEXT_PUBLIC_API_URL
+        scope: RUN_AND_BUILD_TIME
+        value: https://demo.proptech.cv
+      - key: NEXT_PUBLIC_TENANT_DOMAIN
+        scope: RUN_AND_BUILD_TIME
+        value: demo.proptech.cv
+      - key: NODE_ENV
+        scope: RUN_AND_BUILD_TIME
+        value: production
+    github:
+      branch: develop
+      deploy_on_push: true
+      repo: lutcha/imoOS
+    http_port: 3000
+    instance_count: 1
+    instance_size_slug: professional-xs
+    name: frontend
+    source_dir: frontend
 workers:
-- dockerfile_path: docker/Dockerfile.staging
-  envs:
-  - key: DJANGO_SETTINGS_MODULE
-    scope: RUN_AND_BUILD_TIME
-    value: config.settings.staging
-  - key: SECRET_KEY
-    scope: RUN_AND_BUILD_TIME
-    type: SECRET
-    value: EV[1:sbAY55IZS7Zzt4gCTmtFuRuHpca0MyFA:HxZuNLBppN19OKqHVAd/I+tobq6kZZqWT0FAUM8=]
-  - key: DB_NAME
-    scope: RUN_AND_BUILD_TIME
-    value: ${db.DATABASE}
-  - key: DB_USER
-    scope: RUN_AND_BUILD_TIME
-    value: ${db.USERNAME}
-  - key: DB_PASSWORD
-    scope: RUN_AND_BUILD_TIME
-    type: SECRET
-    value: EV[1:Gl5hWf+QotM33RaomsWWkjFmZlSgNkMr:sRBbzMZirUhO7VYxeyksCLLIWXHfN+4wyrvBLEGV]
-  - key: DB_HOST
-    scope: RUN_AND_BUILD_TIME
-    value: ${db.HOSTNAME}
-  - key: DB_PORT
-    scope: RUN_AND_BUILD_TIME
-    value: ${db.PORT}
-  - key: REDIS_URL
-    scope: RUN_AND_BUILD_TIME
-    value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
-  - key: CELERY_BROKER_URL
-    scope: RUN_AND_BUILD_TIME
-    value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
-  - key: CELERY_RESULT_BACKEND
-    scope: RUN_AND_BUILD_TIME
-    value: django-db
-  github:
-    branch: develop
-    deploy_on_push: true
-    repo: lutcha/imoOS
-  instance_count: 1
-  instance_size_slug: professional-xs
-  name: celery-worker
-  run_command: celery -A config.celery worker --loglevel=info --concurrency=2
-  source_dir: /
-- dockerfile_path: docker/Dockerfile.staging
-  envs:
-  - key: DJANGO_SETTINGS_MODULE
-    scope: RUN_AND_BUILD_TIME
-    value: config.settings.staging
-  - key: SECRET_KEY
-    scope: RUN_AND_BUILD_TIME
-    type: SECRET
-    value: EV[1:n2ExJ+Qoy2k2NRKOUgmN2KeDE1HbjuvW:mn9aMglrQZQzVH2f0Uc7FWmPLrtWtOXZvyA8aO0=]
-  - key: DB_NAME
-    scope: RUN_AND_BUILD_TIME
-    value: ${db.DATABASE}
-  - key: DB_USER
-    scope: RUN_AND_BUILD_TIME
-    value: ${db.USERNAME}
-  - key: DB_PASSWORD
-    scope: RUN_AND_BUILD_TIME
-    type: SECRET
-    value: EV[1:hQGutsa0z477Cs8YIVfk1OBNBDIkxc/w:81esYRF2Ap9kZRfVomk4ADyb5wieRIOh7DgvaEqD]
-  - key: DB_HOST
-    scope: RUN_AND_BUILD_TIME
-    value: ${db.HOSTNAME}
-  - key: DB_PORT
-    scope: RUN_AND_BUILD_TIME
-    value: ${db.PORT}
-  - key: REDIS_URL
-    scope: RUN_AND_BUILD_TIME
-    value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
-  - key: CELERY_BROKER_URL
-    scope: RUN_AND_BUILD_TIME
-    value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
-  - key: CELERY_RESULT_BACKEND
-    scope: RUN_AND_BUILD_TIME
-    value: django-db
-  github:
-    branch: develop
-    deploy_on_push: true
-    repo: lutcha/imoOS
-  instance_count: 1
-  instance_size_slug: basic-xxs
-  name: celery-beat
-  run_command: celery -A config.celery beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
-  source_dir: /
+  - dockerfile_path: docker/Dockerfile.staging
+    envs:
+      - key: DJANGO_SETTINGS_MODULE
+        scope: RUN_AND_BUILD_TIME
+        value: config.settings.staging
+      - key: SECRET_KEY
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+        value: EV[1:sbAY55IZS7Zzt4gCTmtFuRuHpca0MyFA:HxZuNLBppN19OKqHVAd/I+tobq6kZZqWT0FAUM8=]
+      - key: DB_NAME
+        scope: RUN_AND_BUILD_TIME
+        value: ${db.DATABASE}
+      - key: DB_USER
+        scope: RUN_AND_BUILD_TIME
+        value: ${db.USERNAME}
+      - key: DB_PASSWORD
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+        value: EV[1:Gl5hWf+QotM33RaomsWWkjFmZlSgNkMr:sRBbzMZirUhO7VYxeyksCLLIWXHfN+4wyrvBLEGV]
+      - key: DB_HOST
+        scope: RUN_AND_BUILD_TIME
+        value: ${db.HOSTNAME}
+      - key: DB_PORT
+        scope: RUN_AND_BUILD_TIME
+        value: ${db.PORT}
+      - key: REDIS_URL
+        scope: RUN_AND_BUILD_TIME
+        value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
+      - key: CELERY_BROKER_URL
+        scope: RUN_AND_BUILD_TIME
+        value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
+      - key: CELERY_RESULT_BACKEND
+        scope: RUN_AND_BUILD_TIME
+        value: django-db
+    github:
+      branch: develop
+      deploy_on_push: true
+      repo: lutcha/imoOS
+    instance_count: 1
+    instance_size_slug: professional-xs
+    name: celery-worker
+    run_command: celery -A config.celery worker --loglevel=info --concurrency=2
+    source_dir: /
+  - dockerfile_path: docker/Dockerfile.staging
+    envs:
+      - key: DJANGO_SETTINGS_MODULE
+        scope: RUN_AND_BUILD_TIME
+        value: config.settings.staging
+      - key: SECRET_KEY
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+        value: EV[1:n2ExJ+Qoy2k2NRKOUgmN2KeDE1HbjuvW:mn9aMglrQZQzVH2f0Uc7FWmPLrtWtOXZvyA8aO0=]
+      - key: DB_NAME
+        scope: RUN_AND_BUILD_TIME
+        value: ${db.DATABASE}
+      - key: DB_USER
+        scope: RUN_AND_BUILD_TIME
+        value: ${db.USERNAME}
+      - key: DB_PASSWORD
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+        value: EV[1:hQGutsa0z477Cs8YIVfk1OBNBDIkxc/w:81esYRF2Ap9kZRfVomk4ADyb5wieRIOh7DgvaEqD]
+      - key: DB_HOST
+        scope: RUN_AND_BUILD_TIME
+        value: ${db.HOSTNAME}
+      - key: DB_PORT
+        scope: RUN_AND_BUILD_TIME
+        value: ${db.PORT}
+      - key: REDIS_URL
+        scope: RUN_AND_BUILD_TIME
+        value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
+      - key: CELERY_BROKER_URL
+        scope: RUN_AND_BUILD_TIME
+        value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
+      - key: CELERY_RESULT_BACKEND
+        scope: RUN_AND_BUILD_TIME
+        value: django-db
+    github:
+      branch: develop
+      deploy_on_push: true
+      repo: lutcha/imoOS
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    name: celery-beat
+    run_command: celery -A config.celery beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    source_dir: /
