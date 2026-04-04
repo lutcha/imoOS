@@ -63,9 +63,9 @@ services:
       - key: DB_PORT
         value: ${db.PORT}
       - key: REDIS_URL
-        value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
+        value: ${redis.DATABASE_URL}
       - key: CELERY_BROKER_URL
-        value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
+        value: ${redis.DATABASE_URL}
       - key: CELERY_RESULT_BACKEND
         value: django-db
       - key: AWS_ACCESS_KEY_ID
@@ -142,9 +142,9 @@ workers:
       - key: DB_PORT
         value: ${db.PORT}
       - key: REDIS_URL
-        value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
+        value: ${redis.DATABASE_URL}
       - key: CELERY_BROKER_URL
-        value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
+        value: ${redis.DATABASE_URL}
       - key: CELERY_RESULT_BACKEND
         value: django-db
 
@@ -176,9 +176,9 @@ workers:
       - key: DB_PORT
         value: ${db.PORT}
       - key: REDIS_URL
-        value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
+        value: ${redis.DATABASE_URL}
       - key: CELERY_BROKER_URL
-        value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
+        value: ${redis.DATABASE_URL}
       - key: CELERY_RESULT_BACKEND
         value: django-db
 
@@ -220,7 +220,7 @@ jobs:
       - key: APP_DOMAIN
         value: ${APP_DOMAIN}
       - key: REDIS_URL
-        value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
+        value: ${redis.DATABASE_URL}
       - key: DATABASE_URL
         value: ${db.DATABASE_URL}
 

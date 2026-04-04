@@ -14,22 +14,20 @@ SECRET_KEY = config('SECRET_KEY')
 ALLOWED_HOSTS = ['*']
 
 # =============================================================
-# Redis / Celery — fix SSL before Celery reads Django settings
-# DigitalOcean managed Redis uses rediss:// which requires ssl_cert_reqs
-# The fix in celery.py runs after lazy config resolution, so we fix here.
+# Redis / Celery — DigitalOcean Valkey uses rediss:// (TLS)
+# redis-py 4+ does not accept ssl_cert_reqs=CERT_NONE in the URL string.
+# Use CELERY_BROKER_USE_SSL and CONNECTION_POOL_KWARGS instead (in base.py).
 # =============================================================
-def _fix_rediss_url(url: str) -> str:
-    """Append ssl_cert_reqs=CERT_NONE to rediss:// URLs that lack it."""
-    if url and url.startswith('rediss://') and 'ssl_cert_reqs' not in url:
-        sep = '&' if '?' in url else '?'
-        return f"{url}{sep}ssl_cert_reqs=CERT_NONE"
-    return url
+import ssl as _ssl
 
-
-_redis_url = _fix_rediss_url(config('REDIS_URL', default=''))
+_redis_url = config('REDIS_URL', default='')
 CELERY_BROKER_URL = _redis_url
-# Result backend uses django-db (via django_celery_results), not Redis
 CELERY_RESULT_BACKEND = 'django-db'
+
+if _redis_url.startswith('rediss://'):
+    _ssl_config = {'ssl_cert_reqs': _ssl.CERT_NONE}
+    CELERY_BROKER_USE_SSL = _ssl_config
+    CELERY_REDIS_BACKEND_USE_SSL = _ssl_config
 
 # =============================================================
 # Database
