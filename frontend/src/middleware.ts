@@ -27,6 +27,7 @@ const PUBLIC_PREFIXES = [
   "/register",        // Sprint 7 - Prompt 03: Self-service registration
   "/verify-email",    // Sprint 7 - Prompt 03: Email verification
   "/superadmin/login", // Sprint 9 - P01: Staff login via public schema
+  "/impersonate",     // Sprint 9 - P04: Impersonation token handoff
 ];
 
 const PUBLIC_EXACT = new Set([

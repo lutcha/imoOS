@@ -3,6 +3,7 @@ import os
 import re
 import uuid
 import logging
+from datetime import timedelta
 from django.core.management import call_command
 from django.db.models import Count
 
@@ -249,6 +250,166 @@ class SuperAdminTenantViewSet(viewsets.ReadOnlyModelViewSet):
             },
             status=status.HTTP_201_CREATED if provision_status == 'created' else status.HTTP_200_OK,
         )
+
+    # ------------------------------------------------------------------
+    # User management — cross-tenant (Sprint 9 - P04)
+    # ------------------------------------------------------------------
+
+    @action(detail=True, methods=['get', 'post'], url_path='users')
+    def users(self, request, pk=None):
+        """
+        GET  /api/v1/superadmin/tenants/{id}/users/ — list users in tenant schema
+        POST /api/v1/superadmin/tenants/{id}/users/ — create user in tenant schema
+             Body: { email, first_name, last_name, role, password }
+        """
+        from django.contrib.auth import get_user_model
+        tenant = self.get_object()
+
+        if request.method == 'GET':
+            with schema_context(tenant.schema_name):
+                User = get_user_model()
+                users = list(
+                    User.objects.values(
+                        'id', 'email', 'first_name', 'last_name',
+                        'role', 'is_active', 'is_staff', 'date_joined',
+                    ).order_by('-date_joined')
+                )
+                # Stringify UUIDs for JSON serialisation
+                for u in users:
+                    u['id'] = str(u['id'])
+                    u['full_name'] = f"{u['first_name']} {u['last_name']}".strip()
+            return Response({'results': users, 'count': len(users)})
+
+        # POST — create user
+        email = request.data.get('email', '').strip()
+        password = request.data.get('password', '').strip()
+        first_name = request.data.get('first_name', '').strip()
+        last_name = request.data.get('last_name', '').strip()
+        role = request.data.get('role', 'gestor')
+
+        if not email or not password:
+            return Response(
+                {'detail': 'email and password are required.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        with schema_context(tenant.schema_name):
+            User = get_user_model()
+            if User.objects.filter(email=email).exists():
+                return Response(
+                    {'detail': f'User with email {email} already exists in this tenant.'},
+                    status=status.HTTP_409_CONFLICT,
+                )
+            user = User.objects.create_user(
+                email=email,
+                password=password,
+                first_name=first_name,
+                last_name=last_name,
+                role=role,
+            )
+
+        logger.info(
+            'superadmin created user %s in tenant %s by %s',
+            email, tenant.schema_name, request.user.email,
+        )
+        return Response(
+            {'id': str(user.id), 'email': user.email, 'role': user.role},
+            status=status.HTTP_201_CREATED,
+        )
+
+    @action(
+        detail=True, methods=['post'],
+        url_path=r'users/(?P<user_id>[^/.]+)/deactivate',
+    )
+    def deactivate_user(self, request, pk=None, user_id=None):
+        """
+        POST /api/v1/superadmin/tenants/{id}/users/{user_id}/deactivate/
+        Soft-deactivates a user inside the tenant schema.
+        """
+        from django.contrib.auth import get_user_model
+        tenant = self.get_object()
+
+        with schema_context(tenant.schema_name):
+            User = get_user_model()
+            try:
+                user = User.objects.get(id=user_id)
+            except (User.DoesNotExist, Exception):
+                return Response({'detail': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+            user.is_active = False
+            user.save(update_fields=['is_active'])
+
+        logger.info(
+            'superadmin deactivated user %s in tenant %s by %s',
+            user_id, tenant.schema_name, request.user.email,
+        )
+        return Response({'status': 'deactivated', 'user_id': str(user_id)})
+
+    @action(
+        detail=True, methods=['post'],
+        url_path=r'impersonate/(?P<user_id>[^/.]+)',
+    )
+    def impersonate(self, request, pk=None, user_id=None):
+        """
+        POST /api/v1/superadmin/tenants/{id}/impersonate/{user_id}/
+        Generate a short-lived (30 min) access token for a tenant user.
+        Requires is_staff=True. Logs to PlanEvent for audit.
+        Returns: { access_token, tenant_schema, tenant_name, email, domain }
+        """
+        from django.contrib.auth import get_user_model
+        from rest_framework_simplejwt.tokens import RefreshToken as JWTRefreshToken
+
+        tenant = self.get_object()
+
+        with schema_context(tenant.schema_name):
+            User = get_user_model()
+            try:
+                target_user = User.objects.get(id=user_id)
+            except (User.DoesNotExist, Exception):
+                return Response({'detail': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+            if not target_user.is_active:
+                return Response(
+                    {'detail': 'Cannot impersonate an inactive user.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # Build a short-lived token — no refresh token issued
+            refresh = JWTRefreshToken.for_user(target_user)
+            refresh['tenant_schema'] = tenant.schema_name
+            refresh['tenant_name'] = tenant.name
+            refresh['email'] = target_user.email
+            refresh['role'] = target_user.role
+            refresh['full_name'] = target_user.get_full_name() or target_user.email
+            refresh['is_staff'] = False  # Never elevate during impersonation
+            refresh['impersonated_by'] = request.user.email
+
+            access = refresh.access_token
+            access.set_exp(lifetime=timedelta(minutes=30))
+
+        # Audit — immutable log
+        PlanEvent.objects.create(
+            tenant=tenant,
+            event_type=PlanEvent.EVENT_LIMIT_HIT,  # closest available type; P06 adds IMPERSONATED
+            from_plan=tenant.plan,
+            to_plan=tenant.plan,
+            metadata={
+                'action': 'impersonated',
+                'target_user': str(user_id),
+                'target_email': target_user.email,
+                'by': request.user.email,
+            },
+            created_by=request.user,
+        )
+
+        domain_obj = tenant.domains.filter(is_primary=True).first()
+        return Response({
+            'access_token': str(access),
+            'tenant_schema': tenant.schema_name,
+            'tenant_name': tenant.name,
+            'email': target_user.email,
+            'domain': domain_obj.domain if domain_obj else None,
+        })
 
 
 # ---------------------------------------------------------------------------
