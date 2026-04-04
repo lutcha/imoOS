@@ -1,16 +1,14 @@
-/**
- * Super-Admin Dashboard — ImoOS
- * Sprint 7 - Prompt 02: Admin Backoffice
- * 
- * Features:
- * - Platform KPIs (total tenants, by plan, resources)
- * - Tenant list with actions (suspend/activate)
- * - Quick access to Django Admin, Health Check, Metrics
- */
 "use client";
 
+/**
+ * Super-Admin Dashboard — ImoOS
+ * Sprint 9 - P03: Platform overview + tenant list
+ */
 import { useEffect, useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import Link from "next/link";
+import { useSuperAdminSession } from "@/hooks/useSuperAdminSession";
+import { superadminFetch } from "@/lib/superadmin-client";
+import { Plus, RefreshCw } from "lucide-react";
 
 interface Tenant {
   id: string;
@@ -32,302 +30,233 @@ interface PlatformSummary {
   active_tenants: number;
   inactive_tenants: number;
   tenants_by_plan: Record<string, number>;
-  total_resources: {
-    projects: number;
-    units: number;
-    users: number;
-  };
+  total_resources: { projects: number; units: number; users: number };
 }
 
+const PLAN_BADGE: Record<string, string> = {
+  starter: "bg-green-100 text-green-800",
+  pro: "bg-blue-100 text-blue-800",
+  enterprise: "bg-purple-100 text-purple-800",
+};
+
 export default function SuperAdminDashboard() {
-  const { user } = useAuth();
+  const { user } = useSuperAdminSession();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [summary, setSummary] = useState<PlatformSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchTenants();
-    fetchSummary();
-  }, []);
-
-  async function fetchTenants() {
+  async function load() {
+    setLoading(true);
+    setError(null);
     try {
-      const resp = await fetch("/api/v1/tenants/superadmin/tenants/", {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      if (!resp.ok) throw new Error("Failed to fetch tenants");
-      const data = await resp.json();
-      setTenants(data.results || data);
+      const [tenantsResp, summaryResp] = await Promise.all([
+        superadminFetch("/superadmin/tenants/"),
+        superadminFetch("/superadmin/tenants/platform_summary/"),
+      ]);
+      if (!tenantsResp.ok || !summaryResp.ok) throw new Error("Erro ao carregar dados");
+      const tenantsData = await tenantsResp.json();
+      const summaryData = await summaryResp.json();
+      setTenants(tenantsData.results ?? tenantsData);
+      setSummary(summaryData);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      setError(err instanceof Error ? err.message : "Erro desconhecido");
     } finally {
       setLoading(false);
     }
   }
 
-  async function fetchSummary() {
+  useEffect(() => { load(); }, []);
+
+  async function handleToggleActive(tenant: Tenant) {
+    const action = tenant.is_active ? "suspend" : "activate";
+    const label = tenant.is_active ? "suspender" : "activar";
+    if (!confirm(`Tem a certeza que deseja ${label} "${tenant.name}"?`)) return;
     try {
-      const resp = await fetch(
-        "/api/v1/tenants/superadmin/tenants/platform_summary/",
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      if (!resp.ok) throw new Error("Failed to fetch summary");
-      const data = await resp.json();
-      setSummary(data);
+      const resp = await superadminFetch(`/superadmin/tenants/${tenant.id}/${action}/`, {
+        method: "POST",
+      });
+      if (!resp.ok) throw new Error("Operação falhou");
+      await load();
     } catch (err) {
-      console.error("Summary fetch error:", err);
+      alert(err instanceof Error ? err.message : "Erro");
     }
-  }
-
-  async function handleSuspend(tenantId: string) {
-    if (!confirm("Tem a certeza que deseja suspender este tenant?")) return;
-
-    try {
-      const resp = await fetch(
-        `/api/v1/tenants/superadmin/tenants/${tenantId}/suspend/`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      if (!resp.ok) throw new Error("Failed to suspend tenant");
-      await fetchTenants();
-      await fetchSummary();
-      alert("Tenant suspenso com sucesso");
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Erro ao suspender tenant");
-    }
-  }
-
-  async function handleActivate(tenantId: string) {
-    try {
-      const resp = await fetch(
-        `/api/v1/tenants/superadmin/tenants/${tenantId}/activate/`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      if (!resp.ok) throw new Error("Failed to activate tenant");
-      await fetchTenants();
-      await fetchSummary();
-      alert("Tenant activado com sucesso");
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Erro ao activar tenant");
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <p className="text-red-800">Erro: {error}</p>
-      </div>
-    );
   }
 
   return (
-    <div className="space-y-8">
-      {/* KPI Cards */}
-      {summary && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-sm font-medium text-gray-500">Total Tenants</div>
-            <div className="mt-2 text-3xl font-bold text-gray-900">
-              {summary.total_tenants}
-            </div>
-            <div className="mt-2 text-sm text-gray-600">
-              {summary.active_tenants} activos • {summary.inactive_tenants} inactivos
-            </div>
-          </div>
+    <div className="space-y-6">
+      {/* Page header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Tenants</h1>
+          <p className="text-sm text-gray-500 mt-0.5">
+            Bem-vindo, {user?.email}
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={load}
+            disabled={loading}
+            className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            Actualizar
+          </button>
+          <Link
+            href="/superadmin/tenants/new"
+            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+          >
+            <Plus className="h-4 w-4" />
+            Novo Tenant
+          </Link>
+        </div>
+      </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-sm font-medium text-gray-500">Starter</div>
-            <div className="mt-2 text-3xl font-bold text-gray-900">
-              {summary.tenants_by_plan?.starter || 0}
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-sm font-medium text-gray-500">Pro</div>
-            <div className="mt-2 text-3xl font-bold text-gray-900">
-              {summary.tenants_by_plan?.pro || 0}
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-sm font-medium text-gray-500">Enterprise</div>
-            <div className="mt-2 text-3xl font-bold text-gray-900">
-              {summary.tenants_by_plan?.enterprise || 0}
-            </div>
-          </div>
+      {error && (
+        <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+          {error}
         </div>
       )}
 
-      {/* Resources Summary */}
+      {/* KPI Cards */}
       {summary && (
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Recursos da Plataforma
-          </h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-white rounded-xl border border-gray-200 p-5">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Total</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900">{summary.total_tenants}</p>
+            <p className="mt-1 text-xs text-gray-500">
+              {summary.active_tenants} activos · {summary.inactive_tenants} inactivos
+            </p>
+          </div>
+          {["starter", "pro", "enterprise"].map((plan) => (
+            <div key={plan} className="bg-white rounded-xl border border-gray-200 p-5">
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{plan}</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900">
+                {summary.tenants_by_plan?.[plan] ?? 0}
+              </p>
+              <p className="mt-1 text-xs text-gray-500">tenants</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Resources */}
+      {summary && (
+        <div className="bg-white rounded-xl border border-gray-200 p-5">
+          <h2 className="text-sm font-semibold text-gray-700 mb-4">Recursos da Plataforma</h2>
           <div className="grid grid-cols-3 gap-6">
-            <div>
-              <div className="text-sm text-gray-500">Projectos</div>
-              <div className="text-2xl font-bold text-gray-900">
-                {summary.total_resources?.projects || 0}
+            {[
+              { label: "Projectos", value: summary.total_resources?.projects ?? 0 },
+              { label: "Unidades", value: summary.total_resources?.units ?? 0 },
+              { label: "Utilizadores", value: summary.total_resources?.users ?? 0 },
+            ].map(({ label, value }) => (
+              <div key={label}>
+                <p className="text-xs text-gray-500">{label}</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
               </div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-500">Unidades</div>
-              <div className="text-2xl font-bold text-gray-900">
-                {summary.total_resources?.units || 0}
-              </div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-500">Utilizadores</div>
-              <div className="text-2xl font-bold text-gray-900">
-                {summary.total_resources?.users || 0}
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       )}
 
       {/* Tenants Table */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Tenants</h2>
+      <div className="bg-white rounded-xl border border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-gray-700">
+            Todos os Tenants {tenants.length > 0 && `(${tenants.length})`}
+          </h2>
         </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Empresa
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Schema
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Plano
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  País
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Recursos
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Estado
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Acções
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {tenants.map((tenant) => (
-                <tr key={tenant.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {tenant.name}
-                    </div>
-                    {tenant.domain && (
-                      <div className="text-sm text-gray-500">
-                        {tenant.domain}
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <code className="text-xs bg-gray-100 px-2 py-1 rounded">
-                      {tenant.schema_name}
-                    </code>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`px-2 py-1 text-xs font-medium rounded-full ${
-                        tenant.plan === "starter"
-                          ? "bg-green-100 text-green-800"
-                          : tenant.plan === "pro"
-                          ? "bg-blue-100 text-blue-800"
-                          : "bg-purple-100 text-purple-800"
-                      }`}
+
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600" />
+          </div>
+        ) : tenants.length === 0 ? (
+          <div className="py-16 text-center">
+            <p className="text-gray-500 text-sm">Sem tenants registados</p>
+            <Link
+              href="/superadmin/tenants/new"
+              className="mt-3 inline-flex items-center gap-1.5 text-sm text-red-600 hover:text-red-700"
+            >
+              <Plus className="h-4 w-4" />
+              Criar primeiro tenant
+            </Link>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-100">
+              <thead>
+                <tr className="bg-gray-50">
+                  {["Empresa", "Schema", "Plano", "Recursos", "País", "Estado", "Acções"].map((h) => (
+                    <th
+                      key={h}
+                      className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                     >
-                      {tenant.plan}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {tenant.country}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-600">
-                      <div>👥 {tenant.user_count}</div>
-                      <div>🏢 {tenant.project_count}</div>
-                      <div>🏠 {tenant.unit_count}</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {tenant.is_active ? (
-                      <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
-                        Activo
-                      </span>
-                    ) : (
-                      <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
-                        Suspenso
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    {tenant.is_active ? (
-                      <button
-                        onClick={() => handleSuspend(tenant.id)}
-                        className="text-red-600 hover:text-red-900 mr-3"
-                      >
-                        Suspender
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handleActivate(tenant.id)}
-                        className="text-green-600 hover:text-green-900 mr-3"
-                      >
-                        Activar
-                      </button>
-                    )}
-                    <a
-                      href={`https://${tenant.slug}.imos.cv`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-900"
-                    >
-                      Visitar
-                    </a>
-                  </td>
+                      {h}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {tenants.length === 0 && (
-          <div className="px-6 py-12 text-center text-gray-500">
-            Sem tenants registados
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {tenants.map((tenant) => (
+                  <tr key={tenant.id} className="hover:bg-gray-50 transition">
+                    <td className="px-5 py-4">
+                      <div className="font-medium text-gray-900 text-sm">{tenant.name}</div>
+                      {tenant.domain && (
+                        <div className="text-xs text-gray-400 mt-0.5">{tenant.domain}</div>
+                      )}
+                    </td>
+                    <td className="px-5 py-4">
+                      <code className="text-xs bg-gray-100 px-2 py-0.5 rounded">
+                        {tenant.schema_name}
+                      </code>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${PLAN_BADGE[tenant.plan] ?? ""}`}>
+                        {tenant.plan}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4 text-xs text-gray-600 space-y-0.5">
+                      <div>{tenant.user_count} utilizadores</div>
+                      <div>{tenant.project_count} projectos</div>
+                      <div>{tenant.unit_count} unidades</div>
+                    </td>
+                    <td className="px-5 py-4 text-sm text-gray-600">{tenant.country}</td>
+                    <td className="px-5 py-4">
+                      <span
+                        className={`px-2 py-0.5 text-xs font-medium rounded-full ${
+                          tenant.is_active
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {tenant.is_active ? "Activo" : "Suspenso"}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-3 text-sm">
+                        <Link
+                          href={`/superadmin/tenants/${tenant.id}`}
+                          className="text-blue-600 hover:text-blue-800 font-medium"
+                        >
+                          Detalhes
+                        </Link>
+                        <button
+                          onClick={() => handleToggleActive(tenant)}
+                          className={`font-medium ${
+                            tenant.is_active
+                              ? "text-red-600 hover:text-red-800"
+                              : "text-green-600 hover:text-green-800"
+                          }`}
+                        >
+                          {tenant.is_active ? "Suspender" : "Activar"}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
