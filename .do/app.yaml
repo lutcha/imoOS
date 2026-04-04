@@ -113,6 +113,8 @@ services:
         value: production
       - key: NPM_CONFIG_LEGACY_PEER_DEPS
         value: "true"
+      - key: PLATFORM_DOMAIN
+        value: proptech.cv
 
 # ------------------------------------------------------------------
 # Workers — Celery (background, no HTTP port)

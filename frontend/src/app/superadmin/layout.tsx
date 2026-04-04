@@ -1,80 +1,77 @@
 /**
  * Super-Admin Layout — ImoOS
- * Only accessible to users with is_staff=True
- * Sprint 7 - Prompt 02: Admin Backoffice
+ * Uses useSuperAdminSession (public schema auth) instead of AuthContext.
+ * Redirects to /superadmin/login if not authenticated or not staff.
  */
 "use client";
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
+import { useSuperAdminSession } from "@/hooks/useSuperAdminSession";
 
 export default function SuperAdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading, logout } = useSuperAdminSession();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated && !user?.isStaff) {
-      // Redirect non-staff users to dashboard
-      router.push("/");
+    if (!isLoading && !isAuthenticated) {
+      router.replace("/superadmin/login");
     }
-  }, [user, isAuthenticated, isLoading, router]);
+  }, [isLoading, isAuthenticated, router]);
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-slate-900">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">A carregar...</p>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-red-500 mx-auto"></div>
+          <p className="mt-4 text-sm text-slate-400">A verificar acesso...</p>
         </div>
       </div>
     );
   }
 
-  if (!user?.isStaff) {
-    return null; // Will redirect in useEffect
+  if (!isAuthenticated) {
+    return null;
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Top Bar */}
-      <header className="bg-white border-b border-gray-200">
+      <header className="bg-slate-900 border-b border-slate-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-14">
             <div className="flex items-center">
-              <h1 className="text-xl font-bold text-gray-900">
-                <span className="text-red-600">🔴</span> Super Admin
-              </h1>
-              <nav className="ml-8 flex space-x-6">
+              <span className="text-red-500 mr-2 text-xs font-bold uppercase tracking-widest">
+                ● Super Admin
+              </span>
+              <nav className="ml-6 flex space-x-1">
                 <a
                   href="/superadmin"
-                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                  className="text-slate-300 hover:text-white hover:bg-slate-700 px-3 py-1.5 rounded text-sm transition"
                 >
                   Tenants
                 </a>
                 <a
-                  href="/django-admin/"
-                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href="/superadmin/registrations"
+                  className="text-slate-300 hover:text-white hover:bg-slate-700 px-3 py-1.5 rounded text-sm transition"
                 >
-                  Django Admin
+                  Registrations
                 </a>
                 <a
                   href="/api/v1/health/"
-                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                  className="text-slate-300 hover:text-white hover:bg-slate-700 px-3 py-1.5 rounded text-sm transition"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Health Check
+                  Health
                 </a>
                 <a
                   href="/metrics/"
-                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                  className="text-slate-300 hover:text-white hover:bg-slate-700 px-3 py-1.5 rounded text-sm transition"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -83,15 +80,13 @@ export default function SuperAdminLayout({
               </nav>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">
-                {user?.email}
-              </span>
-              <a
-                href="/"
-                className="text-sm text-blue-600 hover:text-blue-800"
+              <span className="text-xs text-slate-400">{user?.email}</span>
+              <button
+                onClick={logout}
+                className="text-xs text-slate-400 hover:text-red-400 transition"
               >
-                Voltar ao Dashboard
-              </a>
+                Sair
+              </button>
             </div>
           </div>
         </div>

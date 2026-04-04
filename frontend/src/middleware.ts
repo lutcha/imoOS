@@ -24,8 +24,9 @@ import { NextRequest, NextResponse } from "next/server";
 const PUBLIC_PREFIXES = [
   "/api/auth/",
   "/_next/",
-  "/register",  // Sprint 7 - Prompt 03: Self-service registration
-  "/verify-email",  // Sprint 7 - Prompt 03: Email verification
+  "/register",        // Sprint 7 - Prompt 03: Self-service registration
+  "/verify-email",    // Sprint 7 - Prompt 03: Email verification
+  "/superadmin/login", // Sprint 9 - P01: Staff login via public schema
 ];
 
 const PUBLIC_EXACT = new Set([
@@ -56,7 +57,19 @@ export function middleware(request: NextRequest) {
   }
 
   // ------------------------------------------------------------------
-  // 2. Protected path — require refresh_token cookie
+  // 2. Super Admin area — requires superadmin_refresh_token cookie
+  // ------------------------------------------------------------------
+  if (pathname.startsWith("/superadmin")) {
+    if (!request.cookies.has("superadmin_refresh_token")) {
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = "/superadmin/login";
+      return NextResponse.redirect(loginUrl);
+    }
+    return NextResponse.next();
+  }
+
+  // ------------------------------------------------------------------
+  // 3. Protected path — require refresh_token cookie
   // ------------------------------------------------------------------
   if (!request.cookies.has("refresh_token")) {
     // Use request.nextUrl.clone() so Next.js handles basePath automatically.
@@ -67,7 +80,7 @@ export function middleware(request: NextRequest) {
   }
 
   // ------------------------------------------------------------------
-  // 3. Cookie present — allow through (AuthContext validates on mount)
+  // 4. Cookie present — allow through (AuthContext validates on mount)
   // ------------------------------------------------------------------
   return NextResponse.next();
 }
