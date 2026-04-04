@@ -35,8 +35,26 @@ if _redis_url.startswith('rediss://'):
 # =============================================================
 # Database
 # =============================================================
-DATABASES = {
-    'default': {
+# If DATABASE_URL is set (migrate job uses doadmin URL so it can CREATE SCHEMA),
+# parse it and override individual DB_* vars. This lets django-tenants create
+# schemas with elevated privileges without changing the runtime app user.
+from urllib.parse import urlparse as _urlparse
+
+_database_url = config('DATABASE_URL', default='')
+if _database_url:
+    _parsed = _urlparse(_database_url)
+    _db_cfg = {
+        'ENGINE': 'django_tenants.postgresql_backend',
+        'NAME': _parsed.path.lstrip('/').split('?')[0],
+        'USER': _parsed.username,
+        'PASSWORD': _parsed.password,
+        'HOST': _parsed.hostname,
+        'PORT': _parsed.port or 5432,
+        'CONN_MAX_AGE': 60,
+        'OPTIONS': {'sslmode': 'require'},
+    }
+else:
+    _db_cfg = {
         'ENGINE': 'django_tenants.postgresql_backend',
         'NAME': config('DB_NAME'),
         'USER': config('DB_USER'),
@@ -44,11 +62,10 @@ DATABASES = {
         'HOST': config('DB_HOST'),
         'PORT': config('DB_PORT', default='5432'),
         'CONN_MAX_AGE': 60,
-        'OPTIONS': {
-            'sslmode': 'require',
-        },
+        'OPTIONS': {'sslmode': 'require'},
     }
-}
+
+DATABASES = {'default': _db_cfg}
 
 # =============================================================
 # Security Headers
