@@ -105,6 +105,12 @@ services:
         value: https://proptech.cv
       - key: NEXT_PUBLIC_TENANT_DOMAIN
         value: demo.proptech.cv
+      - key: NEXT_PUBLIC_BASE_PATH
+        value: /app
+      - key: API_URL
+        value: https://proptech.cv
+      - key: TENANT_DOMAIN
+        value: demo.proptech.cv
       - key: NODE_ENV
         value: production
       - key: NPM_CONFIG_LEGACY_PEER_DEPS

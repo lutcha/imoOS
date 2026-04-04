@@ -80,6 +80,11 @@ function hydrateFromToken(token: string): { user: User; tenant: Tenant } {
   };
 }
 
+// basePath prefix for all client-side fetch calls to Next.js API routes.
+// Next.js serves /api/auth/* at /app/api/auth/* when basePath=/app.
+// Browser fetch() does not auto-apply basePath — must be explicit.
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AuthState>({
     user: null,
@@ -92,7 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     async function restoreSession() {
       try {
-        const resp = await fetch("/api/auth/refresh", { method: "POST" });
+        const resp = await fetch(`${BASE_PATH}/api/auth/refresh`, { method: "POST" });
         if (!resp.ok) throw new Error("No session");
         const { access_token, tenant_schema } = await resp.json();
 
@@ -108,7 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const resp = await fetch("/api/auth/login", {
+    const resp = await fetch(`${BASE_PATH}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
@@ -127,11 +132,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    await fetch("/api/auth/logout", { method: "POST" }).catch(() => { });
+    await fetch(`${BASE_PATH}/api/auth/logout`, { method: "POST" }).catch(() => { });
     setAccessToken(null);
     setTenantSchema(null);
     setState({ user: null, tenant: null, isLoading: false, isAuthenticated: false });
-    window.location.href = "/login";
+    window.location.href = `${BASE_PATH}/login`;
   }, []);
 
   return (

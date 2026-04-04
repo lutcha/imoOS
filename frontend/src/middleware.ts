@@ -40,7 +40,7 @@ function isPublicPath(pathname: string): boolean {
   return PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 }
 
-export function proxy(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // ------------------------------------------------------------------
@@ -59,8 +59,9 @@ export function proxy(request: NextRequest) {
   // 2. Protected path — require refresh_token cookie
   // ------------------------------------------------------------------
   if (!request.cookies.has("refresh_token")) {
-    const loginUrl = new URL("/login", request.url);
-    // Preserve the original destination so the login page can redirect back.
+    // Use request.nextUrl.clone() so Next.js handles basePath automatically.
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = "/login";
     loginUrl.searchParams.set("next", pathname);
     return NextResponse.redirect(loginUrl);
   }
