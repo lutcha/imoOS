@@ -98,3 +98,27 @@ class ClientCreateSerializer(serializers.ModelSerializer):
             Domain.objects.create(domain=domain_name, tenant=client, is_primary=True)
             TenantSettings.objects.get_or_create(tenant=client)
         return client
+
+
+class TenantProvisionSerializer(serializers.Serializer):
+    """
+    Input for POST /api/v1/superadmin/tenants/provision/
+    Triggers idempotent schema + Client + Domain + Settings creation.
+    """
+    schema_name = serializers.RegexField(
+        regex=r'^[a-z][a-z0-9_]{2,49}$',
+        error_messages={
+            'invalid': (
+                'Must start with a lowercase letter, contain only lowercase letters, '
+                'digits, or underscores, and be 3–50 characters.'
+            )
+        },
+    )
+    name = serializers.CharField(max_length=200)
+    domain = serializers.CharField(max_length=253)
+    plan = serializers.ChoiceField(choices=['starter', 'pro', 'enterprise'], default='starter')
+    contact_email = serializers.EmailField(required=False, allow_blank=True, default='')
+    country = serializers.CharField(max_length=2, default='CV')
+
+    def validate_domain(self, value):
+        return value.lower().strip()

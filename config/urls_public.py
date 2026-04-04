@@ -12,7 +12,7 @@ from rest_framework.routers import DefaultRouter
 from apps.core.views import health_check
 from apps.crm.views_public import LeadCaptureView
 from apps.contracts.views_public import SignatureView
-from apps.tenants.views import TenantViewSet
+from apps.tenants.views import TenantViewSet, SuperAdminTenantViewSet
 from apps.tenants.views_public import (
     TenantRegistrationCreateView,
     TenantRegistrationVerifyView,
@@ -24,6 +24,9 @@ from django_prometheus import exports
 # Staff-only platform admin — manage all tenants
 _admin_router = DefaultRouter()
 _admin_router.register(r'admin/tenants', TenantViewSet, basename='tenant')
+# Super-admin endpoints (Sprint 9 — platform domain only)
+_superadmin_router = DefaultRouter()
+_superadmin_router.register(r'tenants', SuperAdminTenantViewSet, basename='superadmin-tenant')
 
 urlpatterns = [
     # Redirect root to /app (Frontend)
@@ -51,6 +54,8 @@ urlpatterns = [
 
     # Platform admin (is_staff required by TenantViewSet)
     path('api/v1/', include(_admin_router.urls)),
+    # Super-admin API (is_staff required by SuperAdminTenantViewSet)
+    path('api/v1/superadmin/', include(_superadmin_router.urls)),
 
     # Prometheus metrics (Sprint 7)
     path('metrics/', exports.ExportToDjangoView, name='prometheus-metrics'),

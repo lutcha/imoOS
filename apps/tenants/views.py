@@ -1,7 +1,9 @@
+import io
 import os
 import re
 import uuid
 import logging
+from django.core.management import call_command
 from django.db.models import Count
 
 import boto3
@@ -21,6 +23,7 @@ from .permissions import IsTenantAdmin
 from .serializers import (
     ClientCreateSerializer,
     ClientSerializer,
+    TenantProvisionSerializer,
     TenantSettingsSerializer,
     TenantSettingsWritableSerializer,
 )
@@ -183,8 +186,69 @@ class SuperAdminTenantViewSet(viewsets.ReadOnlyModelViewSet):
         tenant = self.get_object()
         tenant.is_active = True
         tenant.save(update_fields=['is_active', 'updated_at'])
-        
+
         return Response({'status': 'activated', 'id': str(tenant.id)})
+
+    @action(detail=False, methods=['post'])
+    def provision(self, request):
+        """
+        Idempotent tenant provisioning.
+        POST /api/v1/superadmin/tenants/provision/
+        Body: { schema_name, name, domain, plan, contact_email, country }
+        Returns: { status: "created"|"synced"|"already_exists", tenant_id, schema_name }
+        """
+        serializer = TenantProvisionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        # Validate domain is not the platform base domain
+        base_domain = getattr(settings, 'TENANT_BASE_DOMAIN', '')
+        if base_domain and data['domain'] == base_domain:
+            return Response(
+                {'domain': [f'Cannot use the platform base domain ({base_domain}).']},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        out = io.StringIO()
+        try:
+            result = call_command(
+                'provision_tenant',
+                schema=data['schema_name'],
+                name=data['name'],
+                domain=data['domain'],
+                plan=data['plan'],
+                contact_email=data.get('contact_email', ''),
+                country=data.get('country', 'CV'),
+                stdout=out,
+                stderr=out,
+            )
+        except Exception as exc:
+            logger.error('provision_tenant failed: %s', exc, exc_info=True)
+            return Response(
+                {'detail': str(exc)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        try:
+            tenant = Client.objects.get(schema_name=data['schema_name'])
+        except Client.DoesNotExist:
+            return Response(
+                {'detail': 'Provisioning appeared to succeed but tenant not found.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        provision_status = result if isinstance(result, str) else 'created'
+        return Response(
+            {
+                'status': provision_status,
+                'tenant_id': str(tenant.id),
+                'schema_name': tenant.schema_name,
+                'name': tenant.name,
+                'domain': data['domain'],
+                'plan': tenant.plan,
+            },
+            status=status.HTTP_201_CREATED if provision_status == 'created' else status.HTTP_200_OK,
+        )
 
 
 # ---------------------------------------------------------------------------
