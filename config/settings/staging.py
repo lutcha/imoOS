@@ -18,9 +18,12 @@ ALLOWED_HOSTS = ['*']
 # redis-py 4+ does not accept ssl_cert_reqs=CERT_NONE in the URL string.
 # Use CELERY_BROKER_USE_SSL and CONNECTION_POOL_KWARGS instead (in base.py).
 # =============================================================
+import re as _re
 import ssl as _ssl
 
-_redis_url = config('REDIS_URL', default='')
+# Strip ssl_cert_reqs from the URL — DO injects it but redis-py 4+ rejects the string form.
+_raw_redis_url = config('REDIS_URL', default='')
+_redis_url = _re.sub(r'[?&]ssl_cert_reqs=[^&]*', '', _raw_redis_url).rstrip('?&')
 CELERY_BROKER_URL = _redis_url
 CELERY_RESULT_BACKEND = 'django-db'
 

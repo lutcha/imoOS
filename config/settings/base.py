@@ -256,7 +256,19 @@ REST_FRAMEWORK = {
 # =============================================================
 # Cache (Redis)
 # =============================================================
-_redis_url = config('REDIS_URL', default='redis://localhost:6379/0')
+import re as _re
+
+
+def _strip_ssl_cert_reqs(url: str) -> str:
+    """Remove ssl_cert_reqs from URL — DO App Platform injects it but
+    redis-py 4+ rejects the string form. SSL is handled via CONNECTION_POOL_KWARGS."""
+    url = _re.sub(r'[?&]ssl_cert_reqs=[^&]*', '', url)
+    # Fix leftover ?& or trailing ?
+    url = _re.sub(r'\?&', '?', url).rstrip('?&')
+    return url
+
+
+_redis_url = _strip_ssl_cert_reqs(config('REDIS_URL', default='redis://localhost:6379/0'))
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
