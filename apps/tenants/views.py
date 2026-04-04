@@ -534,6 +534,129 @@ class SuperAdminTenantViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 # ---------------------------------------------------------------------------
+# Super-admin: Registration approval queue (Sprint 9 - P05)
+# ---------------------------------------------------------------------------
+
+class SuperAdminRegistrationViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Super-admin read + action endpoints for TenantRegistration.
+    Requires is_staff=True. Operates on public schema.
+
+    Endpoints:
+    - GET  /api/v1/superadmin/registrations/        — list (filter by status)
+    - GET  /api/v1/superadmin/registrations/{id}/   — detail
+    - POST /api/v1/superadmin/registrations/{id}/approve/ — approve → trigger provisioning
+    - POST /api/v1/superadmin/registrations/{id}/reject/  — reject with reason
+    """
+    from .models import TenantRegistration as _Reg  # forward ref resolved at class body level
+
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['company_name', 'contact_email', 'subdomain']
+    ordering_fields = ['created_at', 'status', 'plan']
+    ordering = ['-created_at']
+
+    def get_queryset(self):
+        from .models import TenantRegistration
+        qs = TenantRegistration.objects.all()
+        status_filter = self.request.query_params.get('status')
+        if status_filter:
+            qs = qs.filter(status=status_filter)
+        return qs.order_by('-created_at')
+
+    def get_serializer_class(self):
+        from rest_framework import serializers as _s
+        from .models import TenantRegistration
+
+        class RegistrationAdminSerializer(_s.ModelSerializer):
+            status_display = _s.CharField(source='get_status_display', read_only=True)
+            plan_display = _s.CharField(source='get_plan_display', read_only=True)
+            is_token_expired = _s.BooleanField(read_only=True)
+
+            class Meta:
+                model = TenantRegistration
+                fields = [
+                    'id', 'company_name', 'subdomain', 'plan', 'plan_display',
+                    'contact_email', 'contact_name', 'contact_phone',
+                    'country', 'status', 'status_display', 'error_message',
+                    'is_token_expired', 'created_at', 'provisioned_at',
+                ]
+                read_only_fields = fields
+
+        return RegistrationAdminSerializer
+
+    @action(detail=True, methods=['post'])
+    def approve(self, request, pk=None):
+        """
+        Approve a registration and trigger tenant provisioning.
+        Works on PENDING (bypasses email verification) or VERIFIED status.
+        """
+        from .models import TenantRegistration
+        from .tasks import provision_tenant as provision_task
+
+        reg = self.get_object()
+
+        if reg.status == TenantRegistration.STATUS_ACTIVE:
+            return Response({'detail': 'Registo já está activo.'}, status=status.HTTP_200_OK)
+        if reg.status == TenantRegistration.STATUS_PROVISIONING:
+            return Response({'detail': 'Provisionamento já em curso.'}, status=status.HTTP_200_OK)
+        if reg.status == TenantRegistration.STATUS_REJECTED:
+            return Response(
+                {'detail': 'Registo foi rejeitado. Crie um novo.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Force verified (admin bypass of email verification)
+        reg.status = TenantRegistration.STATUS_VERIFIED
+        reg.error_message = ''
+        reg.save(update_fields=['status', 'error_message'])
+
+        # Trigger async provisioning
+        provision_task.delay(registration_id=str(reg.id))
+
+        logger.info(
+            'Registration %s approved by staff %s — provisioning queued',
+            reg.subdomain, request.user.email,
+        )
+        return Response({
+            'status': 'approved',
+            'registration_id': str(reg.id),
+            'detail': f'Provisionamento de "{reg.company_name}" iniciado.',
+        })
+
+    @action(detail=True, methods=['post'])
+    def reject(self, request, pk=None):
+        """
+        Reject a registration with an optional reason.
+        Body: { reason: str (optional) }
+        """
+        from .models import TenantRegistration
+
+        reg = self.get_object()
+
+        if reg.status in (TenantRegistration.STATUS_ACTIVE, TenantRegistration.STATUS_PROVISIONING):
+            return Response(
+                {'detail': 'Não é possível rejeitar um registo activo ou em provisionamento.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        reason = request.data.get('reason', 'Rejeitado pelo administrador da plataforma.')
+        reg.status = TenantRegistration.STATUS_REJECTED
+        reg.error_message = reason
+        reg.save(update_fields=['status', 'error_message'])
+
+        logger.info(
+            'Registration %s rejected by staff %s: %s',
+            reg.subdomain, request.user.email, reason,
+        )
+        return Response({
+            'status': 'rejected',
+            'registration_id': str(reg.id),
+            'reason': reason,
+        })
+
+
+# ---------------------------------------------------------------------------
 # Platform-level admin: manage all tenants
 # ---------------------------------------------------------------------------
 
