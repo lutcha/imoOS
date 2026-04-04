@@ -2,16 +2,24 @@
 
 /**
  * Tenant Detail — Super Admin Backoffice
- * Sprint 9 - P03/P04
- * Tabs: Visão Geral | Utilizadores | Configurações
+ * Sprint 9 - P03/P04/P06
+ * Tabs: Visão Geral | Utilizadores | Configurações | Histórico
  */
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Loader2, Copy, Check, UserX, LogIn, Plus } from "lucide-react";
+import { ArrowLeft, Loader2, Copy, Check, UserX, LogIn, Plus, TrendingUp, TrendingDown, Shield, AlertCircle, Clock } from "lucide-react";
 import { superadminFetch } from "@/lib/superadmin-client";
 
 // ---- Types ----
+
+interface TenantSettings {
+  max_projects: number;
+  max_units: number;
+  max_users: number;
+  logo_url: string;
+  primary_color: string;
+}
 
 interface TenantDetail {
   id: string;
@@ -29,6 +37,18 @@ interface TenantDetail {
   unit_count: number;
   created_at: string;
   updated_at: string;
+  settings: TenantSettings | null;
+}
+
+interface PlanEvent {
+  id: string;
+  event_type: string;
+  event_label: string;
+  from_plan: string;
+  to_plan: string;
+  metadata: Record<string, unknown>;
+  created_by: string | null;
+  created_at: string;
 }
 
 interface TenantUser {
@@ -49,7 +69,7 @@ interface ImpersonateResult {
   domain: string | null;
 }
 
-type Tab = "overview" | "users" | "settings";
+type Tab = "overview" | "users" | "settings" | "history";
 
 const PLAN_BADGE: Record<string, string> = {
   starter: "bg-green-100 text-green-800",
@@ -196,6 +216,7 @@ export default function TenantDetailPage() {
               { id: "overview", label: "Visão Geral" },
               { id: "users", label: `Utilizadores${users.length > 0 ? ` (${users.length})` : ""}` },
               { id: "settings", label: "Configurações" },
+              { id: "history", label: "Histórico" },
             ] as const
           ).map(({ id: tabId, label }) => (
             <button
@@ -224,7 +245,13 @@ export default function TenantDetailPage() {
           onUsersChange={setUsers}
         />
       )}
-      {tab === "settings" && <SettingsTab tenant={tenant} />}
+      {tab === "settings" && (
+        <SettingsTab
+          tenant={tenant}
+          onPlanChanged={loadTenant}
+        />
+      )}
+      {tab === "history" && <HistoryTab tenantId={id} />}
     </div>
   );
 }
@@ -577,18 +604,276 @@ function UsersTab({
 
 // ---- Tab: Configurações ----
 
-function SettingsTab({ tenant }: { tenant: TenantDetail }) {
+const PLAN_ORDER = ["starter", "pro", "enterprise"] as const;
+type PlanKey = (typeof PLAN_ORDER)[number];
+
+const PLAN_LABELS: Record<PlanKey, string> = {
+  starter: "Starter",
+  pro: "Pro",
+  enterprise: "Enterprise",
+};
+
+const PLAN_DEFAULTS: Record<PlanKey, { max_projects: number; max_units: number; max_users: number }> = {
+  starter:    { max_projects: 3,    max_units: 150,   max_users: 10 },
+  pro:        { max_projects: 20,   max_units: 1000,  max_users: 50 },
+  enterprise: { max_projects: 9999, max_units: 99999, max_users: 9999 },
+};
+
+function SettingsTab({
+  tenant,
+  onPlanChanged,
+}: {
+  tenant: TenantDetail;
+  onPlanChanged: () => void;
+}) {
+  const [planLoading, setPlanLoading] = useState<PlanKey | null>(null);
+  const [planMsg, setPlanMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  const [limits, setLimits] = useState({
+    max_projects: tenant.settings?.max_projects ?? PLAN_DEFAULTS[tenant.plan as PlanKey]?.max_projects ?? 5,
+    max_units: tenant.settings?.max_units ?? PLAN_DEFAULTS[tenant.plan as PlanKey]?.max_units ?? 500,
+    max_users: tenant.settings?.max_users ?? PLAN_DEFAULTS[tenant.plan as PlanKey]?.max_users ?? 20,
+  });
+  const [limitsLoading, setLimitsLoading] = useState(false);
+  const [limitsMsg, setLimitsMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  async function handleChangePlan(newPlan: PlanKey) {
+    if (newPlan === tenant.plan) return;
+    if (!confirm(`Mudar plano de "${PLAN_LABELS[tenant.plan as PlanKey]}" para "${PLAN_LABELS[newPlan]}"?`)) return;
+    setPlanLoading(newPlan);
+    setPlanMsg(null);
+    try {
+      const resp = await superadminFetch(`/superadmin/tenants/${tenant.id}/change-plan/`, {
+        method: "POST",
+        body: JSON.stringify({ plan: newPlan }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.detail ?? data.plan?.[0] ?? "Erro");
+      setPlanMsg({ ok: true, text: `Plano alterado para ${PLAN_LABELS[newPlan]} com sucesso.` });
+      // Update limits form to new plan defaults
+      setLimits(PLAN_DEFAULTS[newPlan]);
+      onPlanChanged();
+    } catch (err) {
+      setPlanMsg({ ok: false, text: err instanceof Error ? err.message : "Erro" });
+    } finally {
+      setPlanLoading(null);
+    }
+  }
+
+  async function handleSaveLimits(e: React.FormEvent) {
+    e.preventDefault();
+    setLimitsLoading(true);
+    setLimitsMsg(null);
+    try {
+      const resp = await superadminFetch(`/superadmin/tenants/${tenant.id}/plan-limits/`, {
+        method: "PATCH",
+        body: JSON.stringify(limits),
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.detail ?? "Erro ao guardar limites");
+      setLimitsMsg({ ok: true, text: "Limites guardados." });
+    } catch (err) {
+      setLimitsMsg({ ok: false, text: err instanceof Error ? err.message : "Erro" });
+    } finally {
+      setLimitsLoading(false);
+    }
+  }
+
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5 max-w-lg">
-      <h2 className="text-sm font-semibold text-gray-700 mb-4">Configurações do Tenant</h2>
-      <p className="text-sm text-gray-500">
-        Gestão de planos e limites disponível na próxima sprint (P06).
-      </p>
-      <div className="mt-4 pt-4 border-t border-gray-100">
-        <p className="text-xs text-gray-400">
-          Tenant ID: <code className="font-mono">{tenant.id}</code>
+    <div className="space-y-6 max-w-lg">
+      {/* Plan selection */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <h2 className="text-sm font-semibold text-gray-700 mb-1">Plano</h2>
+        <p className="text-xs text-gray-400 mb-4">
+          Mudar o plano aplica os limites padrão correspondentes.
         </p>
+        <div className="grid grid-cols-3 gap-3">
+          {PLAN_ORDER.map((plan) => {
+            const isCurrent = tenant.plan === plan;
+            const defaults = PLAN_DEFAULTS[plan];
+            return (
+              <button
+                key={plan}
+                onClick={() => handleChangePlan(plan)}
+                disabled={!!planLoading || isCurrent}
+                className={`rounded-xl border-2 p-3 text-left transition disabled:cursor-not-allowed ${
+                  isCurrent
+                    ? "border-red-500 bg-red-50"
+                    : "border-gray-200 hover:border-gray-300 bg-white"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className={`text-sm font-semibold ${isCurrent ? "text-red-700" : "text-gray-800"}`}>
+                    {PLAN_LABELS[plan]}
+                  </span>
+                  {planLoading === plan && <Loader2 className="h-3.5 w-3.5 animate-spin text-gray-400" />}
+                  {isCurrent && <span className="text-xs text-red-600 font-medium">Actual</span>}
+                </div>
+                <div className="space-y-0.5">
+                  <p className="text-xs text-gray-500">{defaults.max_projects === 9999 ? "∞" : defaults.max_projects} projectos</p>
+                  <p className="text-xs text-gray-500">{defaults.max_units === 99999 ? "∞" : defaults.max_units} unidades</p>
+                  <p className="text-xs text-gray-500">{defaults.max_users === 9999 ? "∞" : defaults.max_users} utilizadores</p>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+        {planMsg && (
+          <p className={`mt-3 text-xs ${planMsg.ok ? "text-green-700" : "text-red-600"}`}>
+            {planMsg.text}
+          </p>
+        )}
       </div>
+
+      {/* Custom limits */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <h2 className="text-sm font-semibold text-gray-700 mb-1">Limites Personalizados</h2>
+        <p className="text-xs text-gray-400 mb-4">
+          Substituição individual dos limites do plano.
+        </p>
+        <form onSubmit={handleSaveLimits} className="space-y-3">
+          {(
+            [
+              { key: "max_projects", label: "Máx. Projectos" },
+              { key: "max_units",    label: "Máx. Unidades" },
+              { key: "max_users",    label: "Máx. Utilizadores" },
+            ] as const
+          ).map(({ key, label }) => (
+            <div key={key} className="flex items-center gap-3">
+              <label className="w-40 text-sm text-gray-600 shrink-0">{label}</label>
+              <input
+                type="number"
+                min={1}
+                max={999999}
+                value={limits[key]}
+                onChange={(e) => setLimits((l) => ({ ...l, [key]: parseInt(e.target.value, 10) || 1 }))}
+                className="w-28 rounded-lg border border-gray-300 px-3 py-1.5 text-sm outline-none focus:border-red-400"
+              />
+            </div>
+          ))}
+          {limitsMsg && (
+            <p className={`text-xs ${limitsMsg.ok ? "text-green-700" : "text-red-600"}`}>
+              {limitsMsg.text}
+            </p>
+          )}
+          <button
+            type="submit"
+            disabled={limitsLoading}
+            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-50"
+          >
+            {limitsLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+            Guardar Limites
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ---- Tab: Histórico ----
+
+const EVENT_ICONS: Record<string, React.ReactNode> = {
+  PLAN_UPGRADED:   <TrendingUp className="h-4 w-4 text-green-600" />,
+  PLAN_DOWNGRADED: <TrendingDown className="h-4 w-4 text-orange-500" />,
+  LIMIT_HIT:       <AlertCircle className="h-4 w-4 text-yellow-500" />,
+  TRIAL_STARTED:   <Clock className="h-4 w-4 text-blue-500" />,
+  TRIAL_ENDED:     <Clock className="h-4 w-4 text-gray-400" />,
+  IMPERSONATED:    <Shield className="h-4 w-4 text-purple-500" />,
+};
+
+const EVENT_LABELS: Record<string, string> = {
+  PLAN_UPGRADED:   "Plano Actualizado",
+  PLAN_DOWNGRADED: "Plano Rebaixado",
+  LIMIT_HIT:       "Limite Atingido",
+  TRIAL_STARTED:   "Trial Iniciado",
+  TRIAL_ENDED:     "Trial Terminado",
+  IMPERSONATED:    "Impersonation",
+};
+
+function HistoryTab({ tenantId }: { tenantId: string }) {
+  const [events, setEvents] = useState<PlanEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    superadminFetch(`/superadmin/tenants/${tenantId}/plan-events/`)
+      .then(async (resp) => {
+        if (!resp.ok) throw new Error("Erro ao carregar histórico");
+        return resp.json();
+      })
+      .then((data) => setEvents(Array.isArray(data) ? data : data.results ?? []))
+      .catch((err) => setError(err instanceof Error ? err.message : "Erro"))
+      .finally(() => setLoading(false));
+  }, [tenantId]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+        {error}
+      </div>
+    );
+  }
+
+  if (events.length === 0) {
+    return (
+      <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-sm text-gray-400">
+        Sem eventos de plano registados.
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 p-5">
+      <h2 className="text-sm font-semibold text-gray-700 mb-5">Histórico de Plano</h2>
+      <ol className="relative border-l border-gray-200 space-y-6 ml-2">
+        {events.map((ev) => (
+          <li key={ev.id} className="ml-6">
+            <span className="absolute -left-3 flex items-center justify-center w-6 h-6 bg-white border border-gray-200 rounded-full">
+              {EVENT_ICONS[ev.event_type] ?? <Clock className="h-3.5 w-3.5 text-gray-400" />}
+            </span>
+            <div>
+              <p className="text-sm font-medium text-gray-900">
+                {ev.event_label || EVENT_LABELS[ev.event_type] || ev.event_type}
+                {ev.from_plan && ev.to_plan && (
+                  <span className="ml-2 font-normal text-gray-500 text-xs">
+                    {ev.from_plan} → {ev.to_plan}
+                  </span>
+                )}
+              </p>
+              <div className="flex items-center gap-3 mt-0.5">
+                <time className="text-xs text-gray-400">
+                  {new Date(ev.created_at).toLocaleString("pt-PT", {
+                    day: "2-digit", month: "short", year: "numeric",
+                    hour: "2-digit", minute: "2-digit",
+                  })}
+                </time>
+                {ev.created_by && (
+                  <span className="text-xs text-gray-400">por {ev.created_by}</span>
+                )}
+              </div>
+              {ev.metadata && Object.keys(ev.metadata).length > 0 && (
+                <details className="mt-1">
+                  <summary className="text-xs text-gray-400 cursor-pointer hover:text-gray-600">
+                    Metadados
+                  </summary>
+                  <pre className="mt-1 text-xs bg-gray-50 rounded p-2 overflow-x-auto text-gray-600">
+                    {JSON.stringify(ev.metadata, null, 2)}
+                  </pre>
+                </details>
+              )}
+            </div>
+          </li>
+        ))}
+      </ol>
     </div>
   );
 }

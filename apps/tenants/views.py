@@ -45,13 +45,14 @@ class TenantAdminSerializer(serializers.ModelSerializer):
     user_count = serializers.SerializerMethodField()
     project_count = serializers.SerializerMethodField()
     unit_count = serializers.SerializerMethodField()
+    settings = TenantSettingsWritableSerializer(read_only=True)
 
     class Meta:
         model = Client
         fields = [
             'id', 'name', 'slug', 'schema_name', 'plan', 'is_active',
             'country', 'currency', 'timezone', 'created_at', 'updated_at',
-            'domain', 'user_count', 'project_count', 'unit_count',
+            'domain', 'user_count', 'project_count', 'unit_count', 'settings',
         ]
         read_only_fields = fields
 
@@ -390,11 +391,10 @@ class SuperAdminTenantViewSet(viewsets.ReadOnlyModelViewSet):
         # Audit — immutable log
         PlanEvent.objects.create(
             tenant=tenant,
-            event_type=PlanEvent.EVENT_LIMIT_HIT,  # closest available type; P06 adds IMPERSONATED
+            event_type=PlanEvent.EVENT_IMPERSONATED,
             from_plan=tenant.plan,
             to_plan=tenant.plan,
             metadata={
-                'action': 'impersonated',
                 'target_user': str(user_id),
                 'target_email': target_user.email,
                 'by': request.user.email,
@@ -410,6 +410,127 @@ class SuperAdminTenantViewSet(viewsets.ReadOnlyModelViewSet):
             'email': target_user.email,
             'domain': domain_obj.domain if domain_obj else None,
         })
+
+    # ------------------------------------------------------------------
+    # Plan management (Sprint 9 - P06)
+    # ------------------------------------------------------------------
+
+    # Canonical limits applied when a plan is changed.
+    # Override individual limits via the plan_limits action.
+    _PLAN_DEFAULT_LIMITS = {
+        'starter':    {'max_projects': 3,    'max_units': 150,   'max_users': 10},
+        'pro':        {'max_projects': 20,   'max_units': 1000,  'max_users': 50},
+        'enterprise': {'max_projects': 9999, 'max_units': 99999, 'max_users': 9999},
+    }
+
+    @action(detail=True, methods=['post'], url_path='change-plan')
+    def change_plan(self, request, pk=None):
+        """
+        POST /api/v1/superadmin/tenants/{id}/change-plan/
+        Body: { plan: "starter"|"pro"|"enterprise" }
+        Updates Client.plan + TenantSettings limits and logs a PlanEvent.
+        """
+        new_plan = request.data.get('plan', '')
+        if new_plan not in self._PLAN_DEFAULT_LIMITS:
+            return Response(
+                {'plan': [f'Must be one of: {", ".join(self._PLAN_DEFAULT_LIMITS)}.']},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        tenant = self.get_object()
+        old_plan = tenant.plan
+
+        if old_plan == new_plan:
+            return Response({'detail': 'Tenant is already on this plan.'}, status=status.HTTP_200_OK)
+
+        event_type = (
+            PlanEvent.EVENT_PLAN_UPGRADED
+            if list(self._PLAN_DEFAULT_LIMITS).index(new_plan)
+            > list(self._PLAN_DEFAULT_LIMITS).index(old_plan)
+            else PlanEvent.EVENT_PLAN_DOWNGRADED
+        )
+
+        # Update plan
+        tenant.plan = new_plan
+        tenant.save(update_fields=['plan', 'updated_at'])
+
+        # Update limits to plan defaults
+        limits = self._PLAN_DEFAULT_LIMITS[new_plan]
+        settings_obj, _ = TenantSettings.objects.get_or_create(tenant=tenant)
+        for field, val in limits.items():
+            setattr(settings_obj, field, val)
+        settings_obj.save(update_fields=list(limits.keys()))
+
+        # Immutable audit log
+        PlanEvent.objects.create(
+            tenant=tenant,
+            event_type=event_type,
+            from_plan=old_plan,
+            to_plan=new_plan,
+            metadata={'by': request.user.email, 'limits_applied': limits},
+            created_by=request.user,
+        )
+
+        logger.info(
+            'Plan changed %s → %s for tenant %s by %s',
+            old_plan, new_plan, tenant.schema_name, request.user.email,
+        )
+        return Response({
+            'status': 'updated',
+            'tenant_id': str(tenant.id),
+            'from_plan': old_plan,
+            'to_plan': new_plan,
+            'limits': limits,
+        })
+
+    @action(detail=True, methods=['patch'], url_path='plan-limits')
+    def plan_limits(self, request, pk=None):
+        """
+        PATCH /api/v1/superadmin/tenants/{id}/plan-limits/
+        Override individual limits independently of plan.
+        Body (all optional): { max_projects, max_units, max_users }
+        """
+        tenant = self.get_object()
+        settings_obj, _ = TenantSettings.objects.get_or_create(tenant=tenant)
+        serializer = TenantSettingsWritableSerializer(
+            settings_obj, data=request.data, partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        logger.info(
+            'Plan limits overridden for tenant %s by %s: %s',
+            tenant.schema_name, request.user.email, request.data,
+        )
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get'], url_path='plan-events')
+    def plan_events(self, request, pk=None):
+        """
+        GET /api/v1/superadmin/tenants/{id}/plan-events/
+        List plan lifecycle events for a tenant (newest first, max 100).
+        """
+        tenant = self.get_object()
+        events = (
+            PlanEvent.objects
+            .filter(tenant=tenant)
+            .select_related('created_by')
+            .order_by('-created_at')[:100]
+        )
+        data = [
+            {
+                'id': str(e.id),
+                'event_type': e.event_type,
+                'event_label': e.get_event_type_display(),
+                'from_plan': e.from_plan,
+                'to_plan': e.to_plan,
+                'metadata': e.metadata,
+                'created_by': e.created_by.email if e.created_by else None,
+                'created_at': e.created_at.isoformat(),
+            }
+            for e in events
+        ]
+        return Response({'results': data, 'count': len(data)})
 
 
 # ---------------------------------------------------------------------------

@@ -102,6 +102,7 @@ class PlanEvent(models.Model):
     EVENT_LIMIT_HIT = 'LIMIT_HIT'
     EVENT_TRIAL_STARTED = 'TRIAL_STARTED'
     EVENT_TRIAL_ENDED = 'TRIAL_ENDED'
+    EVENT_IMPERSONATED = 'IMPERSONATED'
 
     EVENT_CHOICES = [
         (EVENT_PLAN_UPGRADED, 'Plano Actualizado'),
@@ -109,6 +110,7 @@ class PlanEvent(models.Model):
         (EVENT_LIMIT_HIT, 'Limite Atingido'),
         (EVENT_TRIAL_STARTED, 'Trial Iniciado'),
         (EVENT_TRIAL_ENDED, 'Trial Terminado'),
+        (EVENT_IMPERSONATED, 'Impersonation'),
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
