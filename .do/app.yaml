@@ -31,7 +31,7 @@ services:
     instance_size_slug: professional-xs
 
     routes:
-      - path: /
+      - path: /api/v1
     health_check:
       http_path: /api/v1/health/
       initial_delay_seconds: 60
@@ -99,14 +99,12 @@ services:
     instance_size_slug: professional-xs
     http_port: 3000
     routes:
-      - path: /app
+      - path: /
     envs:
       - key: NEXT_PUBLIC_API_URL
         value: https://proptech.cv
       - key: NEXT_PUBLIC_TENANT_DOMAIN
         value: demo.proptech.cv
-      - key: NEXT_PUBLIC_BASE_PATH
-        value: /app
       - key: API_URL
         value: https://proptech.cv
       - key: TENANT_DOMAIN
