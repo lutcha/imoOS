@@ -193,7 +193,7 @@ jobs:
       branch: develop
     source_dir: /
     dockerfile_path: docker/Dockerfile.staging
-    run_command: 'bash -c ''python manage.py fix_db_permissions && python manage.py migrate_schemas --shared && python manage.py migrate_schemas && python manage.py ensure_public_tenant && python manage.py ensure_demo_tenant --schema demo_promotora --name "Demo Promotora" --domain demo.proptech.cv --plan pro'''
+    run_command: 'bash -c ''psql "$DATABASE_URL" -c "GRANT CREATE ON DATABASE \"$DB_NAME\" TO \"$DB_USER\";" || true && python manage.py migrate_schemas --shared && python manage.py migrate_schemas && python manage.py ensure_public_tenant && (python manage.py ensure_demo_tenant --schema demo_promotora --name "Demo Promotora" --domain demo.proptech.cv --plan pro || echo "WARNING: Demo tenant creation failed. Run manually later.")'''
     envs:
       - key: DJANGO_SETTINGS_MODULE
         value: config.settings.staging
@@ -221,6 +221,8 @@ jobs:
         value: ${APP_DOMAIN}
       - key: REDIS_URL
         value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
+      - key: DATABASE_URL
+        value: ${db.DATABASE_URL}
 
 # ------------------------------------------------------------------
 # Managed Databases
