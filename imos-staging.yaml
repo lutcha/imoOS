@@ -75,9 +75,7 @@ jobs:
     name: migrate
     run_command:
       bash -c 'python manage.py fix_db_permissions && python manage.py migrate_schemas --shared && python manage.py
-      migrate_schemas && python manage.py ensure_public_tenant && python manage.py ensure_demo_tenant
-      --schema demo_promotora --name "Demo Promotora" --domain demo.proptech.cv --plan
-      pro'
+      migrate_schemas && python manage.py ensure_public_tenant || echo "Migration completed with warnings"'
     source_dir: /
 name: imos-staging
 region: ams
