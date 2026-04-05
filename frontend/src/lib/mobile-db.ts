@@ -164,8 +164,19 @@ class MobileDatabase {
   async getUnsyncedPhotos(): Promise<PhotoMetadata[]> {
     const store = this.getStore(STORES.photos);
     return new Promise((resolve, reject) => {
-      const request = store.index('synced').getAll(false);
-      request.onsuccess = () => resolve(request.result as PhotoMetadata[]);
+      const request = store.index('synced').openCursor();
+      const results: PhotoMetadata[] = [];
+      request.onsuccess = () => {
+        const cursor = request.result;
+        if (cursor) {
+          if (cursor.value.synced === false) {
+            results.push(cursor.value as PhotoMetadata);
+          }
+          cursor.continue();
+        } else {
+          resolve(results);
+        }
+      };
       request.onerror = () => reject(request.error);
     });
   }
@@ -201,8 +212,19 @@ class MobileDatabase {
   async getUnsyncedVoiceNotes(): Promise<VoiceNote[]> {
     const store = this.getStore(STORES.voiceNotes);
     return new Promise((resolve, reject) => {
-      const request = store.index('synced').getAll(false);
-      request.onsuccess = () => resolve(request.result as VoiceNote[]);
+      const request = store.index('synced').openCursor();
+      const results: VoiceNote[] = [];
+      request.onsuccess = () => {
+        const cursor = request.result;
+        if (cursor) {
+          if (cursor.value.synced === false) {
+            results.push(cursor.value as VoiceNote);
+          }
+          cursor.continue();
+        } else {
+          resolve(results);
+        }
+      };
       request.onerror = () => reject(request.error);
     });
   }
