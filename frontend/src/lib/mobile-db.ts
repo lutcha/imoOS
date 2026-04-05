@@ -248,7 +248,7 @@ class MobileDatabase {
     });
   }
 
-  async deleteAction(id: number): Promise<void> {
+  async deleteAction(id: number | string): Promise<void> {
     const store = this.getStore(STORES.actions, 'readwrite');
     return new Promise((resolve, reject) => {
       const request = store.delete(id);
@@ -262,7 +262,7 @@ class MobileDatabase {
     const syncedActions = actions.filter(a => a.retries >= a.maxRetries || !a.error);
     
     for (const action of syncedActions) {
-      await this.deleteAction(action.id as number);
+      await this.deleteAction(action.id);
     }
   }
 
