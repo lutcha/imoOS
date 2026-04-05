@@ -148,9 +148,9 @@ workers:
       - key: DB_PORT
         value: ${db.PORT}
       - key: REDIS_URL
-        value: ${redis.DATABASE_URL}
+        value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
       - key: CELERY_BROKER_URL
-        value: ${redis.DATABASE_URL}
+        value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
       - key: CELERY_RESULT_BACKEND
         value: django-db
 
@@ -182,9 +182,9 @@ workers:
       - key: DB_PORT
         value: ${db.PORT}
       - key: REDIS_URL
-        value: ${redis.DATABASE_URL}
+        value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
       - key: CELERY_BROKER_URL
-        value: ${redis.DATABASE_URL}
+        value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
       - key: CELERY_RESULT_BACKEND
         value: django-db
 
@@ -199,7 +199,7 @@ jobs:
       branch: develop
     source_dir: /
     dockerfile_path: docker/Dockerfile.staging
-    run_command: 'bash -c ''python manage.py grant_schema_create || true && python manage.py migrate_schemas --shared && python manage.py migrate_schemas && python manage.py ensure_public_tenant && (python manage.py ensure_demo_tenant --schema demo_promotora --name "Demo Promotora" --domain demo.proptech.cv --plan pro || echo "WARNING: Demo tenant creation failed.")'''
+    run_command: 'bash -c ''python manage.py grant_schema_create || true && python manage.py migrate_schemas --shared && python manage.py migrate_schemas && python manage.py ensure_public_tenant && (python manage.py ensure_demo_tenant --schema demo_promotora --name "Demo Promotora" --domain demo.proptech.cv --plan pro || echo "WARNING: Demo tenant creation failed.") && python manage.py create_platform_admin'''
     envs:
       - key: DJANGO_SETTINGS_MODULE
         value: config.settings.staging
@@ -229,6 +229,11 @@ jobs:
         value: ${redis.DATABASE_URL}
       - key: DATABASE_URL
         value: ${db.DATABASE_URL}
+      - key: PLATFORM_ADMIN_EMAIL
+        value: ${PLATFORM_ADMIN_EMAIL}
+      - key: PLATFORM_ADMIN_PASSWORD
+        value: ${PLATFORM_ADMIN_PASSWORD}
+        type: SECRET
 
 # ------------------------------------------------------------------
 # Managed Databases
