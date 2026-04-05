@@ -17,6 +17,9 @@ urlpatterns = [
     path('api/v1/health/', health_check, name='health-check'),
     path('api/v1/health/detailed/', DetailedHealthCheckView.as_view(), name='health-detailed'),
     
+    # Setup endpoints (for initial configuration)
+    path('api/v1/', include('apps.core.urls')),
+    
     # Tenant Registration (Sprint 7 - Prompt 03) - Public endpoints
     path('api/v1/register/', TenantRegistrationCreateView.as_view(), name='tenant-register'),
     path('api/v1/register/verify/', TenantRegistrationVerifyView.as_view(), name='tenant-register-verify'),

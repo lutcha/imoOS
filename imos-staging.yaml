@@ -81,6 +81,10 @@ jobs:
         scope: RUN_AND_BUILD_TIME
         type: SECRET
         value: EV[1:placeholder:webhook_secret_placeholder]
+      - key: SETUP_SECRET_TOKEN
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+        value: EV[1:placeholder:imos-setup-2026]
     github:
       branch: develop
       repo: lutcha/imoOS
