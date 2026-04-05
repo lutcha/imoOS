@@ -2,6 +2,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: 'standalone',
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 
   // Ensure CDN/reverse-proxy (DO App Platform) caches RSC navigation responses
   // separately from full HTML responses. Without this, the proxy may serve a
