@@ -92,7 +92,7 @@ export function useOfflineSync(): UseOfflineSyncReturn {
       for (const action of actions) {
         try {
           await processAction(action);
-          await mobileDB.deleteAction(action.id as number);
+          await mobileDB.deleteAction(action.id as unknown as number);
         } catch (err) {
           console.error('Failed to process action:', action, err);
           // Increment retry count
