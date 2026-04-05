@@ -1,194 +1,196 @@
 """
-Celery tasks for the construction app.
+Construction Celery tasks.
 
-Rules (CLAUDE.md):
-- Always receive tenant_schema as a string argument, never ORM objects
-- Use tenant_context() to switch schema before any DB operations
-- Tasks must be idempotent: safe to re-run on the same data
-- S3 client is instantiated inside the task to avoid stale credentials
+Tarefas agendadas:
+- daily_reminders: Lembretes diários de tasks (8h)
+- check_overdue: Verificar tasks atrasadas (9h)
+- recalculate_cpm: Recalcular CPM diariamente
+- evm_snapshot: Snapshot diário EVM
 """
-import io
 import logging
 
-import boto3
 from celery import shared_task
-from celery.utils.log import get_task_logger
-from django.conf import settings
-from django_tenants.utils import get_tenant_model, tenant_context
+from django.utils import timezone
 
-logger = get_task_logger(__name__)
+from .models import ConstructionTask
+from .services import CPMCalculator, EVMCalculator
+from .signals import send_daily_reminders, check_overdue_tasks
 
-
-def _get_tenant(tenant_schema: str):
-    TenantModel = get_tenant_model()
-    return TenantModel.objects.get(schema_name=tenant_schema)
+logger = logging.getLogger(__name__)
 
 
-def _make_s3_client():
+@shared_task(bind=True, max_retries=3)
+def send_daily_task_reminders(self):
     """
-    Build a boto3 S3 client from Django settings.
-
-    Created inside the task (never at module level) so that credentials
-    loaded from environment variables are always fresh.
+    Enviar lembretes diários para tasks do dia.
+    
+    Schedule: Todo dia às 8h (configurar no Django Admin > Periodic Tasks)
     """
-    return boto3.client(
-        's3',
-        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-        endpoint_url=getattr(settings, 'AWS_S3_ENDPOINT_URL', None),
-        region_name='us-east-1',
-    )
-
-
-@shared_task(
-    bind=True,
-    max_retries=3,
-    name='construction.process_construction_photo',
-)
-def process_construction_photo(
-    self,
-    *,
-    tenant_schema: str,
-    photo_id: str,
-) -> dict:
-    """
-    Download the original photo from S3, generate an 800x600 JPEG thumbnail,
-    upload it back to S3, and persist the thumbnail S3 key on the
-    ConstructionPhoto record.
-
-    Arguments:
-        tenant_schema: schema_name of the target tenant (string, not ORM object)
-        photo_id:      UUID string of the ConstructionPhoto record
-
-    Returns one of:
-        {'processed': True, 'photo_id': str, 'thumb_key': str}
-        {'skipped': 'not_found'}
-        {'skipped': 'already_processed'}
-        {'error': 'pillow_not_installed'}
-
-    Retry policy: exponential back-off — 1 min, 2 min, 4 min — on any
-    boto3 or Pillow error.
-    """
-    # ------------------------------------------------------------------
-    # Guard: Pillow must be installed
-    # ------------------------------------------------------------------
+    logger.info('Iniciando envio de lembretes diários...')
+    
     try:
-        from PIL import Image
-    except ImportError:
-        logger.error(
-            'process_construction_photo: Pillow is not installed. '
-            'Add Pillow to requirements/base.txt.'
-        )
-        return {'error': 'pillow_not_installed'}
-
-    # ------------------------------------------------------------------
-    # 1. Resolve tenant from the PUBLIC schema (no tenant_context needed)
-    # ------------------------------------------------------------------
-    try:
-        tenant = _get_tenant(tenant_schema)
+        send_daily_reminders()
+        logger.info('Lembretes diários enviados com sucesso.')
+        return {'status': 'success', 'message': 'Lembretes enviados'}
     except Exception as exc:
-        logger.error(
-            'process_construction_photo: tenant %s not found: %s',
-            tenant_schema,
-            exc,
-        )
-        countdown = 60 * (2 ** self.request.retries)
-        raise self.retry(exc=exc, countdown=countdown)
+        logger.error(f'Erro ao enviar lembretes: {exc}')
+        raise self.retry(exc=exc, countdown=300)
 
-    # ------------------------------------------------------------------
-    # 2. All business logic runs inside the tenant schema
-    # ------------------------------------------------------------------
-    with tenant_context(tenant):
-        from apps.construction.models import ConstructionPhoto
 
-        # 2a. Fetch the photo record
-        try:
-            photo = ConstructionPhoto.objects.get(id=photo_id)
-        except ConstructionPhoto.DoesNotExist:
-            logger.warning(
-                'process_construction_photo: photo %s not found in tenant %s',
-                photo_id,
-                tenant_schema,
-            )
-            return {'skipped': 'not_found'}
+@shared_task(bind=True, max_retries=3)
+def check_overdue_tasks_task(self):
+    """
+    Verificar tasks atrasadas e notificar.
+    
+    Schedule: Todo dia às 9h
+    """
+    logger.info('Verificando tasks atrasadas...')
+    
+    try:
+        check_overdue_tasks()
+        logger.info('Verificação de atrasos concluída.')
+        return {'status': 'success', 'message': 'Atrasos verificados'}
+    except Exception as exc:
+        logger.error(f'Erro ao verificar atrasos: {exc}')
+        raise self.retry(exc=exc, countdown=300)
 
-        # 2b. Idempotency check — thumbnail already generated
-        if photo.thumbnail_s3_key:
-            logger.info(
-                'process_construction_photo: photo %s already processed (thumb_key=%s), skipping',
-                photo_id,
-                photo.thumbnail_s3_key,
-            )
-            return {'skipped': 'already_processed'}
 
-        try:
-            s3 = _make_s3_client()
+@shared_task
+def recalculate_project_cpm(project_id: str):
+    """
+    Recalcular CPM para um projeto.
+    
+    Chamado automaticamente quando:
+    - Tasks são criadas/alteradas
+    - Dependências são alteradas
+    """
+    logger.info(f'Recalculando CPM para projeto {project_id}...')
+    
+    try:
+        calculator = CPMCalculator(project_id)
+        stats = calculator.recalculate_project()
+        
+        logger.info(f'CPM recalculado: {stats}')
+        return {
+            'status': 'success',
+            'project_id': project_id,
+            'stats': stats
+        }
+    except Exception as exc:
+        logger.error(f'Erro ao recalcular CPM: {exc}')
+        return {
+            'status': 'error',
+            'project_id': project_id,
+            'error': str(exc)
+        }
 
-            # 2c. Download original from S3
-            logger.info(
-                'process_construction_photo: downloading s3://%s/%s for photo %s',
-                settings.AWS_STORAGE_BUCKET_NAME,
-                photo.s3_key,
-                photo_id,
-            )
-            response = s3.get_object(
-                Bucket=settings.AWS_STORAGE_BUCKET_NAME,
-                Key=photo.s3_key,
-            )
-            original_bytes = response['Body'].read()
 
-            # 2d. Generate thumbnail with Pillow (800x600, JPEG, quality=85)
-            img = Image.open(io.BytesIO(original_bytes))
-            img.thumbnail((800, 600), Image.LANCZOS)
-            if img.mode in ('RGBA', 'P'):
-                img = img.convert('RGB')
-            thumb_buffer = io.BytesIO()
-            img.save(thumb_buffer, format='JPEG', quality=85, optimize=True)
-            thumb_bytes = thumb_buffer.getvalue()
+@shared_task
+def generate_evm_snapshot(project_id: str):
+    """
+    Gerar snapshot EVM diário para um projeto.
+    
+    Schedule: Todo dia às 18h (fim do dia de trabalho)
+    """
+    logger.info(f'Gerando snapshot EVM para projeto {project_id}...')
+    
+    try:
+        calculator = EVMCalculator(project_id)
+        data = calculator.calculate(as_of_date=timezone.now().date(), save_snapshot=True)
+        
+        logger.info(f'Snapshot EVM gerado: SPI={data["spi"]}, CPI={data["cpi"]}')
+        return {
+            'status': 'success',
+            'project_id': project_id,
+            'spi': float(data['spi']),
+            'cpi': float(data['cpi'])
+        }
+    except Exception as exc:
+        logger.error(f'Erro ao gerar snapshot EVM: {exc}')
+        return {
+            'status': 'error',
+            'project_id': project_id,
+            'error': str(exc)
+        }
 
-            # 2e. Upload thumbnail to S3
-            thumb_key = f'{photo.s3_key}_thumb.jpg'
-            logger.info(
-                'process_construction_photo: uploading thumbnail to s3://%s/%s',
-                settings.AWS_STORAGE_BUCKET_NAME,
-                thumb_key,
-            )
-            s3.put_object(
-                Bucket=settings.AWS_STORAGE_BUCKET_NAME,
-                Key=thumb_key,
-                Body=thumb_bytes,
-                ContentType='image/jpeg',
-                ServerSideEncryption='AES256',
-            )
 
-            # 2f. Persist the thumbnail key — only the single field is updated
-            #     to keep the write narrow and avoid race conditions.
-            photo.thumbnail_s3_key = thumb_key
-            photo.save(update_fields=['thumbnail_s3_key'])
-
-        except Exception as exc:
-            countdown = 60 * (2 ** self.request.retries)
-            logger.error(
-                'process_construction_photo: error processing photo %s in tenant %s '
-                '(attempt %d/%d, retrying in %ds): %s',
-                photo_id,
-                tenant_schema,
-                self.request.retries + 1,
-                self.max_retries + 1,
-                countdown,
-                exc,
-                exc_info=True,
-            )
-            raise self.retry(exc=exc, countdown=countdown)
-
-    logger.info(
-        'process_construction_photo: tenant=%s photo_id=%s thumb_key=%s',
-        tenant_schema,
-        photo_id,
-        thumb_key,
-    )
+@shared_task
+def generate_all_evm_snapshots():
+    """
+    Gerar snapshots EVM para todos os projetos ativos.
+    
+    Schedule: Todo dia às 18h
+    """
+    from apps.projects.models import Project
+    
+    active_projects = Project.objects.filter(
+        status=Project.STATUS_CONSTRUCTION
+    ).values_list('id', flat=True)
+    
+    results = []
+    for project_id in active_projects:
+        result = generate_evm_snapshot.delay(str(project_id))
+        results.append(str(project_id))
+    
+    logger.info(f'Snapshots EVM agendados para {len(results)} projetos')
     return {
-        'processed': True,
-        'photo_id': photo_id,
-        'thumb_key': thumb_key,
+        'status': 'success',
+        'projects': results
     }
+
+
+@shared_task
+def update_phase_progress(phase_id: str):
+    """
+    Atualizar progresso agregado de uma fase.
+    
+    Chamado automaticamente quando tasks são alteradas.
+    """
+    from .models import ConstructionPhase
+    
+    try:
+        phase = ConstructionPhase.objects.get(id=phase_id)
+        phase.recalculate_progress()
+        
+        logger.info(f'Progresso da fase {phase.name} atualizado: {phase.progress_percent}%')
+        return {
+            'status': 'success',
+            'phase_id': phase_id,
+            'progress': float(phase.progress_percent)
+        }
+    except ConstructionPhase.DoesNotExist:
+        return {
+            'status': 'error',
+            'phase_id': phase_id,
+            'error': 'Fase não encontrada'
+        }
+    except Exception as exc:
+        logger.error(f'Erro ao atualizar progresso da fase: {exc}')
+        return {
+            'status': 'error',
+            'phase_id': phase_id,
+            'error': str(exc)
+        }
+
+
+@shared_task
+def cleanup_old_notifications(days: int = 30):
+    """
+    Limpar flags de notificação antigas para permitir reenvio.
+    
+    Schedule: Mensalmente
+    """
+    cutoff_date = timezone.now() - timezone.timedelta(days=days)
+    
+    # Resetar reminder_sent para tasks pendentes
+    updated = ConstructionTask.objects.filter(
+        reminder_sent=True,
+        updated_at__lt=cutoff_date,
+        status__in=[
+            ConstructionTask.STATUS_PENDING,
+            ConstructionTask.STATUS_IN_PROGRESS
+        ]
+    ).update(reminder_sent=False)
+    
+    logger.info(f'{updated} flags de lembrete resetadas')
+    return {'reset_count': updated}

@@ -1,261 +1,283 @@
 """
-Budget admin - ImoOS
-Admin customizado para moderação de preços crowdsourced.
+Budget Admin — Admin customizado para o app budget.
 """
 from django.contrib import admin
 from django.utils.html import format_html
-from django.urls import reverse
-from django.utils.safestring import mark_safe
-
-from .models import (
-    PriceCategory, PriceItem, CrowdsourcedPrice,
-    Budget, BudgetItem, UserPoints, PointsLog
+from apps.budget.models import (
+    LocalPriceItem, SimpleBudget, BudgetItem,
+    CrowdsourcedPrice, UserPriceScore
 )
 
 
-@admin.register(PriceCategory)
-class PriceCategoryAdmin(admin.ModelAdmin):
-    list_display = ['icon', 'name', 'code', 'item_count', 'is_active']
-    list_display_links = ['name']
-    list_filter = ['is_active']
-    search_fields = ['name', 'code']
-    ordering = ['code']
+@admin.register(LocalPriceItem)
+class LocalPriceItemAdmin(admin.ModelAdmin):
+    """Admin para itens da base de preços."""
     
-    def item_count(self, obj):
-        return obj.items.filter(is_active=True).count()
-    item_count.short_description = 'Itens Ativos'
-
-
-@admin.register(PriceItem)
-class PriceItemAdmin(admin.ModelAdmin):
     list_display = [
-        'name', 'category', 'unit', 'price_santiago_display',
-        'islands_with_prices', 'is_verified', 'source', 'last_updated'
+        'code', 'name', 'category_badge', 'unit', 
+        'price_santiago', 'island_prices_summary', 
+        'is_verified_badge', 'last_updated'
     ]
-    list_filter = ['category', 'is_active', 'is_verified', 'last_updated']
-    search_fields = ['name', 'description']
-    list_editable = ['is_verified']
-    readonly_fields = ['last_updated', 'created_at', 'updated_at']
+    list_filter = ['category', 'is_verified', 'last_updated']
+    search_fields = ['name', 'code', 'description']
+    list_editable = ['price_santiago']
+    actions = ['mark_verified', 'mark_unverified', 'duplicate_item']
+    
     fieldsets = (
-        ('Informação Básica', {
-            'fields': ('category', 'name', 'description', 'unit')
+        ('Informações Básicas', {
+            'fields': ('code', 'name', 'description', 'category', 'unit')
         }),
         ('Preços por Ilha', {
             'fields': (
                 ('price_santiago', 'price_sao_vicente'),
                 ('price_sal', 'price_boa_vista'),
                 ('price_santo_antao', 'price_sao_nicolau'),
-                ('price_maio', 'price_fogo'),
-                ('price_brava',),
-                'default_markup_pct',
-            )
+                ('price_fogo', 'price_brava'),
+                ('price_maio',),
+            ),
+            'description': 'Preços em CVE. Santiago é o preço base; outras ilhas usam Santiago como fallback se vazio.'
         }),
         ('Metadados', {
-            'fields': ('is_active', 'is_verified', 'source', 'last_updated')
-        }),
-        ('Timestamps', {
-            'fields': ('created_at', 'updated_at'),
+            'fields': ('source', 'is_verified', 'verified_by', 'ifc_class'),
             'classes': ('collapse',)
         }),
     )
     
-    def price_santiago_display(self, obj):
-        return f"{obj.price_santiago:,.0f} CVE"
-    price_santiago_display.short_description = 'Preço Santiago'
-    
-    def islands_with_prices(self, obj):
-        islands = obj.get_islands_with_prices()
-        if not islands:
-            return '-'
-        return ', '.join([i.replace('_', ' ').title() for i in islands])
-    islands_with_prices.short_description = 'Ilhas com Preços'
-
-
-@admin.register(CrowdsourcedPrice)
-class CrowdsourcedPriceAdmin(admin.ModelAdmin):
-    list_display = [
-        'item_name', 'price_cve', 'island', 'reporter',
-        'status_badge', 'points_earned', 'date_reported'
-    ]
-    list_filter = ['status', 'island', 'reporter_role', 'date_reported']
-    search_fields = ['item_name', 'supplier_name', 'reported_by__email']
-    readonly_fields = [
-        'points_earned', 'date_reported', 'reviewed_at',
-        'linked_item', 'created_at', 'updated_at'
-    ]
-    actions = ['approve_prices', 'reject_prices']
-    
-    fieldsets = (
-        ('Item', {
-            'fields': ('item_name', 'category', 'price_cve', 'island', 'location_detail')
-        }),
-        ('Reporter', {
-            'fields': ('reported_by', 'reporter_role', 'supplier_name')
-        }),
-        ('Moderação', {
-            'fields': ('status', 'reviewed_by', 'reviewed_at', 'review_notes', 'linked_item')
-        }),
-        ('Gamificação', {
-            'fields': ('points_earned',)
-        }),
-        ('Timestamps', {
-            'fields': ('date_reported', 'created_at', 'updated_at'),
-            'classes': ('collapse',)
-        }),
-    )
-    
-    def reporter(self, obj):
-        return obj.reported_by.email
-    reporter.short_description = 'Reportado por'
-    
-    def status_badge(self, obj):
+    def category_badge(self, obj):
+        """Mostrar categoria como badge colorido."""
         colors = {
-            'PENDING': 'orange',
-            'APPROVED': 'green',
-            'REJECTED': 'red',
+            'MATERIALS': '#28a745',
+            'LABOR': '#007bff',
+            'EQUIPMENT': '#ffc107',
+            'SERVICES': '#17a2b8',
         }
-        color = colors.get(obj.status, 'gray')
+        color = colors.get(obj.category, '#6c757d')
         return format_html(
-            '<span style="background-color: {}; color: white; padding: 3px 8px; border-radius: 3px;">{}</span>',
-            color,
-            obj.get_status_display()
+            '<span style="background-color: {}; color: white; padding: 2px 8px; '
+            'border-radius: 12px; font-size: 11px;">{}</span>',
+            color, obj.get_category_display()
         )
-    status_badge.short_description = 'Status'
+    category_badge.short_description = 'Categoria'
     
-    def approve_prices(self, request, queryset):
-        """Ação para aprovar múltiplos preços"""
-        from django.utils import timezone
-        from decimal import Decimal
-        
-        approved_count = 0
-        for price in queryset.filter(status='PENDING'):
-            # Criar PriceItem
-            category = price.category
-            if not category:
-                category, _ = PriceCategory.objects.get_or_create(
-                    code='CROWD',
-                    defaults={'name': 'Crowdsourced', 'icon': '👥'}
-                )
-            
-            island_field = f"price_{price.island.lower()}"
-            
-            price_item, created = PriceItem.objects.get_or_create(
-                name=price.item_name,
-                category=category,
-                defaults={
-                    'unit': 'un',
-                    'price_santiago': price.price_cve,
-                    island_field: price.price_cve,
-                    'source': f"Crowdsourced by {price.reported_by.email}",
-                    'is_verified': True,
-                }
+    def is_verified_badge(self, obj):
+        """Mostrar status de verificação como badge."""
+        if obj.is_verified:
+            return format_html(
+                '<span style="color: #28a745;">✓ Verificado</span>'
             )
-            
-            if not created:
-                setattr(price_item, island_field, price.price_cve)
-                price_item.save()
-            
-            price.status = 'APPROVED'
-            price.reviewed_by = request.user
-            price.reviewed_at = timezone.now()
-            price.linked_item = price_item
-            price.save()
-            
-            # Bonus points
-            user_points, _ = UserPoints.objects.get_or_create(user=price.reported_by)
-            user_points.add_points(20, f"Preço aprovado: {price.item_name}")
-            user_points.increment_prices_verified()
-            
-            approved_count += 1
-        
-        self.message_user(request, f'{approved_count} preços aprovados com sucesso.')
-    approve_prices.short_description = 'Aprovar preços selecionados'
-    
-    def reject_prices(self, request, queryset):
-        """Ação para rejeitar múltiplos preços"""
-        from django.utils import timezone
-        
-        rejected_count = queryset.filter(status='PENDING').update(
-            status='REJECTED',
-            reviewed_by=request.user,
-            reviewed_at=timezone.now()
+        return format_html(
+            '<span style="color: #dc3545;">✗ Pendente</span>'
         )
-        self.message_user(request, f'{rejected_count} preços rejeitados.')
-    reject_prices.short_description = 'Rejeitar preços selecionados'
+    is_verified_badge.short_description = 'Verificado'
+    
+    def island_prices_summary(self, obj):
+        """Resumo de preços por ilha."""
+        prices = obj.get_all_island_prices()
+        defined = sum(1 for p in prices.values() if p is not None)
+        return f'{defined}/9 ilhas'
+    island_prices_summary.short_description = 'Preços Definidos'
+    
+    @admin.action(description='Marcar como verificado')
+    def mark_verified(self, request, queryset):
+        """Marcar items seleccionados como verificados."""
+        updated = queryset.update(is_verified=True, verified_by=request.user)
+        self.message_user(request, f'{updated} item(s) marcado(s) como verificado(s).')
+    
+    @admin.action(description='Marcar como não verificado')
+    def mark_unverified(self, request, queryset):
+        """Marcar items seleccionados como não verificados."""
+        updated = queryset.update(is_verified=False, verified_by=None)
+        self.message_user(request, f'{updated} item(s) marcado(s) como não verificado(s).')
+    
+    @admin.action(description='Duplicar item seleccionado')
+    def duplicate_item(self, request, queryset):
+        """Duplicar items seleccionados."""
+        for item in queryset:
+            item.pk = None
+            item.code = f'{item.code}-COPY'
+            item.is_verified = False
+            item.save()
+        self.message_user(request, f'{queryset.count()} item(s) duplicado(s).')
 
 
 class BudgetItemInline(admin.TabularInline):
+    """Inline para items de orçamento."""
     model = BudgetItem
     extra = 0
-    fields = ['price_item', 'custom_name', 'quantity', 'unit_price', 'total', 'order']
+    fields = ['line_number', 'category', 'description', 'quantity', 'unit', 'unit_price', 'total']
     readonly_fields = ['total']
-    autocomplete_fields = ['price_item']
+    ordering = ['line_number']
 
 
-@admin.register(Budget)
-class BudgetAdmin(admin.ModelAdmin):
+@admin.register(SimpleBudget)
+class SimpleBudgetAdmin(admin.ModelAdmin):
+    """Admin para orçamentos."""
+    
     list_display = [
-        'name', 'project', 'island', 'status',
-        'subtotal', 'contingency', 'total', 'item_count', 'created_at'
+        'name', 'project', 'version', 'island', 
+        'status_badge', 'item_count', 'grand_total_display', 
+        'created_by', 'created_at'
     ]
-    list_filter = ['status', 'island', 'created_at']
-    search_fields = ['name', 'description']
+    list_filter = ['status', 'island', 'created_at', 'category_totals']
+    search_fields = ['name', 'project__name', 'description']
     readonly_fields = [
-        'total_materials', 'total_labor', 'total_equipment', 'total_services',
-        'subtotal', 'contingency', 'total', 'created_at', 'updated_at'
+        'total_materials', 'total_labor', 'total_equipment', 
+        'total_services', 'subtotal', 'total_contingency', 
+        'grand_total', 'created_at', 'updated_at'
     ]
     inlines = [BudgetItemInline]
     
     fieldsets = (
-        ('Informação Básica', {
-            'fields': ('name', 'description', 'project', 'island')
+        ('Informações Gerais', {
+            'fields': ('project', 'name', 'version', 'description')
         }),
         ('Configuração', {
-            'fields': ('contingency_pct', 'status')
+            'fields': ('island', 'currency', 'contingency_pct', 'status')
         }),
         ('Totais', {
             'fields': (
                 ('total_materials', 'total_labor'),
                 ('total_equipment', 'total_services'),
-                'subtotal',
-                'contingency',
-                'total',
-            )
+                'subtotal', 'total_contingency', 'grand_total'
+            ),
+            'classes': ('collapse',)
         }),
-        ('Metadata', {
-            'fields': ('created_by', 'created_at', 'updated_at'),
+        ('Metadados', {
+            'fields': ('created_by', 'approved_by', 'created_at', 'updated_at', 'approved_at'),
             'classes': ('collapse',)
         }),
     )
     
+    def status_badge(self, obj):
+        """Mostrar status como badge."""
+        colors = {
+            'DRAFT': '#6c757d',
+            'APPROVED': '#28a745',
+            'BASELINE': '#007bff',
+            'ARCHIVED': '#dc3545',
+        }
+        color = colors.get(obj.status, '#6c757d')
+        return format_html(
+            '<span style="background-color: {}; color: white; padding: 2px 8px; '
+            'border-radius: 12px; font-size: 11px;">{}</span>',
+            color, obj.get_status_display()
+        )
+    status_badge.short_description = 'Estado'
+    
+    def grand_total_display(self, obj):
+        """Mostrar total formatado."""
+        return f'{obj.grand_total:,.0f} CVE'
+    grand_total_display.short_description = 'Total'
+    
     def item_count(self, obj):
+        """Número de items no orçamento."""
         return obj.items.count()
-    item_count.short_description = 'Itens'
+    item_count.short_description = 'Items'
+    
+    def category_totals(self, obj):
+        """Para uso no list_filter (não implementado)."""
+        return obj.grand_total
 
 
-@admin.register(UserPoints)
-class UserPointsAdmin(admin.ModelAdmin):
-    list_display = ['user', 'total_points', 'prices_reported', 'prices_verified', 'badges_list']
-    list_filter = ['prices_reported', 'prices_verified']
-    search_fields = ['user__email']
+@admin.register(CrowdsourcedPrice)
+class CrowdsourcedPriceAdmin(admin.ModelAdmin):
+    """Admin para preços crowdsourced."""
+    
+    list_display = [
+        'item_name', 'category', 'price_cve', 'island',
+        'location', 'status_badge', 'reported_by', 
+        'points_earned', 'created_at'
+    ]
+    list_filter = ['status', 'category', 'island', 'created_at']
+    search_fields = ['item_name', 'location', 'supplier']
+    actions = ['verify_prices', 'reject_prices']
+    readonly_fields = ['points_earned', 'created_at']
+    
+    fieldsets = (
+        ('Informação do Preço', {
+            'fields': ('item_name', 'category', 'price_cve', 'unit')
+        }),
+        ('Localização', {
+            'fields': ('island', 'location', 'supplier')
+        }),
+        ('Observação', {
+            'fields': ('date_observed', 'receipt_photo')
+        }),
+        ('Status', {
+            'fields': ('status', 'verified_by', 'verified_at', 'linked_price_item')
+        }),
+        ('Gamificação', {
+            'fields': ('reported_by', 'points_earned'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def status_badge(self, obj):
+        """Mostrar status como badge."""
+        colors = {
+            'PENDING': '#ffc107',
+            'VERIFIED': '#28a745',
+            'REJECTED': '#dc3545',
+        }
+        icons = {
+            'PENDING': '⏳',
+            'VERIFIED': '✓',
+            'REJECTED': '✗',
+        }
+        color = colors.get(obj.status, '#6c757d')
+        icon = icons.get(obj.status, '?')
+        return format_html(
+            '<span style="background-color: {}; color: white; padding: 2px 8px; '
+            'border-radius: 12px; font-size: 11px;">{} {}</span>',
+            color, icon, obj.get_status_display()
+        )
+    status_badge.short_description = 'Estado'
+    
+    @admin.action(description='Verificar preços seleccionados (+10 pts)')
+    def verify_prices(self, request, queryset):
+        """Verificar preços seleccionados."""
+        for price in queryset.filter(status='PENDING'):
+            price.verify(request.user, points=10)
+        self.message_user(
+            request, 
+            f'{queryset.filter(status="VERIFIED").count()} preço(s) verificado(s).'
+        )
+    
+    @admin.action(description='Rejeitar preços seleccionados')
+    def reject_prices(self, request, queryset):
+        """Rejeitar preços seleccionados."""
+        updated = queryset.filter(status='PENDING').update(
+            status='REJECTED',
+            verified_by=request.user
+        )
+        self.message_user(request, f'{updated} preço(s) rejeitado(s).')
+
+
+@admin.register(UserPriceScore)
+class UserPriceScoreAdmin(admin.ModelAdmin):
+    """Admin para pontuações de utilizadores."""
+    
+    list_display = [
+        'user', 'rank_badge', 'total_points', 
+        'prices_reported', 'prices_verified'
+    ]
+    list_filter = ['rank']
+    search_fields = ['user__email', 'user__first_name', 'user__last_name']
     readonly_fields = ['total_points', 'prices_reported', 'prices_verified']
     
-    def badges_list(self, obj):
-        if not obj.badges:
-            return '-'
-        badges_display = {
-            'first_price': '🌟 Primeiro Preço',
-            '10_prices': '🏆 10 Preços',
-            '50_prices': '💎 50 Preços',
-            'verified_reporter': '✅ Verificado',
+    def rank_badge(self, obj):
+        """Mostrar rank como badge."""
+        colors = {
+            'Novato': '#6c757d',
+            'Contribuidor': '#17a2b8',
+            'Especialista': '#007bff',
+            'Guru': '#ffc107',
+            'Lenda': '#28a745',
         }
-        return ', '.join([badges_display.get(b, b) for b in obj.badges])
-    badges_list.short_description = 'Badges'
-
-
-@admin.register(PointsLog)
-class PointsLogAdmin(admin.ModelAdmin):
-    list_display = ['user', 'points', 'reason', 'created_at']
-    list_filter = ['created_at']
-    search_fields = ['user__email', 'reason']
-    readonly_fields = ['user', 'points', 'reason', 'created_at']
+        color = colors.get(obj.rank, '#6c757d')
+        return format_html(
+            '<span style="background-color: {}; color: white; padding: 2px 8px; '
+            'border-radius: 12px; font-size: 11px;">{}</span>',
+            color, obj.rank
+        )
+    rank_badge.short_description = 'Rank'

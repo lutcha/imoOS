@@ -32,6 +32,13 @@ class User(AbstractUser):
     email = models.EmailField(unique=True)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='gestor')
     
+    # Contact info (for WhatsApp notifications)
+    phone = models.CharField(
+        max_length=20,
+        blank=True,
+        help_text='Número de telefone para notificações WhatsApp (ex: +2389991234)'
+    )
+    
     # Audit
     # AbstractUser already has date_joined (created_at equivalent)
     updated_at = models.DateTimeField(auto_now=True)

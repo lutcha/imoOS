@@ -1,437 +1,809 @@
 """
-Budget models - ImoOS
-Base de preços local para Cabo Verde com suporte a crowdsourcing e gamificação.
+Budget models — Tenant schema.
+
+Base de preços local para Cabo Verde, com suporte a:
+- Preços diferenciados por ilha
+- Crowdsourcing de preços com gamificação
+- Orçamentos simplificados estilo Excel
 """
 from decimal import Decimal
-from django.db import models
 from django.conf import settings
-from simple_history.models import HistoricalRecords
-
+from django.db import models
+from django.core.validators import MinValueValidator
 from apps.core.models import TenantAwareModel
 
 
-class PriceCategory(TenantAwareModel):
-    """Categorias: Materiais, Mão-de-obra, Equipamentos, Serviços"""
+class LocalPriceItem(TenantAwareModel):
+    """
+    Preço unitário de materiais/mão-de-obra em Cabo Verde.
     
-    name = models.CharField(max_length=100)  # "Materiais de Construção"
-    code = models.CharField(max_length=10, unique=True)  # "MAT"
-    icon = models.CharField(max_length=50, default='🔨')  # Emoji para UI
-    is_active = models.BooleanField(default=True)
+    Cada item tem preços específicos por ilha, refletindo as diferenças
+    reais de custo entre Santiago, São Vicente, Sal, etc.
+    """
     
-    class Meta:
-        verbose_name = 'Categoria de Preço'
-        verbose_name_plural = 'Categorias de Preços'
-        ordering = ['code']
+    # Categorias de itens
+    CATEGORY_MATERIALS = 'MATERIALS'
+    CATEGORY_LABOR = 'LABOR'
+    CATEGORY_EQUIPMENT = 'EQUIPMENT'
+    CATEGORY_SERVICES = 'SERVICES'
     
-    def __str__(self):
-        return f"{self.icon} {self.name}"
-
-
-class PriceItem(TenantAwareModel):
-    """Item com preços por ilha"""
+    CATEGORIES = [
+        (CATEGORY_MATERIALS, 'Materiais de Construção'),
+        (CATEGORY_LABOR, 'Mão-de-Obra'),
+        (CATEGORY_EQUIPMENT, 'Equipamentos'),
+        (CATEGORY_SERVICES, 'Serviços'),
+    ]
     
-    ISLANDS = [
+    # Unidades de medida
+    UNIT_UN = 'UN'
+    UNIT_M2 = 'M2'
+    UNIT_M3 = 'M3'
+    UNIT_KG = 'KG'
+    UNIT_HR = 'HR'
+    UNIT_DAY = 'DAY'
+    UNIT_SACO = 'SACO'
+    UNIT_L = 'L'
+    UNIT_ML = 'ML'
+    UNIT_KIT = 'KIT'
+    
+    UNITS = [
+        (UNIT_UN, 'Unidade'),
+        (UNIT_M2, 'Metro Quadrado'),
+        (UNIT_M3, 'Metro Cúbico'),
+        (UNIT_KG, 'Quilograma'),
+        (UNIT_HR, 'Hora'),
+        (UNIT_DAY, 'Dia'),
+        (UNIT_SACO, 'Saco'),
+        (UNIT_L, 'Litro'),
+        (UNIT_ML, 'Metro Linear'),
+        (UNIT_KIT, 'Kit'),
+    ]
+    
+    # Ilhas de Cabo Verde
+    ISLAND_CHOICES = [
         ('SANTIAGO', 'Santiago'),
         ('SAO_VICENTE', 'São Vicente'),
         ('SAL', 'Sal'),
         ('BOA_VISTA', 'Boa Vista'),
         ('SANTO_ANTAO', 'Santo Antão'),
         ('SAO_NICOLAU', 'São Nicolau'),
-        ('MAIO', 'Maio'),
         ('FOGO', 'Fogo'),
         ('BRAVA', 'Brava'),
+        ('MAIO', 'Maio'),
     ]
     
-    category = models.ForeignKey(
-        PriceCategory, 
-        on_delete=models.PROTECT, 
-        related_name='items'
+    category = models.CharField(
+        max_length=20, 
+        choices=CATEGORIES,
+        verbose_name='Categoria'
     )
-    name = models.CharField(max_length=200)  # "Cimento CP350 50kg"
-    description = models.TextField(blank=True)
-    unit = models.CharField(max_length=20)  # "saco", "m2", "m3", "hora", "dia"
+    code = models.CharField(
+        max_length=20, 
+        unique=True,
+        verbose_name='Código',
+        help_text='Ex: IMOS-001, CV-045'
+    )
+    name = models.CharField(
+        max_length=200,
+        verbose_name='Nome',
+        help_text='Ex: Cimento CP350 50kg'
+    )
+    description = models.TextField(
+        blank=True,
+        verbose_name='Descrição'
+    )
+    unit = models.CharField(
+        max_length=10, 
+        choices=UNITS,
+        verbose_name='Unidade'
+    )
     
-    # Preços por ilha (variação significativa!)
-    price_santiago = models.DecimalField(max_digits=12, decimal_places=2)
-    price_sao_vicente = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
-    price_sal = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
-    price_boa_vista = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
-    price_santo_antao = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
-    price_sao_nicolau = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
-    price_maio = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
-    price_fogo = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
-    price_brava = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
-    
-    # Se preço não definido para ilha, usar santiago + markup estimado
-    default_markup_pct = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('15.00'))
+    # Preços por ilha (diferenças significativas!)
+    price_santiago = models.DecimalField(
+        max_digits=12, 
+        decimal_places=2,
+        verbose_name='Preço Santiago (CVE)',
+        validators=[MinValueValidator(Decimal('0.00'))]
+    )
+    price_sao_vicente = models.DecimalField(
+        max_digits=12, 
+        decimal_places=2, 
+        null=True, 
+        blank=True,
+        verbose_name='Preço São Vicente (CVE)'
+    )
+    price_sal = models.DecimalField(
+        max_digits=12, 
+        decimal_places=2, 
+        null=True, 
+        blank=True,
+        verbose_name='Preço Sal (CVE)'
+    )
+    price_boa_vista = models.DecimalField(
+        max_digits=12, 
+        decimal_places=2, 
+        null=True, 
+        blank=True,
+        verbose_name='Preço Boa Vista (CVE)'
+    )
+    price_santo_antao = models.DecimalField(
+        max_digits=12, 
+        decimal_places=2, 
+        null=True, 
+        blank=True,
+        verbose_name='Preço Santo Antão (CVE)'
+    )
+    price_sao_nicolau = models.DecimalField(
+        max_digits=12, 
+        decimal_places=2, 
+        null=True, 
+        blank=True,
+        verbose_name='Preço São Nicolau (CVE)'
+    )
+    price_fogo = models.DecimalField(
+        max_digits=12, 
+        decimal_places=2, 
+        null=True, 
+        blank=True,
+        verbose_name='Preço Fogo (CVE)'
+    )
+    price_brava = models.DecimalField(
+        max_digits=12, 
+        decimal_places=2, 
+        null=True, 
+        blank=True,
+        verbose_name='Preço Brava (CVE)'
+    )
+    price_maio = models.DecimalField(
+        max_digits=12, 
+        decimal_places=2, 
+        null=True, 
+        blank=True,
+        verbose_name='Preço Maio (CVE)'
+    )
     
     # Metadados
-    is_active = models.BooleanField(default=True)
-    is_verified = models.BooleanField(default=False)  # Verificado por admin
-    source = models.CharField(max_length=100, default='Admin')  # "Fornecedor X", "Crowdsourced"
-    last_updated = models.DateField(auto_now=True)
+    source = models.CharField(
+        max_length=100,
+        verbose_name='Fonte',
+        help_text='Ex: Cimpor CV, Loja Praia, Crowdsourced'
+    )
+    last_updated = models.DateField(
+        auto_now=True,
+        verbose_name='Última Actualização'
+    )
+    is_verified = models.BooleanField(
+        default=False,
+        verbose_name='Verificado',
+        help_text='Verificado por administrador'
+    )
+    verified_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='verified_price_items',
+        verbose_name='Verificado por'
+    )
     
-    history = HistoricalRecords()
+    # Para relacionar com BIM (futuro)
+    ifc_class = models.CharField(
+        max_length=50, 
+        blank=True,
+        verbose_name='Classe IFC',
+        help_text='Ex: IfcWall, IfcSlab, IfcDoor'
+    )
     
     class Meta:
+        app_label = 'budget'
         verbose_name = 'Item de Preço'
-        verbose_name_plural = 'Itens de Preços'
-        ordering = ['category', 'name']
+        verbose_name_plural = 'Items de Preço'
+        ordering = ['category', 'code']
         indexes = [
-            models.Index(fields=['category', 'is_active']),
-            models.Index(fields=['name']),  # Para search
-            models.Index(fields=['is_active', 'is_verified']),
+            models.Index(fields=['category', 'is_verified']),
+            models.Index(fields=['name']),
+            models.Index(fields=['code']),
+            models.Index(fields=['category', 'name']),
         ]
     
-    def __str__(self):
-        return f"{self.name} ({self.unit})"
+    def __str__(self) -> str:
+        return f'{self.code} - {self.name}'
     
     def get_price_for_island(self, island_code: str) -> Decimal:
-        """Retorna preço para ilha específica ou calcula fallback"""
-        island_map = {
+        """
+        Retornar preço para ilha específica.
+        
+        Args:
+            island_code: Código da ilha (ex: 'SANTIAGO', 'SAL')
+            
+        Returns:
+            Preço em CVE (fallback para Santiago se não definido)
+        """
+        price_map = {
+            'SANTIAGO': self.price_santiago,
+            'SAO_VICENTE': self.price_sao_vicente or self.price_santiago,
+            'SAL': self.price_sal or self.price_santiago,
+            'BOA_VISTA': self.price_boa_vista or self.price_santiago,
+            'SANTO_ANTAO': self.price_santo_antao or self.price_santiago,
+            'SAO_NICOLAU': self.price_sao_nicolau or self.price_santiago,
+            'FOGO': self.price_fogo or self.price_santiago,
+            'BRAVA': self.price_brava or self.price_santiago,
+            'MAIO': self.price_maio or self.price_santiago,
+        }
+        return price_map.get(island_code, self.price_santiago)
+    
+    def get_all_island_prices(self) -> dict:
+        """Retornar dicionário com preços de todas as ilhas."""
+        return {
             'SANTIAGO': self.price_santiago,
             'SAO_VICENTE': self.price_sao_vicente,
             'SAL': self.price_sal,
             'BOA_VISTA': self.price_boa_vista,
             'SANTO_ANTAO': self.price_santo_antao,
             'SAO_NICOLAU': self.price_sao_nicolau,
-            'MAIO': self.price_maio,
             'FOGO': self.price_fogo,
             'BRAVA': self.price_brava,
-        }
-        
-        price = island_map.get(island_code)
-        if price:
-            return price
-        
-        # Fallback: Santiago + markup
-        return self.price_santiago * (1 + self.default_markup_pct / 100)
-    
-    def get_islands_with_prices(self):
-        """Retorna lista de ilhas que têm preço definido"""
-        islands = []
-        island_fields = {
-            'SANTIAGO': self.price_santiago,
-            'SAO_VICENTE': self.price_sao_vicente,
-            'SAL': self.price_sal,
-            'BOA_VISTA': self.price_boa_vista,
-            'SANTO_ANTAO': self.price_santo_antao,
-            'SAO_NICOLAU': self.price_sao_nicolau,
             'MAIO': self.price_maio,
-            'FOGO': self.price_fogo,
-            'BRAVA': self.price_brava,
         }
-        for code, price in island_fields.items():
-            if price:
-                islands.append(code)
-        return islands
 
 
-class CrowdsourcedPrice(TenantAwareModel):
-    """Preços reportados pelos utilizadores"""
+class SimpleBudget(TenantAwareModel):
+    """
+    Orçamento simplificado (Excel-like) para projectos.
     
-    REPORTED_BY_CHOICES = [
-        ('VENDOR', 'Fornecedor'),
-        ('CONTRACTOR', 'Empreiteiro'),
-        ('ENGINEER', 'Engenheiro'),
-        ('FIELD_STAFF', 'Equipa de Campo'),
-        ('OTHER', 'Outro'),
-    ]
+    Permite criar orçamentos detalhados com itens de múltiplas categorias,
+    com cálculo automático de totais e margem de contingência.
+    """
+    
+    # Status
+    STATUS_DRAFT = 'DRAFT'
+    STATUS_APPROVED = 'APPROVED'
+    STATUS_BASELINE = 'BASELINE'
+    STATUS_ARCHIVED = 'ARCHIVED'
     
     STATUS_CHOICES = [
-        ('PENDING', 'Pendente'),
-        ('APPROVED', 'Aprovado'),
-        ('REJECTED', 'Rejeitado'),
+        (STATUS_DRAFT, 'Rascunho'),
+        (STATUS_APPROVED, 'Aprovado'),
+        (STATUS_BASELINE, 'Baseline'),
+        (STATUS_ARCHIVED, 'Arquivado'),
     ]
     
-    item_name = models.CharField(max_length=200)
-    category = models.ForeignKey(
-        PriceCategory, 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True
-    )
-    
-    price_cve = models.DecimalField(max_digits=12, decimal_places=2)
-    island = models.CharField(max_length=20, choices=PriceItem.ISLANDS)
-    location_detail = models.CharField(max_length=100, blank=True)  # "Praia, Achada Grande"
-    
-    reported_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='reported_prices'
-    )
-    reporter_role = models.CharField(max_length=20, choices=REPORTED_BY_CHOICES)
-    supplier_name = models.CharField(max_length=100, blank=True)  # Opcional
-    date_reported = models.DateField(auto_now_add=True)
-    
-    # Gamificação
-    points_earned = models.IntegerField(default=10)
-    
-    # Moderação
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
-    reviewed_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='reviewed_prices'
-    )
-    reviewed_at = models.DateTimeField(null=True, blank=True)
-    review_notes = models.TextField(blank=True)
-    
-    # Se aprovado, link ao PriceItem oficial
-    linked_item = models.ForeignKey(
-        PriceItem,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='crowdsourced_entries'
-    )
-    
-    class Meta:
-        verbose_name = 'Preço Crowdsourced'
-        verbose_name_plural = 'Preços Crowdsourced'
-        ordering = ['-created_at']
-        indexes = [
-            models.Index(fields=['status', 'island']),
-            models.Index(fields=['reported_by', '-created_at']),
-        ]
-    
-    def __str__(self):
-        return f"{self.item_name} - {self.island} - {self.status}"
-
-
-class Budget(TenantAwareModel):
-    """Orçamento de projeto/obras"""
-    
-    STATUS_CHOICES = [
-        ('DRAFT', 'Rascunho'),
-        ('APPROVED', 'Aprovado'),
-        ('BASELINE', 'Baseline'),  # Congelado para comparação
-        ('ARCHIVED', 'Arquivado'),
-    ]
+    ISLAND_CHOICES = LocalPriceItem.ISLAND_CHOICES
     
     project = models.ForeignKey(
         'projects.Project',
         on_delete=models.CASCADE,
         related_name='budgets',
-        null=True,
-        blank=True
+        verbose_name='Projecto'
     )
-    name = models.CharField(max_length=200)  # "Orçamento Preliminar Palmira"
-    description = models.TextField(blank=True)
+    name = models.CharField(
+        max_length=200,
+        verbose_name='Nome',
+        help_text='Ex: Orçamento Preliminar'
+    )
+    version = models.CharField(
+        max_length=10, 
+        default='1.0',
+        verbose_name='Versão'
+    )
+    description = models.TextField(
+        blank=True,
+        verbose_name='Descrição'
+    )
     
     # Configuração
-    island = models.CharField(max_length=20, choices=PriceItem.ISLANDS, default='SANTIAGO')
-    contingency_pct = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('10.00'))
+    island = models.CharField(
+        max_length=20,
+        choices=ISLAND_CHOICES,
+        default='SANTIAGO',
+        verbose_name='Ilha',
+        help_text='Para aplicar preços correctos'
+    )
+    currency = models.CharField(
+        max_length=3, 
+        default='CVE',
+        verbose_name='Moeda'
+    )
+    contingency_pct = models.DecimalField(
+        max_digits=5, 
+        decimal_places=2, 
+        default=10.0,
+        verbose_name='Contingência (%)',
+        validators=[MinValueValidator(Decimal('0.00'))]
+    )
     
     # Status
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=STATUS_DRAFT,
+        verbose_name='Estado'
+    )
     
-    # Totais (calculados)
-    total_materials = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
-    total_labor = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
-    total_equipment = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
-    total_services = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
-    subtotal = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
-    contingency = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
-    total = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    # Totais (denormalizados para performance)
+    total_materials = models.DecimalField(
+        max_digits=14, 
+        decimal_places=2, 
+        default=Decimal('0.00'),
+        verbose_name='Total Materiais'
+    )
+    total_labor = models.DecimalField(
+        max_digits=14, 
+        decimal_places=2, 
+        default=Decimal('0.00'),
+        verbose_name='Total Mão-de-Obra'
+    )
+    total_equipment = models.DecimalField(
+        max_digits=14, 
+        decimal_places=2, 
+        default=Decimal('0.00'),
+        verbose_name='Total Equipamentos'
+    )
+    total_services = models.DecimalField(
+        max_digits=14, 
+        decimal_places=2, 
+        default=Decimal('0.00'),
+        verbose_name='Total Serviços'
+    )
+    subtotal = models.DecimalField(
+        max_digits=14, 
+        decimal_places=2, 
+        default=Decimal('0.00'),
+        verbose_name='Subtotal'
+    )
+    total_contingency = models.DecimalField(
+        max_digits=14, 
+        decimal_places=2, 
+        default=Decimal('0.00'),
+        verbose_name='Total Contingência'
+    )
+    grand_total = models.DecimalField(
+        max_digits=14, 
+        decimal_places=2, 
+        default=Decimal('0.00'),
+        verbose_name='Total Geral'
+    )
     
+    # Metadados
     created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='created_budgets',
+        verbose_name='Criado por'
+    )
+    approved_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
-        related_name='created_budgets'
+        blank=True,
+        related_name='approved_budgets',
+        verbose_name='Aprovado por'
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Criado em'
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name='Actualizado em'
+    )
+    approved_at = models.DateTimeField(
+        null=True, 
+        blank=True,
+        verbose_name='Aprovado em'
     )
     
-    history = HistoricalRecords()
-    
     class Meta:
+        app_label = 'budget'
         verbose_name = 'Orçamento'
         verbose_name_plural = 'Orçamentos'
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['project', 'status']),
-            models.Index(fields=['island', 'status']),
             models.Index(fields=['created_by', '-created_at']),
         ]
+        unique_together = ['project', 'name', 'version']
     
-    def __str__(self):
-        return f"{self.name} ({self.get_island_display()})"
+    def __str__(self) -> str:
+        return f'{self.name} (v{self.version}) - {self.project.name}'
     
-    def recalculate_totals(self):
-        """Recalcula totais baseado nos itens"""
+    def recalculate_totals(self) -> None:
+        """Recalcular totais baseado nos itens."""
         items = self.items.all()
         
-        self.subtotal = sum(item.total for item in items)
-        self.contingency = self.subtotal * (self.contingency_pct / 100)
-        self.total = self.subtotal + self.contingency
+        self.total_materials = sum(
+            i.total for i in items 
+            if i.category == LocalPriceItem.CATEGORY_MATERIALS
+        )
+        self.total_labor = sum(
+            i.total for i in items 
+            if i.category == LocalPriceItem.CATEGORY_LABOR
+        )
+        self.total_equipment = sum(
+            i.total for i in items 
+            if i.category == LocalPriceItem.CATEGORY_EQUIPMENT
+        )
+        self.total_services = sum(
+            i.total for i in items 
+            if i.category == LocalPriceItem.CATEGORY_SERVICES
+        )
         
-        # Por categoria
-        self.total_materials = Decimal('0.00')
-        self.total_labor = Decimal('0.00')
-        self.total_equipment = Decimal('0.00')
-        self.total_services = Decimal('0.00')
-        
-        for item in items:
-            category_code = item.get_category_code()
-            if category_code == 'MAT':
-                self.total_materials += item.total
-            elif category_code == 'LABOR':
-                self.total_labor += item.total
-            elif category_code == 'EQUIP':
-                self.total_equipment += item.total
-            elif category_code == 'SERV':
-                self.total_services += item.total
+        self.subtotal = (
+            self.total_materials + 
+            self.total_labor + 
+            self.total_equipment + 
+            self.total_services
+        )
+        self.total_contingency = (self.subtotal * self.contingency_pct) / 100
+        self.grand_total = self.subtotal + self.total_contingency
         
         self.save(update_fields=[
             'total_materials', 'total_labor', 'total_equipment',
-            'total_services', 'subtotal', 'contingency', 'total'
+            'total_services', 'subtotal', 'total_contingency',
+            'grand_total', 'updated_at'
         ])
+    
+    def approve(self, user) -> None:
+        """Aprovar o orçamento."""
+        self.status = self.STATUS_APPROVED
+        self.approved_by = user
+        self.approved_at = models.DateTimeField().auto_now
+        self.save(update_fields=['status', 'approved_by', 'approved_at'])
+    
+    def get_item_count(self) -> int:
+        """Retornar número de itens no orçamento."""
+        return self.items.count()
 
 
 class BudgetItem(TenantAwareModel):
-    """Item de orçamento"""
+    """
+    Item de orçamento (linha da tabela).
+    
+    Cada item representa uma linha no orçamento com quantidade,
+    preço unitário e total calculado automaticamente.
+    """
+    
+    PRICE_SOURCE_MANUAL = 'MANUAL'
+    PRICE_SOURCE_DATABASE = 'DATABASE'
+    PRICE_SOURCE_CROWDSOURCED = 'CROWDSOURCED'
+    PRICE_SOURCE_TEMPLATE = 'TEMPLATE'
+    
+    PRICE_SOURCE_CHOICES = [
+        (PRICE_SOURCE_MANUAL, 'Manual'),
+        (PRICE_SOURCE_DATABASE, 'Base de Dados'),
+        (PRICE_SOURCE_CROWDSOURCED, 'Crowdsourced'),
+        (PRICE_SOURCE_TEMPLATE, 'Template'),
+    ]
     
     budget = models.ForeignKey(
-        Budget,
+        SimpleBudget,
         on_delete=models.CASCADE,
-        related_name='items'
+        related_name='items',
+        verbose_name='Orçamento'
     )
+    
+    # Linha do orçamento
+    line_number = models.PositiveIntegerField(
+        verbose_name='Nº Linha'
+    )
+    category = models.CharField(
+        max_length=20,
+        choices=LocalPriceItem.CATEGORIES,
+        verbose_name='Categoria'
+    )
+    description = models.CharField(
+        max_length=255,
+        verbose_name='Descrição'
+    )
+    
+    # Quantidade e preço
+    quantity = models.DecimalField(
+        max_digits=12, 
+        decimal_places=3,
+        verbose_name='Quantidade',
+        validators=[MinValueValidator(Decimal('0.001'))]
+    )
+    unit = models.CharField(
+        max_length=10,
+        choices=LocalPriceItem.UNITS,
+        verbose_name='Unidade'
+    )
+    unit_price = models.DecimalField(
+        max_digits=12, 
+        decimal_places=2,
+        verbose_name='Preço Unitário',
+        validators=[MinValueValidator(Decimal('0.00'))]
+    )
+    total = models.DecimalField(
+        max_digits=14, 
+        decimal_places=2,
+        verbose_name='Total',
+        default=Decimal('0.00')
+    )
+    
+    # Link com base de preços (opcional)
     price_item = models.ForeignKey(
-        PriceItem,
-        on_delete=models.SET_NULL,
-        null=True,
+        LocalPriceItem,
+        null=True, 
         blank=True,
-        related_name='budget_entries'
+        on_delete=models.SET_NULL,
+        related_name='budget_items',
+        verbose_name='Item da Base de Preços'
     )
     
-    # Se item custom (não na base)
-    custom_name = models.CharField(max_length=200, blank=True)
-    custom_unit = models.CharField(max_length=20, blank=True)
-    custom_unit_price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    # Origem do preço
+    price_source = models.CharField(
+        max_length=20,
+        choices=PRICE_SOURCE_CHOICES,
+        default=PRICE_SOURCE_MANUAL,
+        verbose_name='Origem do Preço'
+    )
     
-    quantity = models.DecimalField(max_digits=12, decimal_places=3)
-    unit_price = models.DecimalField(max_digits=12, decimal_places=2)
-    total = models.DecimalField(max_digits=14, decimal_places=2)
-    
-    # Ordem para display
-    order = models.IntegerField(default=0)
-    
-    notes = models.TextField(blank=True)  # "Preço negociado com fornecedor X"
+    # Notas
+    notes = models.TextField(
+        blank=True,
+        verbose_name='Observações'
+    )
     
     class Meta:
+        app_label = 'budget'
         verbose_name = 'Item de Orçamento'
-        verbose_name_plural = 'Itens de Orçamento'
-        ordering = ['order', 'created_at']
+        verbose_name_plural = 'Items de Orçamento'
+        ordering = ['line_number']
         indexes = [
-            models.Index(fields=['budget', 'order']),
+            models.Index(fields=['budget', 'category']),
+            models.Index(fields=['budget', 'line_number']),
         ]
+        unique_together = ['budget', 'line_number']
     
-    def __str__(self):
-        name = self.custom_name or (self.price_item.name if self.price_item else 'Item')
-        return f"{name} - {self.quantity} x {self.unit_price}"
-    
-    def get_category_code(self):
-        """Retorna código da categoria para cálculo de totais"""
-        if self.price_item and self.price_item.category:
-            return self.price_item.category.code
-        return None
+    def __str__(self) -> str:
+        return f'{self.line_number}. {self.description}'
     
     def save(self, *args, **kwargs):
-        # Auto-calcular preço
-        if self.price_item:
-            self.unit_price = self.price_item.get_price_for_island(self.budget.island)
-            if not self.custom_name:
-                self.custom_name = self.price_item.name
-            if not self.custom_unit:
-                self.custom_unit = self.price_item.unit
-        elif self.custom_unit_price:
-            self.unit_price = self.custom_unit_price
-        
+        """Calcular total automaticamente antes de salvar."""
         self.total = self.quantity * self.unit_price
         super().save(*args, **kwargs)
-        self.budget.recalculate_totals()
 
 
-class UserPoints(TenantAwareModel):
-    """Pontos acumulados por utilizador"""
+class CrowdsourcedPrice(TenantAwareModel):
+    """
+    Preços reportados pelos utilizadores (crowdsourcing).
+    
+    Sistema de gamificação onde utilizadores reportam preços observados
+    no mercado e ganham pontos por contribuições verificadas.
+    """
+    
+    STATUS_PENDING = 'PENDING'
+    STATUS_VERIFIED = 'VERIFIED'
+    STATUS_REJECTED = 'REJECTED'
+    
+    STATUS_CHOICES = [
+        (STATUS_PENDING, 'Pendente'),
+        (STATUS_VERIFIED, 'Verificado'),
+        (STATUS_REJECTED, 'Rejeitado'),
+    ]
+    
+    ISLAND_CHOICES = LocalPriceItem.ISLAND_CHOICES
+    
+    reported_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='reported_prices',
+        verbose_name='Reportado por'
+    )
+    item_name = models.CharField(
+        max_length=200,
+        verbose_name='Nome do Item'
+    )
+    category = models.CharField(
+        max_length=20,
+        choices=LocalPriceItem.CATEGORIES,
+        verbose_name='Categoria'
+    )
+    price_cve = models.DecimalField(
+        max_digits=12, 
+        decimal_places=2,
+        verbose_name='Preço (CVE)',
+        validators=[MinValueValidator(Decimal('0.01'))]
+    )
+    unit = models.CharField(
+        max_length=10,
+        choices=LocalPriceItem.UNITS,
+        verbose_name='Unidade'
+    )
+    location = models.CharField(
+        max_length=100,
+        verbose_name='Localização',
+        help_text='Ex: Praia, Achada Grande'
+    )
+    island = models.CharField(
+        max_length=20,
+        choices=ISLAND_CHOICES,
+        verbose_name='Ilha'
+    )
+    supplier = models.CharField(
+        max_length=100, 
+        blank=True,
+        verbose_name='Fornecedor',
+        help_text='Opcional'
+    )
+    date_observed = models.DateField(
+        verbose_name='Data Observada',
+        help_text='Quando viu o preço'
+    )
+    
+    # Status
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=STATUS_PENDING,
+        verbose_name='Estado'
+    )
+    verified_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True, 
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='verified_crowd_prices',
+        verbose_name='Verificado por'
+    )
+    verified_at = models.DateTimeField(
+        null=True, 
+        blank=True,
+        verbose_name='Verificado em'
+    )
+    rejection_reason = models.TextField(
+        blank=True,
+        verbose_name='Motivo da Rejeição'
+    )
+    
+    # Gamificação
+    points_earned = models.IntegerField(
+        default=0,
+        verbose_name='Pontos Ganhos'
+    )
+    
+    # Link com item oficial (quando verificado e integrado)
+    linked_price_item = models.ForeignKey(
+        LocalPriceItem,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='crowdsourced_entries',
+        verbose_name='Item Oficial Vinculado'
+    )
+    
+    # Evidência (foto opcional)
+    receipt_photo = models.URLField(
+        blank=True,
+        verbose_name='Foto do Recibo/Preço',
+        help_text='URL da foto no S3'
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        app_label = 'budget'
+        verbose_name = 'Preço Crowdsourced'
+        verbose_name_plural = 'Preços Crowdsourced'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['status', 'island']),
+            models.Index(fields=['category', 'status']),
+            models.Index(fields=['reported_by', '-created_at']),
+            models.Index(fields=['item_name']),
+        ]
+    
+    def __str__(self) -> str:
+        return f'{self.item_name} - {self.price_cve} CVE ({self.get_island_display()})'
+    
+    def verify(self, user, points: int = 10) -> None:
+        """Verificar o preço reportado."""
+        self.status = self.STATUS_VERIFIED
+        self.verified_by = user
+        self.verified_at = models.DateTimeField().auto_now
+        self.points_earned = points
+        self.save(update_fields=['status', 'verified_by', 'verified_at', 'points_earned'])
+        
+        # Actualizar pontuação do utilizador
+        user_score, _ = UserPriceScore.objects.get_or_create(user=self.reported_by)
+        user_score.add_points(points)
+    
+    def reject(self, user, reason: str = '') -> None:
+        """Rejeitar o preço reportado."""
+        self.status = self.STATUS_REJECTED
+        self.verified_by = user
+        self.verified_at = models.DateTimeField().auto_now
+        self.rejection_reason = reason
+        self.save(update_fields=['status', 'verified_by', 'verified_at', 'rejection_reason'])
+
+
+class UserPriceScore(TenantAwareModel):
+    """
+    Pontuação de gamificação para utilizadores.
+    
+    Sistema de ranks baseado em contribuições verificadas.
+    """
+    
+    RANK_NOVATO = 'Novato'
+    RANK_CONTRIBUIDOR = 'Contribuidor'
+    RANK_ESPECIALISTA = 'Especialista'
+    RANK_GURU = 'Guru'
+    RANK_LENDA = 'Lenda'
+    
+    RANK_CHOICES = [
+        (RANK_NOVATO, 'Novato'),
+        (RANK_CONTRIBUIDOR, 'Contribuidor'),
+        (RANK_ESPECIALISTA, 'Especialista'),
+        (RANK_GURU, 'Guru'),
+        (RANK_LENDA, 'Lenda'),
+    ]
+    
+    # Thresholds de pontos para cada rank
+    RANK_THRESHOLDS = {
+        RANK_NOVATO: 0,
+        RANK_CONTRIBUIDOR: 50,
+        RANK_ESPECIALISTA: 200,
+        RANK_GURU: 500,
+        RANK_LENDA: 1000,
+    }
     
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='points'
+        related_name='price_score',
+        verbose_name='Utilizador'
     )
-    total_points = models.IntegerField(default=0)
-    prices_reported = models.IntegerField(default=0)
-    prices_verified = models.IntegerField(default=0)
-    
-    # Badges
-    badges = models.JSONField(default=list)  # ["first_price", "10_prices", "verified_reporter"]
+    total_points = models.IntegerField(
+        default=0,
+        verbose_name='Total de Pontos'
+    )
+    prices_reported = models.IntegerField(
+        default=0,
+        verbose_name='Preços Reportados'
+    )
+    prices_verified = models.IntegerField(
+        default=0,
+        verbose_name='Preços Verificados'
+    )
+    rank = models.CharField(
+        max_length=20,
+        choices=RANK_CHOICES,
+        default=RANK_NOVATO,
+        verbose_name='Rank'
+    )
     
     class Meta:
-        verbose_name = 'Pontos do Utilizador'
-        verbose_name_plural = 'Pontos dos Utilizadores'
+        app_label = 'budget'
+        verbose_name = 'Pontuação de Preços'
+        verbose_name_plural = 'Pontuações de Preços'
+        ordering = ['-total_points']
     
-    def __str__(self):
-        return f"{self.user.email} - {self.total_points} pontos"
+    def __str__(self) -> str:
+        return f'{self.user.email} - {self.rank} ({self.total_points} pts)'
     
-    def add_points(self, points: int, reason: str):
+    def add_points(self, points: int) -> None:
+        """Adicionar pontos e actualizar rank."""
         self.total_points += points
-        self.save(update_fields=['total_points'])
-        # Criar log
-        PointsLog.objects.create(
-            user=self.user,
-            points=points,
-            reason=reason
-        )
+        self.prices_verified += 1
+        self._update_rank()
+        self.save(update_fields=['total_points', 'prices_verified', 'rank'])
     
-    def add_badge(self, badge_code: str):
-        """Adiciona um badge se ainda não existe"""
-        if badge_code not in self.badges:
-            self.badges.append(badge_code)
-            self.save(update_fields=['badges'])
-    
-    def increment_prices_reported(self):
+    def increment_reported(self) -> None:
+        """Incrementar contador de preços reportados."""
         self.prices_reported += 1
         self.save(update_fields=['prices_reported'])
-        
-        # Verificar badges
-        if self.prices_reported == 1:
-            self.add_badge('first_price')
-            self.add_points(5, "Primeiro preço reportado!")
-        elif self.prices_reported == 10:
-            self.add_badge('10_prices')
-            self.add_points(20, "10 preços reportados!")
-        elif self.prices_reported == 50:
-            self.add_badge('50_prices')
-            self.add_points(50, "50 preços reportados!")
     
-    def increment_prices_verified(self):
-        self.prices_verified += 1
-        self.save(update_fields=['prices_verified'])
-        
-        if self.prices_verified == 1:
-            self.add_badge('verified_reporter')
-
-
-class PointsLog(TenantAwareModel):
-    """Log de pontos ganhos"""
-    
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='points_log'
-    )
-    points = models.IntegerField()
-    reason = models.CharField(max_length=200)
-    created_at = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        verbose_name = 'Log de Pontos'
-        verbose_name_plural = 'Logs de Pontos'
-        ordering = ['-created_at']
-    
-    def __str__(self):
-        return f"{self.user.email} +{self.points} - {self.reason}"
+    def _update_rank(self) -> None:
+        """Actualizar rank baseado nos pontos totais."""
+        points = self.total_points
+        if points >= self.RANK_THRESHOLDS[self.RANK_LENDA]:
+            self.rank = self.RANK_LENDA
+        elif points >= self.RANK_THRESHOLDS[self.RANK_GURU]:
+            self.rank = self.RANK_GURU
+        elif points >= self.RANK_THRESHOLDS[self.RANK_ESPECIALISTA]:
+            self.rank = self.RANK_ESPECIALISTA
+        elif points >= self.RANK_THRESHOLDS[self.RANK_CONTRIBUIDOR]:
+            self.rank = self.RANK_CONTRIBUIDOR
+        else:
+            self.rank = self.RANK_NOVATO

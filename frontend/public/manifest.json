@@ -1,0 +1,98 @@
+{
+  "name": "ImoOS Obra — Gestão de Construção",
+  "short_name": "ImoOS Obra",
+  "description": "Aplicação mobile para equipas de campo gerirem tarefas de construção offline",
+  "start_url": "/mobile/obra",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#1e40af",
+  "scope": "/mobile",
+  "lang": "pt",
+  "dir": "ltr",
+  "categories": ["business", "productivity"],
+  "icons": [
+    {
+      "src": "/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/mobile-dashboard.png",
+      "sizes": "375x812",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Dashboard de tarefas"
+    },
+    {
+      "src": "/screenshots/mobile-task.png",
+      "sizes": "375x812",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Detalhe da tarefa"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Minhas Tarefas",
+      "short_name": "Tarefas",
+      "description": "Ver tarefas pendentes",
+      "url": "/mobile/obra",
+      "icons": [{ "src": "/icons/tasks.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Tirar Foto",
+      "short_name": "Foto",
+      "description": "Adicionar foto rápida",
+      "url": "/mobile/obra?action=photo",
+      "icons": [{ "src": "/icons/camera.png", "sizes": "96x96" }]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
+}

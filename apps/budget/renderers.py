@@ -1,6 +1,5 @@
 """
-Budget renderers - ImoOS
-Exportação de orçamentos para PDF e Excel.
+Budget renderers — Exportação de orçamentos para PDF e Excel.
 """
 import io
 from decimal import Decimal
@@ -12,19 +11,21 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
+from apps.budget.models import BudgetItem
+
 
 def format_currency(value):
-    """Formata valor em CVE"""
+    """Formata valor em CVE."""
     if value is None:
         return "0,00"
     return f"{value:,.2f} CVE".replace(",", "X").replace(".", ",").replace("X", ".")
 
 
 class BudgetPDFRenderer:
-    """Renderer para exportação de orçamento em PDF"""
+    """Renderer para exportação de orçamento em PDF."""
     
     def render(self, budget, include_notes=True):
-        """Renderiza orçamento como PDF"""
+        """Renderiza orçamento como PDF."""
         try:
             from weasyprint import HTML, CSS
             USE_WEASYPRINT = True
@@ -60,14 +61,13 @@ class BudgetPDFRenderer:
             return response
     
     def _group_items_by_category(self, budget):
-        """Agrupa itens do orçamento por categoria"""
+        """Agrupa itens do orçamento por categoria."""
         from collections import defaultdict
         
         groups = defaultdict(list)
-        for item in budget.items.all().select_related('price_item__category'):
-            category = item.price_item.category if item.price_item else None
-            category_name = category.name if category else 'Outros'
-            category_code = category.code if category else 'OTHER'
+        for item in budget.items.all():
+            category_name = item.get_category_display()
+            category_code = item.category
             groups[category_code].append({
                 'category_name': category_name,
                 'item': item
@@ -78,10 +78,10 @@ class BudgetPDFRenderer:
 
 
 class BudgetExcelRenderer:
-    """Renderer para exportação de orçamento em Excel"""
+    """Renderer para exportação de orçamento em Excel."""
     
     def render(self, budget, include_notes=True):
-        """Renderiza orçamento como Excel"""
+        """Renderiza orçamento como Excel."""
         wb = Workbook()
         ws = wb.active
         ws.title = "Orçamento"
@@ -134,12 +134,11 @@ class BudgetExcelRenderer:
         current_row = header_row + 1
         current_category = None
         
-        items = budget.items.all().select_related('price_item__category').order_by('order')
+        items = budget.items.all().order_by('line_number')
         
         for item in items:
             # Verificar se mudou de categoria
-            category = item.price_item.category if item.price_item else None
-            category_name = category.name if category else 'Outros'
+            category_name = item.get_category_display()
             
             if category_name != current_category:
                 current_category = category_name
@@ -151,16 +150,13 @@ class BudgetExcelRenderer:
                 current_row += 1
             
             # Dados do item
-            name = item.custom_name or (item.price_item.name if item.price_item else '-')
-            unit = item.custom_unit or (item.price_item.unit if item.price_item else '-')
-            
             data = [
-                item.order,
-                name,
-                unit,
-                item.quantity,
-                item.unit_price,
-                item.total,
+                item.line_number,
+                item.description,
+                item.get_unit_display(),
+                float(item.quantity),
+                float(item.unit_price),
+                float(item.total),
             ]
             if include_notes:
                 data.append(item.notes)
@@ -179,17 +175,17 @@ class BudgetExcelRenderer:
         # Totais
         totals_row = current_row + 1
         ws.cell(row=totals_row, column=1, value='Subtotal:').font = total_font
-        ws.cell(row=totals_row, column=6, value=budget.subtotal).font = total_font
+        ws.cell(row=totals_row, column=6, value=float(budget.subtotal)).font = total_font
         ws.cell(row=totals_row, column=6).number_format = '#,##0.00 CVE'
         ws.cell(row=totals_row, column=6).fill = total_fill
         
         ws.cell(row=totals_row + 1, column=1, value=f'Contingência ({budget.contingency_pct}%):').font = total_font
-        ws.cell(row=totals_row + 1, column=6, value=budget.contingency).font = total_font
+        ws.cell(row=totals_row + 1, column=6, value=float(budget.total_contingency)).font = total_font
         ws.cell(row=totals_row + 1, column=6).number_format = '#,##0.00 CVE'
         ws.cell(row=totals_row + 1, column=6).fill = total_fill
         
         ws.cell(row=totals_row + 2, column=1, value='TOTAL:').font = Font(bold=True, size=12)
-        ws.cell(row=totals_row + 2, column=6, value=budget.total).font = Font(bold=True, size=12)
+        ws.cell(row=totals_row + 2, column=6, value=float(budget.grand_total)).font = Font(bold=True, size=12)
         ws.cell(row=totals_row + 2, column=6).number_format = '#,##0.00 CVE'
         ws.cell(row=totals_row + 2, column=6).fill = PatternFill(start_color="92D050", end_color="92D050", fill_type="solid")
         
@@ -217,12 +213,12 @@ class BudgetExcelRenderer:
 
 
 def generate_budget_pdf_response(budget, include_notes=True):
-    """Função auxiliar para gerar resposta PDF"""
+    """Função auxiliar para gerar resposta PDF."""
     renderer = BudgetPDFRenderer()
     return renderer.render(budget, include_notes)
 
 
 def generate_budget_excel_response(budget, include_notes=True):
-    """Função auxiliar para gerar resposta Excel"""
+    """Função auxiliar para gerar resposta Excel."""
     renderer = BudgetExcelRenderer()
     return renderer.render(budget, include_notes)

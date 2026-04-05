@@ -1,149 +1,205 @@
 """
 Management command para seed inicial de preços de Cabo Verde.
-Usage: python manage.py seed_prices [--island=SANTIAGO] [--clear]
+
+Usage: 
+    python manage.py seed_prices [--clear]
+    python manage.py seed_prices --load-fixture
 """
+import json
+import os
 from decimal import Decimal
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from apps.budget.models import PriceCategory, PriceItem
+from apps.budget.models import LocalPriceItem
 
 
-# Data inicial (50+ itens reais de Cabo Verde)
+# Dados de seed simplificados (50 itens essenciais)
 SEED_DATA = [
-    # === MATERIAIS DE CONSTRUÇÃO (MAT) ===
-    {'category': 'MAT', 'name': 'Cimento CP350 50kg', 'unit': 'saco', 'price_santiago': Decimal('950.00')},
-    {'category': 'MAT', 'name': 'Cimento CP400 50kg', 'unit': 'saco', 'price_santiago': Decimal('1050.00')},
-    {'category': 'MAT', 'name': 'Tijolo 15x20x30', 'unit': 'un', 'price_santiago': Decimal('45.00')},
-    {'category': 'MAT', 'name': 'Tijolo 10x20x30', 'unit': 'un', 'price_santiago': Decimal('35.00')},
-    {'category': 'MAT', 'name': 'Tijolo maciço 15x20x40', 'unit': 'un', 'price_santiago': Decimal('55.00')},
-    {'category': 'MAT', 'name': 'Bloco de betão 15x20x40', 'unit': 'un', 'price_santiago': Decimal('120.00')},
-    {'category': 'MAT', 'name': 'Bloco de betão 10x20x40', 'unit': 'un', 'price_santiago': Decimal('85.00')},
-    {'category': 'MAT', 'name': 'Areia fina (rio)', 'unit': 'm3', 'price_santiago': Decimal('3500.00')},
-    {'category': 'MAT', 'name': 'Areia grossa', 'unit': 'm3', 'price_santiago': Decimal('3200.00')},
-    {'category': 'MAT', 'name': 'Brita 1', 'unit': 'm3', 'price_santiago': Decimal('4500.00')},
-    {'category': 'MAT', 'name': 'Brita 2', 'unit': 'm3', 'price_santiago': Decimal('4200.00')},
-    {'category': 'MAT', 'name': 'Brita 3', 'unit': 'm3', 'price_santiago': Decimal('4000.00')},
-    {'category': 'MAT', 'name': 'Pedra calçada', 'unit': 'm3', 'price_santiago': Decimal('5000.00')},
+    # === MATERIAIS DE CONSTRUÇÃO ===
+    {
+        'code': 'CV-001', 'category': 'MATERIALS', 'name': 'Cimento CP350 50kg',
+        'unit': 'SACO', 'price_santiago': '850.00', 'source': 'Cimpor CV'
+    },
+    {
+        'code': 'CV-002', 'category': 'MATERIALS', 'name': 'Cimento CP450 50kg',
+        'unit': 'SACO', 'price_santiago': '920.00', 'source': 'Cimpor CV'
+    },
+    {
+        'code': 'CV-003', 'category': 'MATERIALS', 'name': 'Tijolo 15x20x30',
+        'unit': 'UN', 'price_santiago': '45.00', 'source': 'Fábrica Tijolos Praia'
+    },
+    {
+        'code': 'CV-004', 'category': 'MATERIALS', 'name': 'Tijolo 10x20x30',
+        'unit': 'UN', 'price_santiago': '35.00', 'source': 'Fábrica Tijolos Praia'
+    },
+    {
+        'code': 'CV-005', 'category': 'MATERIALS', 'name': 'Bloco de cimento 15x20x40',
+        'unit': 'UN', 'price_santiago': '65.00', 'source': 'Fábrica Blocos'
+    },
+    {
+        'code': 'CV-006', 'category': 'MATERIALS', 'name': 'Areia média (m3)',
+        'unit': 'M3', 'price_santiago': '4500.00', 'source': 'Areal Santiago'
+    },
+    {
+        'code': 'CV-007', 'category': 'MATERIALS', 'name': 'Brita 19mm (m3)',
+        'unit': 'M3', 'price_santiago': '6000.00', 'source': 'Brita CV'
+    },
+    {
+        'code': 'CV-008', 'category': 'MATERIALS', 'name': 'Brita 25mm (m3)',
+        'unit': 'M3', 'price_santiago': '5800.00', 'source': 'Brita CV'
+    },
+    {
+        'code': 'CV-009', 'category': 'MATERIALS', 'name': 'Ferro 6mm (kg)',
+        'unit': 'KG', 'price_santiago': '180.00', 'source': 'Siderurgia Nacional'
+    },
+    {
+        'code': 'CV-010', 'category': 'MATERIALS', 'name': 'Ferro 8mm (kg)',
+        'unit': 'KG', 'price_santiago': '175.00', 'source': 'Siderurgia Nacional'
+    },
+    {
+        'code': 'CV-011', 'category': 'MATERIALS', 'name': 'Ferro 10mm (kg)',
+        'unit': 'KG', 'price_santiago': '170.00', 'source': 'Siderurgia Nacional'
+    },
+    {
+        'code': 'CV-012', 'category': 'MATERIALS', 'name': 'Ferro 12mm (kg)',
+        'unit': 'KG', 'price_santiago': '165.00', 'source': 'Siderurgia Nacional'
+    },
+    {
+        'code': 'CV-013', 'category': 'MATERIALS', 'name': 'Ferro 16mm (kg)',
+        'unit': 'KG', 'price_santiago': '160.00', 'source': 'Siderurgia Nacional'
+    },
+    {
+        'code': 'CV-014', 'category': 'MATERIALS', 'name': 'Arame recozido (kg)',
+        'unit': 'KG', 'price_santiago': '250.00', 'source': 'Siderurgia Nacional'
+    },
+    {
+        'code': 'CV-015', 'category': 'MATERIALS', 'name': 'Telha fibrocimento 1.10x0.90m',
+        'unit': 'UN', 'price_santiago': '850.00', 'source': 'Importado'
+    },
+    {
+        'code': 'CV-016', 'category': 'MATERIALS', 'name': 'Madeira caibro 5x7 (ml)',
+        'unit': 'ML', 'price_santiago': '180.00', 'source': 'Serralharia CV'
+    },
+    {
+        'code': 'CV-017', 'category': 'MATERIALS', 'name': 'Tubo PVC 100mm (ml)',
+        'unit': 'ML', 'price_santiago': '450.00', 'source': 'Importado'
+    },
+    {
+        'code': 'CV-018', 'category': 'MATERIALS', 'name': 'Tubo PVC 50mm (ml)',
+        'unit': 'ML', 'price_santiago': '250.00', 'source': 'Importado'
+    },
+    {
+        'code': 'CV-019', 'category': 'MATERIALS', 'name': 'Fio elétrico 2.5mm (ml)',
+        'unit': 'ML', 'price_santiago': '85.00', 'source': 'Electrão'
+    },
+    {
+        'code': 'CV-020', 'category': 'MATERIALS', 'name': 'Fio elétrico 4mm (ml)',
+        'unit': 'ML', 'price_santiago': '120.00', 'source': 'Electrão'
+    },
+    {
+        'code': 'CV-021', 'category': 'MATERIALS', 'name': 'Cerâmica piso 45x45 (m2)',
+        'unit': 'M2', 'price_santiago': '1200.00', 'source': 'Importado'
+    },
+    {
+        'code': 'CV-022', 'category': 'MATERIALS', 'name': 'Azulejo parede 20x30 (m2)',
+        'unit': 'M2', 'price_santiago': '950.00', 'source': 'Importado'
+    },
+    {
+        'code': 'CV-023', 'category': 'MATERIALS', 'name': 'Tinta látex 18L',
+        'unit': 'L', 'price_santiago': '2500.00', 'source': 'Importado'
+    },
+    {
+        'code': 'CV-024', 'category': 'MATERIALS', 'name': 'Porta interior completa',
+        'unit': 'UN', 'price_santiago': '8500.00', 'source': 'Marcenaria CV'
+    },
+    {
+        'code': 'CV-025', 'category': 'MATERIALS', 'name': 'Porta exterior completa',
+        'unit': 'UN', 'price_santiago': '15000.00', 'source': 'Importado'
+    },
+    {
+        'code': 'CV-026', 'category': 'MATERIALS', 'name': 'Janela alumínio 1.00x1.00m',
+        'unit': 'UN', 'price_santiago': '12000.00', 'source': 'Alumínios CV'
+    },
+    {
+        'code': 'CV-027', 'category': 'MATERIALS', 'name': 'Vidro comum 4mm (m2)',
+        'unit': 'M2', 'price_santiago': '1500.00', 'source': 'Importado'
+    },
+    {
+        'code': 'CV-028', 'category': 'MATERIALS', 'name': 'Chave de porta',
+        'unit': 'UN', 'price_santiago': '2500.00', 'source': 'Importado'
+    },
+    {
+        'code': 'CV-029', 'category': 'MATERIALS', 'name': 'Cal hidratada 20kg',
+        'unit': 'SACO', 'price_santiago': '450.00', 'source': 'Importado'
+    },
+    {
+        'code': 'CV-030', 'category': 'MATERIALS', 'name': 'Prego 17x27 (kg)',
+        'unit': 'KG', 'price_santiago': '350.00', 'source': 'Importado'
+    },
     
-    # Ferro e Aço
-    {'category': 'MAT', 'name': 'Ferro 6mm (varão)', 'unit': 'barra', 'price_santiago': Decimal('800.00')},
-    {'category': 'MAT', 'name': 'Ferro 8mm (varão)', 'unit': 'barra', 'price_santiago': Decimal('1200.00')},
-    {'category': 'MAT', 'name': 'Ferro 10mm (varão)', 'unit': 'barra', 'price_santiago': Decimal('1800.00')},
-    {'category': 'MAT', 'name': 'Ferro 12mm (varão)', 'unit': 'barra', 'price_santiago': Decimal('2500.00')},
-    {'category': 'MAT', 'name': 'Ferro 16mm (varão)', 'unit': 'barra', 'price_santiago': Decimal('4200.00')},
-    {'category': 'MAT', 'name': 'Ferro 20mm (varão)', 'unit': 'barra', 'price_santiago': Decimal('6500.00')},
-    {'category': 'MAT', 'name': 'Arame de amarrar', 'unit': 'kg', 'price_santiago': Decimal('350.00')},
+    # === MÃO-DE-OBRA ===
+    {
+        'code': 'CV-101', 'category': 'LABOR', 'name': 'Pedreiro (dia)',
+        'unit': 'DAY', 'price_santiago': '2500.00', 'source': 'Média mercado'
+    },
+    {
+        'code': 'CV-102', 'category': 'LABOR', 'name': 'Carpinteiro (dia)',
+        'unit': 'DAY', 'price_santiago': '2200.00', 'source': 'Média mercado'
+    },
+    {
+        'code': 'CV-103', 'category': 'LABOR', 'name': 'Eletricista (dia)',
+        'unit': 'DAY', 'price_santiago': '2800.00', 'source': 'Média mercado'
+    },
+    {
+        'code': 'CV-104', 'category': 'LABOR', 'name': 'Canalizador (dia)',
+        'unit': 'DAY', 'price_santiago': '2600.00', 'source': 'Média mercado'
+    },
+    {
+        'code': 'CV-105', 'category': 'LABOR', 'name': 'Pintor (dia)',
+        'unit': 'DAY', 'price_santiago': '2000.00', 'source': 'Média mercado'
+    },
+    {
+        'code': 'CV-106', 'category': 'LABOR', 'name': 'Servente (dia)',
+        'unit': 'DAY', 'price_santiago': '1500.00', 'source': 'Média mercado'
+    },
+    {
+        'code': 'CV-107', 'category': 'LABOR', 'name': 'Serralheiro (dia)',
+        'unit': 'DAY', 'price_santiago': '2400.00', 'source': 'Média mercado'
+    },
     
-    # Madeiras
-    {'category': 'MAT', 'name': 'Madeira pinho 2x3', 'unit': 'm', 'price_santiago': Decimal('250.00')},
-    {'category': 'MAT', 'name': 'Madeira pinho 2x4', 'unit': 'm', 'price_santiago': Decimal('350.00')},
-    {'category': 'MAT', 'name': 'Madeira pinho 2x6', 'unit': 'm', 'price_santiago': Decimal('500.00')},
-    {'category': 'MAT', 'name': 'Madeira pinho 2x8', 'unit': 'm', 'price_santiago': Decimal('650.00')},
-    {'category': 'MAT', 'name': 'Chapa OSB 12mm', 'unit': 'm2', 'price_santiago': Decimal('1200.00')},
-    {'category': 'MAT', 'name': 'Compensado 15mm', 'unit': 'm2', 'price_santiago': Decimal('1500.00')},
-    {'category': 'MAT', 'name': 'Compensado 18mm', 'unit': 'm2', 'price_santiago': Decimal('1800.00')},
+    # === EQUIPAMENTOS ===
+    {
+        'code': 'CV-201', 'category': 'EQUIPMENT', 'name': 'Aluguer betoneira (dia)',
+        'unit': 'DAY', 'price_santiago': '3500.00', 'source': 'Equipamentos CV'
+    },
+    {
+        'code': 'CV-202', 'category': 'EQUIPMENT', 'name': 'Aluguer andaimes (m2/mês)',
+        'unit': 'M2', 'price_santiago': '450.00', 'source': 'Equipamentos CV'
+    },
+    {
+        'code': 'CV-203', 'category': 'EQUIPMENT', 'name': 'Aluguer escavadeira (dia)',
+        'unit': 'DAY', 'price_santiago': '15000.00', 'source': 'Construção CV'
+    },
+    {
+        'code': 'CV-204', 'category': 'EQUIPMENT', 'name': 'Bomba de concreto (hora)',
+        'unit': 'HR', 'price_santiago': '8000.00', 'source': 'Construção CV'
+    },
     
-    # Cobertura e Telhas
-    {'category': 'MAT', 'name': 'Telha fibrocimento ondulada', 'unit': 'm2', 'price_santiago': Decimal('850.00')},
-    {'category': 'MAT', 'name': 'Telha cerâmica portuguesa', 'unit': 'm2', 'price_santiago': Decimal('2500.00')},
-    {'category': 'MAT', 'name': 'Telha de zinco ondulada', 'unit': 'm2', 'price_santiago': Decimal('1200.00')},
-    {'category': 'MAT', 'name': 'Chapa zinco lisa', 'unit': 'm2', 'price_santiago': Decimal('950.00')},
-    {'category': 'MAT', 'name': 'Calha de zinco', 'unit': 'm', 'price_santiago': Decimal('350.00')},
-    
-    # Revestimentos
-    {'category': 'MAT', 'name': 'Azulejo cerâmico 20x20', 'unit': 'm2', 'price_santiago': Decimal('800.00')},
-    {'category': 'MAT', 'name': 'Azulejo cerâmico 30x30', 'unit': 'm2', 'price_santiago': Decimal('1200.00')},
-    {'category': 'MAT', 'name': 'Azulejo porcelânico', 'unit': 'm2', 'price_santiago': Decimal('2500.00')},
-    {'category': 'MAT', 'name': 'Cerâmico piso 40x40', 'unit': 'm2', 'price_santiago': Decimal('1500.00')},
-    {'category': 'MAT', 'name': 'Cerâmico piso 50x50', 'unit': 'm2', 'price_santiago': Decimal('2000.00')},
-    {'category': 'MAT', 'name': 'Tijoleira tradicional', 'unit': 'm2', 'price_santiago': Decimal('1800.00')},
-    
-    # Pintura e Acabamentos
-    {'category': 'MAT', 'name': 'Tinta látex interior 18L', 'unit': 'lata', 'price_santiago': Decimal('5500.00')},
-    {'category': 'MAT', 'name': 'Tinta látex interior 3.6L', 'unit': 'lata', 'price_santiago': Decimal('1800.00')},
-    {'category': 'MAT', 'name': 'Tinta exterior 18L', 'unit': 'lata', 'price_santiago': Decimal('7500.00')},
-    {'category': 'MAT', 'name': 'Massa corrida 25kg', 'unit': 'saco', 'price_santiago': Decimal('1200.00')},
-    {'category': 'MAT', 'name': 'Selador 18L', 'unit': 'lata', 'price_santiago': Decimal('3500.00')},
-    {'category': 'MAT', 'name': 'Verniz madeira 3.6L', 'unit': 'lata', 'price_santiago': Decimal('2200.00')},
-    
-    # Hidráulica e Elétrica
-    {'category': 'MAT', 'name': 'Tubo PVC 50mm', 'unit': 'm', 'price_santiago': Decimal('450.00')},
-    {'category': 'MAT', 'name': 'Tubo PVC 75mm', 'unit': 'm', 'price_santiago': Decimal('650.00')},
-    {'category': 'MAT', 'name': 'Tubo PVC 110mm', 'unit': 'm', 'price_santiago': Decimal('950.00')},
-    {'category': 'MAT', 'name': 'Cabo elétrico 1.5mm', 'unit': 'm', 'price_santiago': Decimal('85.00')},
-    {'category': 'MAT', 'name': 'Cabo elétrico 2.5mm', 'unit': 'm', 'price_santiago': Decimal('120.00')},
-    {'category': 'MAT', 'name': 'Cabo elétrico 4mm', 'unit': 'm', 'price_santiago': Decimal('180.00')},
-    {'category': 'MAT', 'name': 'Cabo elétrico 6mm', 'unit': 'm', 'price_santiago': Decimal('250.00')},
-    {'category': 'MAT', 'name': 'Quadro elétrico 12 disjuntores', 'unit': 'un', 'price_santiago': Decimal('8500.00')},
-    {'category': 'MAT', 'name': 'Disjuntor unipolar 16A', 'unit': 'un', 'price_santiago': Decimal('450.00')},
-    {'category': 'MAT', 'name': 'Disjuntor unipolar 20A', 'unit': 'un', 'price_santiago': Decimal('450.00')},
-    {'category': 'MAT', 'name': 'Disjuntor bipolar 32A', 'unit': 'un', 'price_santiago': Decimal('850.00')},
-    {'category': 'MAT', 'name': 'Tomada Schuko', 'unit': 'un', 'price_santiago': Decimal('350.00')},
-    {'category': 'MAT', 'name': 'Interruptor simples', 'unit': 'un', 'price_santiago': Decimal('280.00')},
-    {'category': 'MAT', 'name': 'Caixa de descarga', 'unit': 'un', 'price_santiago': Decimal('8500.00')},
-    {'category': 'MAT', 'name': 'Lavatório cerâmico', 'unit': 'un', 'price_santiago': Decimal('6500.00')},
-    {'category': 'MAT', 'name': 'Sanita completa', 'unit': 'un', 'price_santiago': Decimal('15000.00')},
-    {'category': 'MAT', 'name': 'Base de chuveiro', 'unit': 'un', 'price_santiago': Decimal('4500.00')},
-    {'category': 'MAT', 'name': 'Misturadora lavatório', 'unit': 'un', 'price_santiago': Decimal('3500.00')},
-    {'category': 'MAT', 'name': 'Misturadora cozinha', 'unit': 'un', 'price_santiago': Decimal('4500.00')},
-    {'category': 'MAT', 'name': 'Misturadora chuveiro', 'unit': 'un', 'price_santiago': Decimal('3800.00')},
-    
-    # === MÃO-DE-OBRA (LABOR) ===
-    {'category': 'LABOR', 'name': 'Pedreiro', 'unit': 'dia', 'price_santiago': Decimal('3500.00')},
-    {'category': 'LABOR', 'name': 'Pedreiro (servente)', 'unit': 'dia', 'price_santiago': Decimal('2500.00')},
-    {'category': 'LABOR', 'name': 'Carpinteiro', 'unit': 'dia', 'price_santiago': Decimal('4000.00')},
-    {'category': 'LABOR', 'name': 'Serralheiro', 'unit': 'dia', 'price_santiago': Decimal('4000.00')},
-    {'category': 'LABOR', 'name': 'Eletricista', 'unit': 'dia', 'price_santiago': Decimal('4500.00')},
-    {'category': 'LABOR', 'name': 'Canalizador', 'unit': 'dia', 'price_santiago': Decimal('4500.00')},
-    {'category': 'LABOR', 'name': 'Pintor', 'unit': 'dia', 'price_santiago': Decimal('3500.00')},
-    {'category': 'LABOR', 'name': 'Ladrilhador', 'unit': 'dia', 'price_santiago': Decimal('4000.00')},
-    {'category': 'LABOR', 'name': 'Encarregado', 'unit': 'dia', 'price_santiago': Decimal('6000.00')},
-    {'category': 'LABOR', 'name': 'Mestre de obras', 'unit': 'dia', 'price_santiago': Decimal('8000.00')},
-    {'category': 'LABOR', 'name': 'Armador de ferro', 'unit': 'dia', 'price_santiago': Decimal('3500.00')},
-    {'category': 'LABOR', 'name': 'Marceneiro', 'unit': 'dia', 'price_santiago': Decimal('4000.00')},
-    
-    # === EQUIPAMENTOS (EQUIP) ===
-    {'category': 'EQUIP', 'name': 'Grua torre', 'unit': 'dia', 'price_santiago': Decimal('15000.00')},
-    {'category': 'EQUIP', 'name': 'Elevador de material', 'unit': 'dia', 'price_santiago': Decimal('8000.00')},
-    {'category': 'EQUIP', 'name': 'Betoneira 250L', 'unit': 'dia', 'price_santiago': Decimal('2500.00')},
-    {'category': 'EQUIP', 'name': 'Betoneira 400L', 'unit': 'dia', 'price_santiago': Decimal('3500.00')},
-    {'category': 'EQUIP', 'name': 'Vibrador de betão', 'unit': 'dia', 'price_santiago': Decimal('1500.00')},
-    {'category': 'EQUIP', 'name': 'Serra circular', 'unit': 'dia', 'price_santiago': Decimal('1200.00')},
-    {'category': 'EQUIP', 'name': 'Serra tico-tico', 'unit': 'dia', 'price_santiago': Decimal('800.00')},
-    {'category': 'EQUIP', 'name': 'Furadeira', 'unit': 'dia', 'price_santiago': Decimal('600.00')},
-    {'category': 'EQUIP', 'name': 'Martelo demolidor', 'unit': 'dia', 'price_santiago': Decimal('3500.00')},
-    {'category': 'EQUIP', 'name': 'Compressor de ar', 'unit': 'dia', 'price_santiago': Decimal('2500.00')},
-    {'category': 'EQUIP', 'name': 'Gerador 5kVA', 'unit': 'dia', 'price_santiago': Decimal('3500.00')},
-    {'category': 'EQUIP', 'name': 'Gerador 10kVA', 'unit': 'dia', 'price_santiago': Decimal('6000.00')},
-    {'category': 'EQUIP', 'name': 'Andaime tubular (m2)', 'unit': 'm2', 'price_santiago': Decimal('150.00')},
-    {'category': 'EQUIP', 'name': 'Caminhão de água 5000L', 'unit': 'viagem', 'price_santiago': Decimal('3500.00')},
-    
-    # === SERVIÇOS (SERV) ===
-    {'category': 'SERV', 'name': 'Projeto arquitetônico (T1-T2)', 'unit': 'un', 'price_santiago': Decimal('150000.00')},
-    {'category': 'SERV', 'name': 'Projeto arquitetônico (T3-T4)', 'unit': 'un', 'price_santiago': Decimal('250000.00')},
-    {'category': 'SERV', 'name': 'Projeto estrutural', 'unit': 'un', 'price_santiago': Decimal('200000.00')},
-    {'category': 'SERV', 'name': 'Projeto elétrico', 'unit': 'un', 'price_santiago': Decimal('80000.00')},
-    {'category': 'SERV', 'name': 'Projeto hidráulico', 'unit': 'un', 'price_santiago': Decimal('80000.00')},
-    {'category': 'SERV', 'name': 'Legalização de obra', 'unit': 'un', 'price_santiago': Decimal('50000.00')},
-    {'category': 'SERV', 'name': 'Topografia', 'unit': 'un', 'price_santiago': Decimal('30000.00')},
-    {'category': 'SERV', 'name': 'Sondagem geotécnica', 'unit': 'un', 'price_santiago': Decimal('45000.00')},
-    {'category': 'SERV', 'name': 'Fiscalização de obra', 'unit': 'mês', 'price_santiago': Decimal('150000.00')},
-    {'category': 'SERV', 'name': 'Gestão de obra', 'unit': 'mês', 'price_santiago': Decimal('200000.00')},
-    {'category': 'SERV', 'name': 'Limpeza final de obra', 'unit': 'm2', 'price_santiago': Decimal('150.00')},
+    # === SERVIÇOS ===
+    {
+        'code': 'CV-301', 'category': 'SERVICES', 'name': 'Projecto arquitectura (m2)',
+        'unit': 'M2', 'price_santiago': '1500.00', 'source': 'Ordem Arquitectos'
+    },
+    {
+        'code': 'CV-302', 'category': 'SERVICES', 'name': 'Projecto estruturas (m2)',
+        'unit': 'M2', 'price_santiago': '1200.00', 'source': 'Ordem Engenheiros'
+    },
+    {
+        'code': 'CV-303', 'category': 'SERVICES', 'name': 'Inspecção técnica',
+        'unit': 'UN', 'price_santiago': '25000.00', 'source': 'Ordem Engenheiros'
+    },
 ]
-
-# Preços específicos para outras ilhas (variações típicas)
-ISLAND_VARIATIONS = {
-    'SAO_VICENTE': Decimal('1.10'),  # 10% mais caro
-    'SAL': Decimal('1.25'),          # 25% mais caro (ilha turística)
-    'BOA_VISTA': Decimal('1.20'),    # 20% mais caro
-    'SANTO_ANTAO': Decimal('1.05'),  # 5% mais caro (transporte)
-    'SAO_NICOLAU': Decimal('1.15'),  # 15% mais caro
-    'MAIO': Decimal('1.20'),         # 20% mais caro
-    'FOGO': Decimal('1.08'),         # 8% mais caro
-    'BRAVA': Decimal('1.10'),        # 10% mais caro
-}
 
 
 class Command(BaseCommand):
@@ -151,109 +207,128 @@ class Command(BaseCommand):
     
     def add_arguments(self, parser):
         parser.add_argument(
-            '--island',
-            type=str,
-            default='SANTIAGO',
-            help='Ilha específica para aplicar variações de preço (default: SANTIAGO)'
-        )
-        parser.add_argument(
             '--clear',
             action='store_true',
             help='Limpar dados existentes antes de seed'
         )
         parser.add_argument(
-            '--apply-variations',
+            '--load-fixture',
             action='store_true',
-            help='Aplicar variações de preço para outras ilhas'
+            help='Carregar do fixture JSON completo'
         )
     
     def handle(self, *args, **options):
-        island = options['island']
-        clear_data = options['clear']
-        apply_variations = options['apply_variations']
+        self.stdout.write(self.style.NOTICE('Seeding preços de Cabo Verde...'))
         
-        self.stdout.write(self.style.NOTICE(f'Seeding preços para {island}...'))
-        
-        if clear_data:
+        if options['clear']:
             self.stdout.write(self.style.WARNING('A limpar dados existentes...'))
-            PriceItem.objects.all().delete()
-            PriceCategory.objects.all().delete()
+            LocalPriceItem.objects.all().delete()
         
-        # Criar categorias
-        categories = {
-            'MAT': {'name': 'Materiais de Construção', 'icon': '🔨'},
-            'LABOR': {'name': 'Mão-de-Obra', 'icon': '👷'},
-            'EQUIP': {'name': 'Equipamentos', 'icon': '🚧'},
-            'SERV': {'name': 'Serviços', 'icon': '📋'},
-        }
+        if options['load_fixture']:
+            self._load_from_fixture()
+        else:
+            self._load_from_seed_data()
         
+        # Estatísticas
+        total = LocalPriceItem.objects.count()
+        materials = LocalPriceItem.objects.filter(category='MATERIALS').count()
+        labor = LocalPriceItem.objects.filter(category='LABOR').count()
+        equipment = LocalPriceItem.objects.filter(category='EQUIPMENT').count()
+        services = LocalPriceItem.objects.filter(category='SERVICES').count()
+        
+        self.stdout.write(self.style.SUCCESS(f'\nSeed concluído!'))
+        self.stdout.write(f'  Total de itens: {total}')
+        self.stdout.write(f'  Materiais: {materials}')
+        self.stdout.write(f'  Mão-de-obra: {labor}')
+        self.stdout.write(f'  Equipamentos: {equipment}')
+        self.stdout.write(f'  Serviços: {services}')
+    
+    def _load_from_seed_data(self):
+        """Carregar dados do SEED_DATA."""
         with transaction.atomic():
-            category_objects = {}
-            for code, data in categories.items():
-                cat, created = PriceCategory.objects.get_or_create(
-                    code=code,
-                    defaults={
-                        'name': data['name'],
-                        'icon': data['icon'],
-                        'is_active': True
-                    }
-                )
-                category_objects[code] = cat
-                if created:
-                    self.stdout.write(f'  Criada categoria: {data["name"]}')
-            
-            # Criar itens de preço
             created_count = 0
-            updated_count = 0
             
             for item_data in SEED_DATA:
-                category_code = item_data['category']
-                category = category_objects.get(category_code)
-                
-                if not category:
-                    self.stdout.write(
-                        self.style.ERROR(f'Categoria {category_code} não encontrada')
-                    )
-                    continue
-                
-                price_data = {
-                    'category': category,
-                    'name': item_data['name'],
-                    'unit': item_data['unit'],
-                    'price_santiago': item_data['price_santiago'],
-                    'is_active': True,
-                    'is_verified': True,
-                    'source': 'Admin - Seed Inicial',
+                # Calcular preços para outras ilhas (variação típica)
+                base_price = Decimal(item_data['price_santiago'])
+                variations = {
+                    'sao_vicente': self._calculate_island_price(base_price, 1.03),
+                    'sal': self._calculate_island_price(base_price, 1.06),
+                    'boa_vista': self._calculate_island_price(base_price, 1.05),
+                    'santo_antao': self._calculate_island_price(base_price, 1.04),
+                    'sao_nicolau': self._calculate_island_price(base_price, 1.04),
+                    'fogo': self._calculate_island_price(base_price, 1.02),
+                    'brava': self._calculate_island_price(base_price, 1.05),
+                    'maio': self._calculate_island_price(base_price, 1.04),
                 }
                 
-                # Aplicar variações de preço se solicitado
-                if apply_variations:
-                    for island_code, multiplier in ISLAND_VARIATIONS.items():
-                        field_name = f'price_{island_code.lower()}'
-                        varied_price = item_data['price_santiago'] * multiplier
-                        # Arredondar para múltiplo de 50
-                        varied_price = round(varied_price / 50) * 50
-                        price_data[field_name] = varied_price
+                defaults = {
+                    'category': item_data['category'],
+                    'name': item_data['name'],
+                    'unit': item_data['unit'],
+                    'price_santiago': base_price,
+                    'source': item_data['source'],
+                    'is_verified': True,
+                    **{f'price_{k}': v for k, v in variations.items()}
+                }
                 
-                # Criar ou atualizar item
-                item, created = PriceItem.objects.update_or_create(
-                    name=item_data['name'],
-                    category=category,
-                    defaults=price_data
+                item, created = LocalPriceItem.objects.update_or_create(
+                    code=item_data['code'],
+                    defaults=defaults
                 )
                 
                 if created:
                     created_count += 1
-                else:
-                    updated_count += 1
             
-            total = created_count + updated_count
-            self.stdout.write(self.style.SUCCESS(
-                f'Seed concluído! {created_count} criados, {updated_count} atualizados (total: {total})'
-            ))
-            
-            # Estatísticas
-            self.stdout.write('\nEstatísticas:')
-            for code, cat in category_objects.items():
-                count = PriceItem.objects.filter(category=cat).count()
-                self.stdout.write(f'  {cat.icon} {cat.name}: {count} itens')
+            self.stdout.write(f'  Criados: {created_count} itens')
+    
+    def _load_from_fixture(self):
+        """Carregar do fixture JSON."""
+        fixture_path = os.path.join(
+            os.path.dirname(__file__),
+            '..', '..', '..', 'fixtures', 'cv_prices.json'
+        )
+        
+        if not os.path.exists(fixture_path):
+            self.stdout.write(
+                self.style.ERROR(f'Fixture não encontrado: {fixture_path}')
+            )
+            return
+        
+        with open(fixture_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        
+        with transaction.atomic():
+            for item in data:
+                fields = item['fields']
+                defaults = {
+                    'category': fields['category'],
+                    'name': fields['name'],
+                    'description': fields.get('description', ''),
+                    'unit': fields['unit'],
+                    'price_santiago': fields['price_santiago'],
+                    'price_sao_vicente': fields.get('price_sao_vicente') or None,
+                    'price_sal': fields.get('price_sal') or None,
+                    'price_boa_vista': fields.get('price_boa_vista') or None,
+                    'price_santo_antao': fields.get('price_santo_antao') or None,
+                    'price_sao_nicolau': fields.get('price_sao_nicolau') or None,
+                    'price_fogo': fields.get('price_fogo') or None,
+                    'price_brava': fields.get('price_brava') or None,
+                    'price_maio': fields.get('price_maio') or None,
+                    'source': fields['source'],
+                    'is_verified': fields.get('is_verified', True),
+                    'ifc_class': fields.get('ifc_class', ''),
+                }
+                
+                LocalPriceItem.objects.update_or_create(
+                    code=fields['code'],
+                    defaults=defaults
+                )
+        
+        self.stdout.write(f'  Carregados do fixture: {len(data)} itens')
+    
+    def _calculate_island_price(self, base_price: Decimal, multiplier: float) -> Decimal:
+        """Calcular preço para ilha com multiplicador."""
+        price = base_price * Decimal(str(multiplier))
+        # Arredondar para múltiplo de 10
+        return Decimal(int(price / 10) * 10)

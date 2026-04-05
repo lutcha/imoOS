@@ -1,11 +1,15 @@
 """
 Construction module — Tenant schema.
 
-Tracks on-site progress through daily reports, photo evidence, and
-an aggregated per-building progress snapshot.
+Este arquivo mantém compatibilidade com models existentes (DailyReport, 
+ConstructionPhoto, ConstructionProgress) e exporta os novos models organizados.
 
-All models live in the tenant schema — isolated per company via
-django-tenants schema-per-tenant strategy. No tenant_id FK is needed.
+Novos models estão em:
+- models/phase.py: ConstructionPhase
+- models/task.py: ConstructionTask
+- models/progress.py: TaskPhoto, TaskProgressLog
+- models/cpm.py: TaskDependency, CPMSnapshot
+- models/evm.py: EVMSnapshot
 """
 from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -14,6 +18,9 @@ from simple_history.models import HistoricalRecords
 
 from apps.core.models import TenantAwareModel
 
+# =============================================================================
+# Legacy Models (mantidos para compatibilidade)
+# =============================================================================
 
 class DailyReport(TenantAwareModel):
     """
@@ -232,3 +239,29 @@ class ConstructionProgress(TenantAwareModel):
 
     def __str__(self) -> str:
         return f'{self.building} — {self.progress_pct}%'
+
+
+# =============================================================================
+# New Models (importados dos módulos)
+# =============================================================================
+
+from .models.phase import ConstructionPhase
+from .models.task import ConstructionTask
+from .models.progress import TaskPhoto, TaskProgressLog
+from .models.cpm import TaskDependency, CPMSnapshot
+from .models.evm import EVMSnapshot
+
+__all__ = [
+    # Legacy
+    'DailyReport',
+    'ConstructionPhoto',
+    'ConstructionProgress',
+    # New
+    'ConstructionPhase',
+    'ConstructionTask',
+    'TaskPhoto',
+    'TaskProgressLog',
+    'TaskDependency',
+    'CPMSnapshot',
+    'EVMSnapshot',
+]

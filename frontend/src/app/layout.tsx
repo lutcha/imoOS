@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Topbar } from "@/components/layout/Topbar";
 import { Providers } from "@/providers/Providers";
+import { RegisterSW } from "@/components/RegisterSW";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,6 +19,26 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "ImoOS — Sistema de Gestão Imobiliária",
   description: "Plataforma completa para promotoras e construtoras imobiliárias.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "ImoOS",
+  },
+  icons: {
+    apple: [
+      { url: "/icons/icon-192x192.png", sizes: "192x192" },
+      { url: "/icons/icon-512x512.png", sizes: "512x512" },
+    ],
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: "#1e40af",
 };
 
 export default function RootLayout({
@@ -32,6 +53,7 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <Providers>
+          <RegisterSW />
           <Sidebar />
           <div className="flex flex-col min-h-screen bg-muted/30 ml-64">
             <Topbar />

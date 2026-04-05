@@ -1,487 +1,464 @@
 """
-Budget views - ImoOS
-APIs para preços, orçamentos e gamificação.
+Budget Views — API Views para o app budget.
 """
-from decimal import Decimal
-from django.db import transaction
-from django.db.models import Q, Sum, F, Count
+from django.db.models import Q
+from django.http import HttpResponse
 from django.utils import timezone
 from rest_framework import viewsets, status, filters
-from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from rest_framework.exceptions import PermissionDenied, ValidationError
 from django_filters.rest_framework import DjangoFilterBackend
 
-from apps.users.permissions import IsTenantMember
-from .models import (
-    PriceCategory, PriceItem, CrowdsourcedPrice,
-    Budget, BudgetItem, UserPoints, PointsLog
+from apps.budget.models import (
+    LocalPriceItem, SimpleBudget, BudgetItem,
+    CrowdsourcedPrice, UserPriceScore
 )
-from .serializers import (
-    PriceCategorySerializer, PriceItemSerializer, PriceItemListSerializer,
-    CrowdsourcedPriceSerializer, CrowdsourcedPriceCreateSerializer,
-    BudgetListSerializer, BudgetDetailSerializer, BudgetCreateSerializer,
-    BudgetItemSerializer, BudgetItemCreateSerializer,
-    UserPointsSerializer, PointsLogSerializer, LeaderboardEntrySerializer,
-    BudgetExportSerializer
+from apps.budget.serializers import (
+    LocalPriceItemSerializer, LocalPriceItemListSerializer,
+    SimpleBudgetSerializer, SimpleBudgetDetailSerializer,
+    BudgetItemSerializer, CrowdsourcedPriceSerializer,
+    CrowdsourcedPriceVerifySerializer, UserPriceScoreSerializer,
+    PriceSuggestionRequestSerializer, PriceAnomalyCheckSerializer,
+    BudgetCreateFromTemplateSerializer, BudgetCompareSerializer,
+    ExcelImportSerializer
 )
-from .filters import PriceItemFilter, BudgetFilter, CrowdsourcedPriceFilter
-from .renderers import BudgetPDFRenderer, BudgetExcelRenderer
+from apps.budget.services import PriceEngine, BudgetCalculator, ExcelImporter, ExcelExporter
 
 
-class PriceCategoryViewSet(viewsets.ModelViewSet):
-    """ViewSet para categorias de preços"""
-    queryset = PriceCategory.objects.filter(is_active=True)
-    serializer_class = PriceCategorySerializer
-    permission_classes = [IsAuthenticated, IsTenantMember]
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['name', 'code']
-
-
-class PriceItemViewSet(viewsets.ModelViewSet):
-    """ViewSet para itens de preços"""
-    queryset = PriceItem.objects.filter(is_active=True)
-    permission_classes = [IsAuthenticated, IsTenantMember]
+class LocalPriceItemViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para gerir a base de preços local.
+    
+    list: Listar items de preço (com filtros e search)
+    retrieve: Ver detalhes de um item
+    create: Criar novo item (admin only)
+    update: Actualizar item (admin only)
+    """
+    queryset = LocalPriceItem.objects.all()
+    permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_class = PriceItemFilter
-    search_fields = ['name', 'description']
-    ordering_fields = ['name', 'price_santiago', 'last_updated', 'created_at']
-    ordering = ['name']
+    filterset_fields = ['category', 'is_verified', 'unit']
+    search_fields = ['name', 'code', 'description']
+    ordering_fields = ['name', 'code', 'last_updated', 'price_santiago']
+    ordering = ['category', 'code']
     
     def get_serializer_class(self):
         if self.action == 'list':
-            return PriceItemListSerializer
-        return PriceItemSerializer
+            return LocalPriceItemListSerializer
+        return LocalPriceItemSerializer
     
-    @action(detail=False, methods=['get'])
-    def search(self, request):
-        """Busca avançada por nome ou descrição"""
-        query = request.query_params.get('q', '')
-        island = request.query_params.get('island', 'SANTIAGO')
-        category = request.query_params.get('category')
+    def get_queryset(self):
+        """Filtrar por ilha se especificado."""
+        queryset = super().get_queryset()
         
-        queryset = self.get_queryset()
+        # Filtro de ilha para preço específico
+        island = self.request.query_params.get('island')
+        if island:
+            # Anotação do preço para a ilha solicitada
+            price_field = f'price_{island.lower()}'
+            if hasattr(LocalPriceItem, price_field):
+                queryset = queryset.filter(**{f'{price_field}__isnull': False})
         
-        if query:
-            queryset = queryset.filter(
-                Q(name__icontains=query) | Q(description__icontains=query)
-            )
+        return queryset
+    
+    @action(detail=False, methods=['post'])
+    def suggest(self, request):
+        """
+        Sugerir preço baseado em histórico e similares.
         
-        if category:
-            queryset = queryset.filter(category__code=category)
+        POST /api/v1/budget/price-items/suggest/
+        {
+            "item_name": "Cimento CP350 50kg",
+            "island": "SANTIAGO",
+            "category": "MATERIALS",
+            "unit": "SACO"
+        }
+        """
+        serializer = PriceSuggestionRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         
-        # Ordenar por relevância (nome começa com query primeiro)
-        queryset = queryset.order_by('name')[:50]
-        
-        serializer = PriceItemListSerializer(
-            queryset, many=True, context={'request': request}
+        engine = PriceEngine()
+        suggestion = engine.suggest_price(
+            item_name=serializer.validated_data['item_name'],
+            island=serializer.validated_data['island'],
+            category=serializer.validated_data['category'],
+            unit=serializer.validated_data.get('unit')
         )
-        return Response({
-            'query': query,
-            'island': island,
-            'count': len(serializer.data),
-            'results': serializer.data
-        })
+        
+        return Response(suggestion)
     
-    @action(detail=True, methods=['get'])
-    def island_price(self, request, pk=None):
-        """Retorna preço específico para uma ilha"""
-        item = self.get_object()
-        island = request.query_params.get('island', 'SANTIAGO')
+    @action(detail=False, methods=['post'])
+    def check_anomaly(self, request):
+        """
+        Verificar se um preço é anômalo.
         
-        valid_islands = [code for code, _ in PriceItem.ISLANDS]
-        if island not in valid_islands:
-            return Response(
-                {'error': f'Ilha inválida. Use: {valid_islands}'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        POST /api/v1/budget/price-items/check_anomaly/
+        {
+            "price": "950.00",
+            "item_name": "Cimento CP350 50kg",
+            "island": "SANTIAGO",
+            "category": "MATERIALS"
+        }
+        """
+        serializer = PriceAnomalyCheckSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         
-        price = item.get_price_for_island(island)
-        return Response({
-            'item_id': str(item.id),
-            'item_name': item.name,
-            'island': island,
-            'price': price,
-            'unit': item.unit,
-            'is_fallback': not getattr(item, f'price_{island.lower()}', None)
-        })
+        engine = PriceEngine()
+        result = engine.detect_price_anomaly(
+            price=serializer.validated_data['price'],
+            item_name=serializer.validated_data['item_name'],
+            island=serializer.validated_data['island'],
+            category=serializer.validated_data['category']
+        )
+        
+        return Response(result)
 
 
-class CrowdsourcedPriceViewSet(viewsets.ModelViewSet):
-    """ViewSet para preços crowdsourced"""
-    queryset = CrowdsourcedPrice.objects.all()
-    permission_classes = [IsAuthenticated, IsTenantMember]
-    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
-    filterset_class = CrowdsourcedPriceFilter
-    ordering_fields = ['created_at', 'price_cve']
+class SimpleBudgetViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para gerir orçamentos.
+    
+    list: Listar orçamentos
+    retrieve: Ver detalhes de um orçamento
+    create: Criar novo orçamento
+    update: Actualizar orçamento
+    """
+    queryset = SimpleBudget.objects.all()
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['project', 'status', 'island']
+    search_fields = ['name', 'description']
+    ordering_fields = ['created_at', 'grand_total', 'name']
     ordering = ['-created_at']
     
     def get_serializer_class(self):
-        if self.action in ['create', 'update', 'partial_update']:
-            return CrowdsourcedPriceCreateSerializer
-        return CrowdsourcedPriceSerializer
+        if self.action == 'retrieve':
+            return SimpleBudgetDetailSerializer
+        return SimpleBudgetSerializer
     
     def get_queryset(self):
-        """Filtra baseado no utilizador"""
-        user = self.request.user
+        """Filtrar por projecto se especificado."""
+        queryset = super().get_queryset()
+        project_id = self.request.query_params.get('project')
+        if project_id:
+            queryset = queryset.filter(project_id=project_id)
+        return queryset
+    
+    @action(detail=False, methods=['post'])
+    def from_template(self, request):
+        """
+        Criar orçamento a partir de template.
+        
+        POST /api/v1/budget/budgets/from_template/
+        {
+            "template_type": "residential_t2",
+            "project_id": "uuid-do-projecto",
+            "island": "SANTIAGO",
+            "name": "Orçamento T2 Personalizado"
+        }
+        """
+        serializer = BudgetCreateFromTemplateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        calculator = BudgetCalculator()
+        budget = calculator.create_budget_from_template(
+            project_id=serializer.validated_data['project_id'],
+            template_type=serializer.validated_data['template_type'],
+            user=request.user,
+            island=serializer.validated_data.get('island', 'SANTIAGO'),
+            custom_name=serializer.validated_data.get('name')
+        )
+        
+        return Response(
+            SimpleBudgetSerializer(budget).data,
+            status=status.HTTP_201_CREATED
+        )
+    
+    @action(detail=True, methods=['post'])
+    def duplicate(self, request, pk=None):
+        """
+        Duplicar um orçamento existente.
+        
+        POST /api/v1/budget/budgets/{id}/duplicate/
+        {
+            "name": "Cópia do Orçamento",
+            "increment_version": true
+        }
+        """
+        budget = self.get_object()
+        
+        calculator = BudgetCalculator()
+        new_budget = calculator.duplicate_budget(
+            budget_id=budget.id,
+            user=request.user,
+            new_name=request.data.get('name'),
+            increment_version=request.data.get('increment_version', True)
+        )
+        
+        return Response(
+            SimpleBudgetSerializer(new_budget).data,
+            status=status.HTTP_201_CREATED
+        )
+    
+    @action(detail=True, methods=['post'])
+    def compare(self, request, pk=None):
+        """
+        Comparar duas versões do orçamento.
+        
+        POST /api/v1/budget/budgets/{id}/compare/
+        {
+            "version_a": "1.0",
+            "version_b": "2.0"
+        }
+        """
+        budget = self.get_object()
+        
+        serializer = BudgetCompareSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        calculator = BudgetCalculator()
+        comparison = calculator.compare_versions(
+            budget_id=budget.project_id,  # Compara orçamentos do mesmo projecto
+            version_a=serializer.validated_data['version_a'],
+            version_b=serializer.validated_data['version_b']
+        )
+        
+        return Response(comparison)
+    
+    @action(detail=True, methods=['post'])
+    def approve(self, request, pk=None):
+        """
+        Aprovar o orçamento.
+        
+        POST /api/v1/budget/budgets/{id}/approve/
+        """
+        budget = self.get_object()
+        
+        if budget.status == SimpleBudget.STATUS_APPROVED:
+            return Response(
+                {'detail': 'Orçamento já está aprovado.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        budget.approve(request.user)
+        
+        return Response(
+            SimpleBudgetSerializer(budget).data,
+            status=status.HTTP_200_OK
+        )
+    
+    @action(detail=True, methods=['get'])
+    def summary(self, request, pk=None):
+        """
+        Obter resumo estatístico do orçamento.
+        
+        GET /api/v1/budget/budgets/{id}/summary/
+        """
+        budget = self.get_object()
+        
+        calculator = BudgetCalculator()
+        summary = calculator.get_budget_summary(budget.id)
+        
+        return Response(summary)
+    
+    @action(detail=True, methods=['post'])
+    def import_excel(self, request, pk=None):
+        """
+        Importar items de um ficheiro Excel.
+        
+        POST /api/v1/budget/budgets/{id}/import_excel/
+        Multipart form com campo 'file'
+        """
+        budget = self.get_object()
+        
+        serializer = ExcelImportSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        importer = ExcelImporter(budget)
+        result = importer.import_from_file(serializer.validated_data['file'])
+        
+        if result['success']:
+            return Response(result, status=status.HTTP_200_OK)
+        else:
+            return Response(result, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=True, methods=['get'])
+    def export_excel(self, request, pk=None):
+        """
+        Exportar orçamento para Excel.
+        
+        GET /api/v1/budget/budgets/{id}/export_excel/
+        """
+        budget = self.get_object()
+        
+        exporter = ExcelExporter(budget)
+        excel_data = exporter.export_to_bytes()
+        
+        filename = f"orcamento_{budget.name.replace(' ', '_')}_v{budget.version}.xlsx"
+        
+        response = HttpResponse(
+            excel_data,
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        return response
+
+
+class BudgetItemViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para gerir items de orçamento.
+    
+    list: Listar items de um orçamento
+    create: Adicionar item ao orçamento
+    update: Actualizar item
+    destroy: Remover item
+    """
+    queryset = BudgetItem.objects.all()
+    serializer_class = BudgetItemSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ['category', 'price_source']
+    ordering_fields = ['line_number', 'total']
+    ordering = ['line_number']
+    
+    def get_queryset(self):
+        """Filtrar por orçamento."""
+        queryset = super().get_queryset()
+        budget_id = self.request.query_params.get('budget')
+        if budget_id:
+            queryset = queryset.filter(budget_id=budget_id)
+        return queryset
+
+
+class CrowdsourcedPriceViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para preços crowdsourced.
+    
+    list: Listar preços reportados
+    create: Reportar novo preço
+    """
+    queryset = CrowdsourcedPrice.objects.all()
+    serializer_class = CrowdsourcedPriceSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['status', 'category', 'island']
+    search_fields = ['item_name', 'location', 'supplier']
+    ordering_fields = ['created_at', 'price_cve']
+    ordering = ['-created_at']
+    
+    def get_queryset(self):
+        """Filtrar preços do utilizador ou verificados."""
         queryset = super().get_queryset()
         
-        # Admin vê todos, outros só veem os seus ou aprovados
-        if not user.is_staff:
+        # Se não for admin, mostrar apenas:
+        # - Próprios preços reportados
+        # - Preços verificados
+        if not self.request.user.is_staff:
             queryset = queryset.filter(
-                Q(reported_by=user) | Q(status='APPROVED')
+                Q(reported_by=self.request.user) | 
+                Q(status=CrowdsourcedPrice.STATUS_VERIFIED)
             )
         
         return queryset
     
-    def perform_create(self, serializer):
-        """Cria preço e atribui pontos"""
-        with transaction.atomic():
-            # Guardar preço
-            crowdsourced = serializer.save()
-            
-            # Atualizar pontos do utilizador
-            user_points, _ = UserPoints.objects.get_or_create(
-                user=crowdsourced.reported_by,
-                defaults={'total_points': 0}
-            )
-            user_points.add_points(
-                crowdsourced.points_earned,
-                f"Preço reportado: {crowdsourced.item_name}"
-            )
-            user_points.increment_prices_reported()
-    
-    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated, IsAdminUser])
-    def pending(self, request):
-        """Lista preços pendentes de aprovação (admin only)"""
-        queryset = self.get_queryset().filter(status='PENDING')
-        serializer = CrowdsourcedPriceSerializer(queryset, many=True)
-        return Response({
-            'count': queryset.count(),
-            'results': serializer.data
-        })
-    
-    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsAdminUser])
-    def approve(self, request, pk=None):
-        """Aprova um preço crowdsourced e cria PriceItem"""
-        crowdsourced = self.get_object()
+    @action(detail=False, methods=['get'])
+    def leaderboard(self, request):
+        """
+        Top contribuidores (gamificação).
         
-        if crowdsourced.status != 'PENDING':
-            return Response(
-                {'error': f"Preço já está {crowdsourced.get_status_display()}"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        with transaction.atomic():
-            # Criar ou atualizar PriceItem
-            category = crowdsourced.category
-            if not category:
-                # Criar categoria default se não especificada
-                category, _ = PriceCategory.objects.get_or_create(
-                    code='CROWD',
-                    defaults={'name': 'Crowdsourced', 'icon': '👥'}
-                )
-            
-            # Verificar se já existe item com mesmo nome na ilha
-            island_field = f"price_{crowdsourced.island.lower()}"
-            
-            price_item, created = PriceItem.objects.get_or_create(
-                name=crowdsourced.item_name,
-                category=category,
-                defaults={
-                    'unit': 'un',  # Default unit
-                    'price_santiago': crowdsourced.price_cve,
-                    island_field: crowdsourced.price_cve,
-                    'source': f"Crowdsourced by {crowdsourced.reported_by.email}",
-                    'is_verified': True,
-                }
-            )
-            
-            if not created:
-                # Atualizar preço para a ilha específica
-                setattr(price_item, island_field, crowdsourced.price_cve)
-                price_item.save()
-            
-            # Atualizar crowdsourced
-            crowdsourced.status = 'APPROVED'
-            crowdsourced.reviewed_by = request.user
-            crowdsourced.reviewed_at = timezone.now()
-            crowdsourced.linked_item = price_item
-            crowdsourced.save()
-            
-            # Bonus points por aprovação
-            user_points = UserPoints.objects.get(user=crowdsourced.reported_by)
-            user_points.add_points(20, f"Preço aprovado: {crowdsourced.item_name}")
-            user_points.increment_prices_verified()
+        GET /api/v1/budget/crowdsourced/leaderboard/
+        """
+        scores = UserPriceScore.objects.select_related('user').order_by('-total_points')[:20]
         
         return Response({
-            'status': 'approved',
-            'price_item_id': str(price_item.id),
-            'crowdsourced': CrowdsourcedPriceSerializer(crowdsourced).data
-        })
-    
-    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsAdminUser])
-    def reject(self, request, pk=None):
-        """Rejeita um preço crowdsourced"""
-        crowdsourced = self.get_object()
-        reason = request.data.get('reason', '')
-        
-        if crowdsourced.status != 'PENDING':
-            return Response(
-                {'error': f"Preço já está {crowdsourced.get_status_display()}"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        crowdsourced.status = 'REJECTED'
-        crowdsourced.reviewed_by = request.user
-        crowdsourced.reviewed_at = timezone.now()
-        crowdsourced.review_notes = reason
-        crowdsourced.save()
-        
-        return Response({
-            'status': 'rejected',
-            'reason': reason,
-            'crowdsourced': CrowdsourcedPriceSerializer(crowdsourced).data
-        })
-
-
-class BudgetViewSet(viewsets.ModelViewSet):
-    """ViewSet para orçamentos"""
-    queryset = Budget.objects.all()
-    permission_classes = [IsAuthenticated, IsTenantMember]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_class = BudgetFilter
-    search_fields = ['name', 'description']
-    ordering_fields = ['created_at', 'updated_at', 'total', 'name']
-    ordering = ['-created_at']
-    
-    def get_serializer_class(self):
-        if self.action == 'list':
-            return BudgetListSerializer
-        elif self.action == 'create':
-            return BudgetCreateSerializer
-        elif self.action in ['retrieve', 'update', 'partial_update']:
-            return BudgetDetailSerializer
-        return BudgetDetailSerializer
-    
-    def get_queryset(self):
-        """Filtra orçamentos do tenant"""
-        queryset = super().get_queryset()
-        
-        # Filtrar por projeto se especificado
-        project_id = self.request.query_params.get('project_id')
-        if project_id:
-            queryset = queryset.filter(project_id=project_id)
-        
-        return queryset.select_related('project', 'created_by').prefetch_related('items', 'items__price_item')
-    
-    @action(detail=True, methods=['post'])
-    def recalculate(self, request, pk=None):
-        """Recalcula totais do orçamento"""
-        budget = self.get_object()
-        budget.recalculate_totals()
-        return Response({
-            'message': 'Orçamento recalculado com sucesso',
-            'budget': BudgetDetailSerializer(budget).data
+            'count': scores.count(),
+            'results': UserPriceScoreSerializer(scores, many=True).data
         })
     
     @action(detail=True, methods=['post'])
-    def duplicate(self, request, pk=None):
-        """Duplica um orçamento"""
-        budget = self.get_object()
+    def verify(self, request, pk=None):
+        """
+        Verificar (aprovar) um preço reportado.
         
-        with transaction.atomic():
-            # Criar novo orçamento baseado no original
-            new_budget = Budget.objects.create(
-                project=budget.project,
-                name=f"{budget.name} (Cópia)",
-                description=budget.description,
-                island=budget.island,
-                contingency_pct=budget.contingency_pct,
-                status='DRAFT',
-                created_by=request.user
-            )
-            
-            # Copiar itens
-            for item in budget.items.all():
-                BudgetItem.objects.create(
-                    budget=new_budget,
-                    price_item=item.price_item,
-                    custom_name=item.custom_name,
-                    custom_unit=item.custom_unit,
-                    custom_unit_price=item.custom_unit_price,
-                    quantity=item.quantity,
-                    order=item.order,
-                    notes=item.notes
-                )
-            
-            new_budget.recalculate_totals()
+        POST /api/v1/budget/crowdsourced/{id}/verify/
+        {
+            "action": "verify",
+            "points": 10,
+            "link_to_official": "uuid-do-item-oficial"
+        }
+        """
+        price = self.get_object()
         
-        return Response({
-            'message': 'Orçamento duplicado com sucesso',
-            'budget': BudgetDetailSerializer(new_budget).data
-        }, status=status.HTTP_201_CREATED)
-    
-    @action(detail=True, methods=['post'])
-    def set_baseline(self, request, pk=None):
-        """Define orçamento como baseline (congelado)"""
-        budget = self.get_object()
-        
-        if budget.status == 'ARCHIVED':
+        # Apenas admins podem verificar
+        if not request.user.is_staff:
             return Response(
-                {'error': 'Orçamento arquivado não pode ser definido como baseline'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        budget.status = 'BASELINE'
-        budget.save(update_fields=['status'])
-        
-        return Response({
-            'message': 'Orçamento definido como baseline',
-            'budget': BudgetDetailSerializer(budget).data
-        })
-    
-    @action(detail=True, methods=['post'])
-    def export(self, request, pk=None):
-        """Exporta orçamento para PDF ou Excel"""
-        budget = self.get_object()
-        serializer = BudgetExportSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        
-        export_format = serializer.validated_data['format']
-        include_notes = serializer.validated_data.get('include_notes', True)
-        
-        if export_format == 'pdf':
-            renderer = BudgetPDFRenderer()
-            return renderer.render(budget, include_notes)
-        elif export_format == 'excel':
-            renderer = BudgetExcelRenderer()
-            return renderer.render(budget, include_notes)
-        
-        return Response(
-            {'error': 'Formato inválido'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-
-class BudgetItemViewSet(viewsets.ModelViewSet):
-    """ViewSet para itens de orçamento"""
-    queryset = BudgetItem.objects.all()
-    permission_classes = [IsAuthenticated, IsTenantMember]
-    filter_backends = [filters.OrderingFilter]
-    ordering_fields = ['order', 'created_at']
-    ordering = ['order', 'created_at']
-    
-    def get_serializer_class(self):
-        if self.action == 'create':
-            return BudgetItemCreateSerializer
-        return BudgetItemSerializer
-    
-    def get_queryset(self):
-        """Filtra itens de um orçamento específico"""
-        queryset = super().get_queryset()
-        budget_id = self.kwargs.get('budget_pk')
-        if budget_id:
-            queryset = queryset.filter(budget_id=budget_id)
-        return queryset.select_related('price_item', 'price_item__category')
-    
-    def perform_create(self, serializer):
-        """Cria item e recalcula orçamento"""
-        budget_id = self.kwargs.get('budget_pk')
-        budget = Budget.objects.get(id=budget_id)
-        
-        # Verificar se orçamento pode ser editado
-        if budget.status in ['BASELINE', 'ARCHIVED']:
-            raise PermissionDenied(
-                'Não é possível editar orçamentos baseline ou arquivados'
-            )
-        
-        serializer.save(budget=budget)
-    
-    @action(detail=False, methods=['post'])
-    def bulk_create(self, request, budget_pk=None):
-        """Cria múltiplos itens de uma vez"""
-        budget = Budget.objects.get(id=budget_pk)
-        
-        if budget.status in ['BASELINE', 'ARCHIVED']:
-            return Response(
-                {'error': 'Não é possível editar orçamentos baseline ou arquivados'},
+                {'detail': 'Apenas administradores podem verificar preços.'},
                 status=status.HTTP_403_FORBIDDEN
             )
         
-        items_data = request.data.get('items', [])
-        if not items_data:
+        if price.status != CrowdsourcedPrice.STATUS_PENDING:
             return Response(
-                {'error': 'Nenhum item fornecido'},
+                {'detail': f'Preço já está {price.get_status_display().lower()}.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        created_items = []
-        with transaction.atomic():
-            for item_data in items_data:
-                serializer = BudgetItemCreateSerializer(data=item_data)
-                serializer.is_valid(raise_exception=True)
-                item = serializer.save(budget=budget)
-                created_items.append(item)
+        serializer = CrowdsourcedPriceVerifySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         
-        return Response({
-            'count': len(created_items),
-            'items': BudgetItemSerializer(created_items, many=True).data
-        }, status=status.HTTP_201_CREATED)
+        action_type = serializer.validated_data['action']
+        
+        if action_type == 'verify':
+            price.verify(request.user, serializer.validated_data.get('points', 10))
+            
+            # Linkar a item oficial se especificado
+            link_id = serializer.validated_data.get('link_to_official')
+            if link_id:
+                try:
+                    official_item = LocalPriceItem.objects.get(id=link_id)
+                    price.linked_price_item = official_item
+                    price.save(update_fields=['linked_price_item'])
+                except LocalPriceItem.DoesNotExist:
+                    pass
+            
+            return Response({
+                'status': 'verified',
+                'points_awarded': price.points_earned,
+                'message': 'Preço verificado e pontos atribuídos ao utilizador.'
+            })
+        
+        else:  # reject
+            price.reject(
+                request.user,
+                serializer.validated_data.get('rejection_reason', '')
+            )
+            return Response({
+                'status': 'rejected',
+                'message': 'Preço rejeitado.'
+            })
 
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated, IsTenantMember])
-def leaderboard(request):
-    """Retorna leaderboard dos maiores contribuidores"""
-    top_users = UserPoints.objects.select_related('user').order_by('-total_points')[:20]
+class UserPriceScoreViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    ViewSet para pontuações de utilizadores (gamificação).
     
-    results = []
-    for rank, user_points in enumerate(top_users, 1):
-        results.append({
-            'rank': rank,
-            'user_name': user_points.user.email,
-            'total_points': user_points.total_points,
-            'prices_reported': user_points.prices_reported,
-            'badges': user_points.badges
-        })
-    
-    return Response({
-        'count': len(results),
-        'results': results
-    })
-
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated, IsTenantMember])
-def my_points(request):
-    """Retorna pontos e histórico do utilizador atual"""
-    user = request.user
-    
-    user_points, _ = UserPoints.objects.get_or_create(
-        user=user,
-        defaults={'total_points': 0}
-    )
-    
-    # Recent logs
-    recent_logs = PointsLog.objects.filter(user=user).order_by('-created_at')[:10]
-    
-    return Response({
-        'user': user.email,
-        'total_points': user_points.total_points,
-        'prices_reported': user_points.prices_reported,
-        'prices_verified': user_points.prices_verified,
-        'badges': user_points.badges,
-        'recent_activity': PointsLogSerializer(recent_logs, many=True).data
-    })
-
-
-class UserPointsViewSet(viewsets.ReadOnlyModelViewSet):
-    """ViewSet para pontos de utilizadores (readonly)"""
-    queryset = UserPoints.objects.select_related('user')
-    serializer_class = UserPointsSerializer
-    permission_classes = [IsAuthenticated, IsTenantMember]
+    list: Listar rankings
+    retrieve: Ver pontuação de um utilizador
+    """
+    queryset = UserPriceScore.objects.all()
+    serializer_class = UserPriceScoreSerializer
+    permission_classes = [IsAuthenticated]
     filter_backends = [filters.OrderingFilter]
-    ordering_fields = ['total_points', 'prices_reported']
+    ordering_fields = ['total_points', 'prices_verified']
     ordering = ['-total_points']
+    
+    @action(detail=False, methods=['get'])
+    def me(self, request):
+        """
+        Ver própria pontuação.
+        
+        GET /api/v1/budget/scores/me/
+        """
+        score, created = UserPriceScore.objects.get_or_create(user=request.user)
+        return Response(UserPriceScoreSerializer(score).data)

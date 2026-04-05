@@ -1,0 +1,14 @@
+# WhatsApp Business API Integration Requirements
+# Add these to your main requirements.txt or install separately
+
+# WhatsApp Providers
+twilio>=9.0.0
+requests>=2.31.0
+
+# Celery for async tasks (should already be in main requirements)
+# celery>=5.3.0
+# django-celery-beat>=2.5.0
+# django-celery-results>=2.5.0
+
+# Optional: Africa's Talking for SMS fallback
+# africastalking>=1.2.0
