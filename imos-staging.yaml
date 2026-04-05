@@ -66,6 +66,21 @@ jobs:
       - key: REDIS_URL
         scope: RUN_AND_BUILD_TIME
         value: ${redis.DATABASE_URL}?ssl_cert_reqs=CERT_NONE
+      - key: TWILIO_ACCOUNT_SID
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+        value: EV[1:placeholder:AC_placeholder]
+      - key: TWILIO_AUTH_TOKEN
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+        value: EV[1:placeholder:placeholder]
+      - key: TWILIO_WHATSAPP_NUMBER
+        scope: RUN_AND_BUILD_TIME
+        value: +14155238886
+      - key: WHATSAPP_WEBHOOK_SECRET
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+        value: EV[1:placeholder:webhook_secret_placeholder]
     github:
       branch: develop
       repo: lutcha/imoOS
@@ -147,6 +162,21 @@ services:
       - key: CORS_ALLOWED_ORIGINS
         scope: RUN_AND_BUILD_TIME
         value: https://proptech.cv,https://www.proptech.cv,https://demo.proptech.cv
+      - key: TWILIO_ACCOUNT_SID
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+        value: EV[1:placeholder:AC_placeholder]
+      - key: TWILIO_AUTH_TOKEN
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+        value: EV[1:placeholder:placeholder]
+      - key: TWILIO_WHATSAPP_NUMBER
+        scope: RUN_AND_BUILD_TIME
+        value: +14155238886
+      - key: WHATSAPP_WEBHOOK_SECRET
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+        value: EV[1:placeholder:webhook_secret_placeholder]
     github:
       branch: develop
       deploy_on_push: true
@@ -220,6 +250,17 @@ workers:
       - key: CELERY_RESULT_BACKEND
         scope: RUN_AND_BUILD_TIME
         value: django-db
+      - key: TWILIO_ACCOUNT_SID
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+        value: EV[1:placeholder:AC_placeholder]
+      - key: TWILIO_AUTH_TOKEN
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+        value: EV[1:placeholder:placeholder]
+      - key: TWILIO_WHATSAPP_NUMBER
+        scope: RUN_AND_BUILD_TIME
+        value: +14155238886
     github:
       branch: develop
       deploy_on_push: true
@@ -263,6 +304,17 @@ workers:
       - key: CELERY_RESULT_BACKEND
         scope: RUN_AND_BUILD_TIME
         value: django-db
+      - key: TWILIO_ACCOUNT_SID
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+        value: EV[1:placeholder:AC_placeholder]
+      - key: TWILIO_AUTH_TOKEN
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+        value: EV[1:placeholder:placeholder]
+      - key: TWILIO_WHATSAPP_NUMBER
+        scope: RUN_AND_BUILD_TIME
+        value: +14155238886
     github:
       branch: develop
       deploy_on_push: true
