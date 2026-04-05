@@ -76,7 +76,7 @@ jobs:
         value: EV[1:placeholder:placeholder]
       - key: TWILIO_WHATSAPP_NUMBER
         scope: RUN_AND_BUILD_TIME
-        value: +14155238886
+        value: "+14155238886"
       - key: WHATSAPP_WEBHOOK_SECRET
         scope: RUN_AND_BUILD_TIME
         type: SECRET
@@ -172,7 +172,7 @@ services:
         value: EV[1:placeholder:placeholder]
       - key: TWILIO_WHATSAPP_NUMBER
         scope: RUN_AND_BUILD_TIME
-        value: +14155238886
+        value: "+14155238886"
       - key: WHATSAPP_WEBHOOK_SECRET
         scope: RUN_AND_BUILD_TIME
         type: SECRET
@@ -260,7 +260,7 @@ workers:
         value: EV[1:placeholder:placeholder]
       - key: TWILIO_WHATSAPP_NUMBER
         scope: RUN_AND_BUILD_TIME
-        value: +14155238886
+        value: "+14155238886"
     github:
       branch: develop
       deploy_on_push: true
@@ -314,7 +314,7 @@ workers:
         value: EV[1:placeholder:placeholder]
       - key: TWILIO_WHATSAPP_NUMBER
         scope: RUN_AND_BUILD_TIME
-        value: +14155238886
+        value: "+14155238886"
     github:
       branch: develop
       deploy_on_push: true
