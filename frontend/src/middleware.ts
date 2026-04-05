@@ -46,6 +46,28 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // ------------------------------------------------------------------
+  // 0. RSC / prefetch navigation requests to protected routes
+  //    → return 401 instead of redirecting.
+  //    A redirect during an RSC fetch causes Next.js to follow the
+  //    redirect and return text/x-component for the login page, which
+  //    the browser renders as raw RSC flight data instead of HTML.
+  // ------------------------------------------------------------------
+  const isRSCNavigation =
+    request.headers.has("RSC") ||
+    request.headers.has("Next-Router-State-Tree") ||
+    request.headers.has("Next-Router-Prefetch");
+
+  if (isRSCNavigation && !isPublicPath(pathname)) {
+    const hasSession =
+      pathname.startsWith("/superadmin")
+        ? request.cookies.has("superadmin_refresh_token")
+        : request.cookies.has("refresh_token");
+    if (!hasSession) {
+      return new NextResponse(null, { status: 401 });
+    }
+  }
+
+  // ------------------------------------------------------------------
   // 1. Always allow public paths
   // ------------------------------------------------------------------
   if (isPublicPath(pathname)) {
