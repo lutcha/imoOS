@@ -254,7 +254,7 @@ class EVMSnapshotAdmin(admin.ModelAdmin):
         'ev', 'pv', 'ac',
         'overall_health'
     ]
-    list_filter = ['date', 'overall_health']
+    list_filter = ['date']
     search_fields = ['project__name']
     date_hierarchy = 'date'
     

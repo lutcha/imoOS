@@ -118,7 +118,7 @@ class SimpleBudgetAdmin(admin.ModelAdmin):
         'status_badge', 'item_count', 'grand_total_display', 
         'created_by', 'created_at'
     ]
-    list_filter = ['status', 'island', 'created_at', 'category_totals']
+    list_filter = ['status', 'island', 'created_at']
     search_fields = ['name', 'project__name', 'description']
     readonly_fields = [
         'total_materials', 'total_labor', 'total_equipment', 
