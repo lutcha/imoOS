@@ -23,33 +23,43 @@ export interface SyncResult {
  */
 async function processAction(action: ActionQueue): Promise<void> {
   switch (action.type) {
-    case "task_complete":
-      await apiClient.patch(`/construction/tasks/${action.payload.taskId}/`, {
+    case "task_complete": {
+      const payload = action.payload as { taskId: string };
+      await apiClient.patch(`/construction/tasks/${payload.taskId}/`, {
         status: "completed",
       });
       break;
+    }
 
-    case "task_update":
-      await apiClient.patch(`/construction/tasks/${action.payload.taskId}/`, {
-        status: action.payload.status,
+    case "task_update": {
+      const payload = action.payload as { taskId: string; status: string };
+      await apiClient.patch(`/construction/tasks/${payload.taskId}/`, {
+        status: payload.status,
       });
       break;
+    }
 
-    case "note_add":
-      await apiClient.post(`/construction/tasks/${action.payload.taskId}/notes/`, {
-        note: action.payload.note,
+    case "note_add": {
+      const payload = action.payload as { taskId: string; note: string };
+      await apiClient.post(`/construction/tasks/${payload.taskId}/notes/`, {
+        note: payload.note,
       });
       break;
+    }
 
-    case "photo_upload":
+    case "photo_upload": {
       // Photo upload handled separately (multipart/form-data)
-      await uploadPhoto(action.payload.photoId);
+      const payload = action.payload as { photoId: string };
+      await uploadPhoto(payload.photoId);
       break;
+    }
 
-    case "voice_upload":
+    case "voice_upload": {
       // Voice upload handled separately
-      await uploadVoiceNote(action.payload.voiceId);
+      const payload = action.payload as { voiceId: string };
+      await uploadVoiceNote(payload.voiceId);
       break;
+    }
 
     default:
       console.warn("Unknown action type:", (action as ActionQueue).type);

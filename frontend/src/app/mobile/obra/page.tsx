@@ -6,7 +6,8 @@
  * Tabs: [Hoje] [Esta Semana] [Concluídas]
  * Lista de TaskCards com swipe actions
  */
-import { useState, useMemo, useCallback } from "react";
+import dynamic from "next/dynamic";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Plus, RefreshCw, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -34,8 +35,22 @@ export default function MobileObraPage() {
   const initialTab = (searchParams.get("tab") as TabKey) || "today";
   
   const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
+  const [mounted, setMounted] = useState(false);
   const { tasks, isLoading, error, refresh, updateTaskStatus, getTaskById } = useMobileTasks();
   const { isOnline, queueAction } = useOfflineSync();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Prevent hydration issues - render loading state until mounted
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   // Filter tasks based on active tab
   const filteredTasks = useMemo(() => {
