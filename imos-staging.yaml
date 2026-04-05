@@ -7,8 +7,10 @@ databases:
     name: redis
     production: true
 domains:
-  - domain: proptech.cv
+  - domain: imos-staging-jiow3.ondigitalocean.app
     type: PRIMARY
+  - domain: proptech.cv
+    type: ALIAS
   - domain: www.proptech.cv
     type: ALIAS
   - domain: demo.proptech.cv
@@ -16,15 +18,15 @@ domains:
 ingress:
   rules:
     - component:
-        name: api
+        name: frontend
       match:
         path:
           prefix: /
     - component:
-        name: frontend
+        name: api
       match:
         path:
-          prefix: /app
+          prefix: /api
 jobs:
   - dockerfile_path: docker/Dockerfile.staging
     envs:
@@ -56,10 +58,10 @@ jobs:
         value: "*"
       - key: TENANT_BASE_DOMAIN
         scope: RUN_AND_BUILD_TIME
-        value: proptech.cv
+        value: imos-staging-jiow3.ondigitalocean.app
       - key: CORS_ALLOWED_ORIGINS
         scope: RUN_AND_BUILD_TIME
-        value: https://proptech.cv,https://www.proptech.cv,https://demo.proptech.cv
+        value: https://imos-staging-jiow3.ondigitalocean.app,https://proptech.cv,https://www.proptech.cv,https://demo.proptech.cv
       - key: APP_DOMAIN
         scope: RUN_AND_BUILD_TIME
         value: ${APP_DOMAIN}
@@ -95,6 +97,7 @@ jobs:
     run_command:
       bash -c 'python manage.py migrate_schemas --shared && python manage.py
       migrate_schemas && python manage.py ensure_public_tenant && 
+      python manage.py create_staging_tenant || echo "Staging tenant creation skipped" && 
       python manage.py create_superuser_public --email=admin@proptech.cv --password=ImoOS2026 || 
       echo "Migration completed with warnings"'
     source_dir: /
@@ -164,10 +167,10 @@ services:
         value: ${_self.COMMIT_HASH}
       - key: TENANT_BASE_DOMAIN
         scope: RUN_AND_BUILD_TIME
-        value: proptech.cv
+        value: imos-staging-jiow3.ondigitalocean.app
       - key: CORS_ALLOWED_ORIGINS
         scope: RUN_AND_BUILD_TIME
-        value: https://proptech.cv,https://www.proptech.cv,https://demo.proptech.cv
+        value: https://imos-staging-jiow3.ondigitalocean.app,https://proptech.cv,https://www.proptech.cv,https://demo.proptech.cv
       - key: TWILIO_ACCOUNT_SID
         scope: RUN_AND_BUILD_TIME
         type: SECRET
@@ -205,10 +208,10 @@ services:
     envs:
       - key: NEXT_PUBLIC_API_URL
         scope: RUN_AND_BUILD_TIME
-        value: https://demo.proptech.cv
+        value: https://imos-staging-jiow3.ondigitalocean.app
       - key: NEXT_PUBLIC_TENANT_DOMAIN
         scope: RUN_AND_BUILD_TIME
-        value: demo.proptech.cv
+        value: imos-staging-jiow3.ondigitalocean.app
       - key: NODE_ENV
         scope: RUN_AND_BUILD_TIME
         value: production
