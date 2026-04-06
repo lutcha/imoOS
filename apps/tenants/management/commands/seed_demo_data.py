@@ -8,7 +8,7 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 import random
 
-from apps.tenants.models import Tenant
+from apps.tenants.models import Client as Tenant
 
 
 class Command(BaseCommand):
@@ -83,15 +83,16 @@ class Command(BaseCommand):
         
         self.stdout.write('Creating users...')
         
+        # Roles must match User.ROLE_CHOICES: admin, gestor, vendedor, engenheiro, investidor
         users_data = [
-            {'email': 'admin@demo.cv', 'first_name': 'Carlos', 'last_name': 'Fonseca', 'role': 'ADMIN', 'is_staff': True},
-            {'email': 'gerente@demo.cv', 'first_name': 'Maria', 'last_name': 'Silva', 'role': 'MANAGER'},
-            {'email': 'vendas@demo.cv', 'first_name': 'João', 'last_name': 'Santos', 'role': 'SALES'},
-            {'email': 'obra@demo.cv', 'first_name': 'Pedro', 'last_name': 'Lima', 'role': 'FOREMAN'},
-            {'email': 'cliente1@demo.cv', 'first_name': 'Ana', 'last_name': 'Oliveira', 'role': 'CLIENT'},
-            {'email': 'cliente2@demo.cv', 'first_name': 'Miguel', 'last_name': 'Ramos', 'role': 'CLIENT'},
+            {'email': 'admin@demo.cv', 'first_name': 'Carlos', 'last_name': 'Fonseca', 'role': 'admin', 'is_staff': True, 'key': 'ADMIN'},
+            {'email': 'gerente@demo.cv', 'first_name': 'Maria', 'last_name': 'Silva', 'role': 'gestor', 'key': 'MANAGER'},
+            {'email': 'vendas@demo.cv', 'first_name': 'João', 'last_name': 'Santos', 'role': 'vendedor', 'key': 'SALES'},
+            {'email': 'obra@demo.cv', 'first_name': 'Pedro', 'last_name': 'Lima', 'role': 'engenheiro', 'key': 'FOREMAN'},
+            {'email': 'cliente1@demo.cv', 'first_name': 'Ana', 'last_name': 'Oliveira', 'role': 'gestor', 'key': 'CLIENT1'},
+            {'email': 'cliente2@demo.cv', 'first_name': 'Miguel', 'last_name': 'Ramos', 'role': 'gestor', 'key': 'CLIENT2'},
         ]
-        
+
         users = {}
         for data in users_data:
             user, created = User.objects.get_or_create(
@@ -99,7 +100,7 @@ class Command(BaseCommand):
                 defaults={
                     'first_name': data['first_name'],
                     'last_name': data['last_name'],
-                    'role': data.get('role', 'CLIENT'),
+                    'role': data['role'],
                     'is_staff': data.get('is_staff', False),
                     'is_active': True,
                 }
@@ -107,8 +108,8 @@ class Command(BaseCommand):
             if created:
                 user.set_password('Demo2026!')
                 user.save()
-            users[data['role']] = user
-            
+            users[data['key']] = user
+
         return users
 
     def create_leads(self, users):

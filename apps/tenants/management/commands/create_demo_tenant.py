@@ -4,7 +4,7 @@ Usage: python manage.py create_demo_tenant
 """
 from django.core.management.base import BaseCommand
 from django.db import connection
-from apps.tenants.models import Tenant, Domain
+from apps.tenants.models import Client as Tenant, Domain
 
 
 class Command(BaseCommand):
@@ -24,6 +24,7 @@ class Command(BaseCommand):
         tenant = Tenant(
             schema_name=schema_name,
             name=tenant_name,
+            slug='demo-promotora',
             plan='pro',
             is_active=True
         )
