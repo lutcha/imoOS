@@ -44,6 +44,14 @@ class ConstructionPhase(TenantAwareModel):
         related_name='phases',
         verbose_name='Projecto'
     )
+    building = models.ForeignKey(
+        'projects.Building',
+        on_delete=models.CASCADE,
+        related_name='phases',
+        verbose_name='Edifício',
+        null=True,
+        blank=True
+    )
     
     # Identificação
     phase_type = models.CharField(

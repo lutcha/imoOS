@@ -39,6 +39,7 @@ urlpatterns = [
     path('api/v1/investors/', include('apps.investors.urls')),
     path('api/v1/budget/', include('apps.budget.urls')),
     path('api/v1/integrations/', include('apps.integrations.urls')),
+    path('api/v1/workflows/', include('apps.workflows.urls')),
     path('api/v1/dashboard/', include('apps.core.dashboard_urls')),
     
     # Documentation

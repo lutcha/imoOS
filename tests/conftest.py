@@ -234,3 +234,265 @@ def api_client_tenant_b(tenant_b, user_tenant_b):
     client.credentials(HTTP_AUTHORIZATION=f'Bearer {str(refresh.access_token)}')
     client.defaults['HTTP_HOST'] = 'empresa-b.imos.cv'
     return client
+
+
+# ---------------------------------------------------------------------------
+# Workflow fixtures
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def tenant_context():
+    """
+    Fixture that returns a context manager for tenant operations.
+    
+    Usage:
+        def test_something(tenant_context, tenant_a):
+            with tenant_context(tenant_a):
+                # operations in tenant_a schema
+                pass
+    """
+    from contextlib import contextmanager
+    
+    @contextmanager
+    def _context(tenant):
+        from django.db import connection
+        from django_tenants.utils import tenant_context as _tenant_context
+        
+        with _tenant_context(tenant):
+            yield tenant, tenant.schema_name
+    
+    return _context
+
+
+@pytest.fixture
+def lead_factory():
+    """Factory for creating Lead instances."""
+    def factory(**kwargs):
+        from apps.crm.models import Lead
+        defaults = {
+            'first_name': 'Test',
+            'last_name': 'Lead',
+            'email': 'test@example.com',
+            'phone': '+2389999999',
+            'status': Lead.STATUS_NEW,
+        }
+        defaults.update(kwargs)
+        return Lead.objects.create(**defaults)
+    return factory
+
+
+@pytest.fixture
+def unit_factory():
+    """Factory for creating Unit instances."""
+    def factory(**kwargs):
+        from apps.inventory.models import Unit, Floor, Building, Project
+        from apps.projects.models import Project as ProjectModel
+        
+        # Create project if not provided
+        if 'floor' not in kwargs:
+            project = ProjectModel.objects.create(
+                name='Test Project',
+                slug='test-project',
+                city='Praia',
+                island='Santiago'
+            )
+            building = Building.objects.create(
+                project=project,
+                name='Bloco A',
+                code='BLK-A'
+            )
+            floor = Floor.objects.create(
+                building=building,
+                number=1,
+                name='1º Andar'
+            )
+            kwargs['floor'] = floor
+        
+        defaults = {
+            'code': 'T1-A-01',
+            'status': Unit.STATUS_AVAILABLE,
+            'area_bruta': 100.00,
+        }
+        defaults.update(kwargs)
+        return Unit.objects.create(**defaults)
+    return factory
+
+
+@pytest.fixture
+def user_factory():
+    """Factory for creating User instances."""
+    def factory(**kwargs):
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        
+        defaults = {
+            'email': 'test@example.com',
+            'first_name': 'Test',
+            'last_name': 'User',
+        }
+        defaults.update(kwargs)
+        
+        if 'password' not in defaults:
+            user = User.objects.create_user(**defaults)
+        else:
+            password = defaults.pop('password')
+            user = User.objects.create_user(password=password, **defaults)
+        
+        return user
+    return factory
+
+
+@pytest.fixture
+def contract_factory():
+    """Factory for creating Contract instances."""
+    def factory(**kwargs):
+        from apps.contracts.models import Contract
+        from apps.crm.models import Lead
+        from apps.inventory.models import Unit
+        
+        # Create dependencies if not provided
+        if 'lead' not in kwargs:
+            from apps.crm.models import Lead
+            kwargs['lead'] = Lead.objects.create(
+                first_name='Test',
+                last_name='Client',
+                email='client@example.com'
+            )
+        
+        if 'unit' not in kwargs:
+            from apps.inventory.models import Unit, Floor, Building
+            from apps.projects.models import Project
+            
+            project = Project.objects.create(
+                name='Test Project',
+                slug='test-project'
+            )
+            building = Building.objects.create(
+                project=project,
+                name='Bloco A',
+                code='BLK-A'
+            )
+            floor = Floor.objects.create(
+                building=building,
+                number=1
+            )
+            kwargs['unit'] = Unit.objects.create(
+                floor=floor,
+                code='T1-01',
+                area_bruta=100
+            )
+        
+        defaults = {
+            'contract_number': 'IMO-2026-0001',
+            'total_price_cve': 5000000,
+            'status': Contract.STATUS_DRAFT,
+        }
+        defaults.update(kwargs)
+        return Contract.objects.create(**defaults)
+    return factory
+
+
+@pytest.fixture
+def reservation_factory():
+    """Factory for creating UnitReservation instances."""
+    def factory(**kwargs):
+        from apps.crm.models import UnitReservation
+        from datetime import timedelta
+        from django.utils import timezone
+        
+        defaults = {
+            'status': UnitReservation.STATUS_ACTIVE,
+            'expires_at': timezone.now() + timedelta(hours=48),
+            'deposit_amount_cve': 0,
+        }
+        defaults.update(kwargs)
+        return UnitReservation.objects.create(**defaults)
+    return factory
+
+
+@pytest.fixture
+def signature_request_factory():
+    """Factory for creating SignatureRequest instances."""
+    def factory(**kwargs):
+        from apps.contracts.models import SignatureRequest
+        from datetime import timedelta
+        from django.utils import timezone
+        
+        defaults = {
+            'status': SignatureRequest.STATUS_PENDING,
+            'expires_at': timezone.now() + timedelta(hours=72),
+        }
+        defaults.update(kwargs)
+        return SignatureRequest.objects.create(**defaults)
+    return factory
+
+
+@pytest.fixture
+def task_factory():
+    """Factory for creating ConstructionTask instances."""
+    def factory(**kwargs):
+        from apps.construction.models import ConstructionTask, ConstructionTask
+        from apps.projects.models import Project
+        from datetime import date
+        
+        # Create project if not provided
+        if 'project' not in kwargs:
+            kwargs['project'] = Project.objects.create(
+                name='Test Project',
+                slug='test-project'
+            )
+        
+        defaults = {
+            'name': 'Test Task',
+            'wbs_code': '1.1',
+            'status': ConstructionTask.STATUS_PENDING,
+            'due_date': date(2026, 12, 31),
+        }
+        defaults.update(kwargs)
+        return ConstructionTask.objects.create(**defaults)
+    return factory
+
+
+@pytest.fixture
+def phase_factory():
+    """Factory for creating ConstructionPhase instances."""
+    def factory(**kwargs):
+        from apps.construction.models import ConstructionPhase
+        from apps.projects.models import Project
+        from datetime import date
+        
+        # Create project if not provided
+        if 'project' not in kwargs:
+            kwargs['project'] = Project.objects.create(
+                name='Test Project',
+                slug='test-project'
+            )
+        
+        defaults = {
+            'name': 'Test Phase',
+            'phase_type': 'FOUNDATION',
+            'status': ConstructionPhase.STATUS_NOT_STARTED,
+            'start_planned': date(2026, 6, 1),
+            'end_planned': date(2026, 7, 1),
+        }
+        defaults.update(kwargs)
+        return ConstructionPhase.objects.create(**defaults)
+    return factory
+
+
+@pytest.fixture
+def payment_factory():
+    """Factory for creating Payment instances."""
+    def factory(**kwargs):
+        from apps.contracts.models import Payment
+        from datetime import date
+        
+        defaults = {
+            'payment_type': Payment.PAYMENT_INSTALLMENT,
+            'amount_cve': 100000,
+            'due_date': date(2026, 7, 1),
+            'status': Payment.STATUS_PENDING,
+        }
+        defaults.update(kwargs)
+        return Payment.objects.create(**defaults)
+    return factory

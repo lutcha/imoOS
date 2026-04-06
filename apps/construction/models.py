@@ -250,6 +250,7 @@ from .models.task import ConstructionTask
 from .models.progress import TaskPhoto, TaskProgressLog
 from .models.cpm import TaskDependency, CPMSnapshot
 from .models.evm import EVMSnapshot
+from .models.project import ConstructionProject
 
 __all__ = [
     # Legacy
@@ -264,4 +265,5 @@ __all__ = [
     'TaskDependency',
     'CPMSnapshot',
     'EVMSnapshot',
+    'ConstructionProject',
 ]
