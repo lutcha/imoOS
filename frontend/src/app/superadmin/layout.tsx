@@ -6,7 +6,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useSuperAdminSession } from "@/hooks/useSuperAdminSession";
 
 export default function SuperAdminLayout({
@@ -14,14 +14,23 @@ export default function SuperAdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const isLoginPage = pathname === "/superadmin/login";
+
   const { user, isAuthenticated, isLoading, logout } = useSuperAdminSession();
   const router = useRouter();
 
   useEffect(() => {
+    if (isLoginPage) return;
     if (!isLoading && !isAuthenticated) {
       router.replace("/superadmin/login");
     }
-  }, [isLoading, isAuthenticated, router]);
+  }, [isLoading, isAuthenticated, router, isLoginPage]);
+
+  // Login page renders without any guard or chrome
+  if (isLoginPage) {
+    return <>{children}</>;
+  }
 
   if (isLoading) {
     return (
