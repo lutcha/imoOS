@@ -265,6 +265,50 @@ export function getStatusLabel(status: string): string {
   return labels[status] || status;
 }
 
+// ----- Daily Reports -----
+
+export interface DailyReport {
+  id: string;
+  project: string;
+  date: string;
+  progress_pct: number;
+  summary: string;
+  status: "DRAFT" | "SUBMITTED" | "APPROVED" | "REJECTED";
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DailyReportFilters {
+  project?: string;
+  date?: string;
+  status?: string;
+  page?: number;
+  page_size?: number;
+}
+
+export interface DailyReportsPage {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: DailyReport[];
+}
+
+export function useDailyReports(filters: DailyReportFilters = {}) {
+  const { schema } = useTenant();
+
+  return useQuery<DailyReportsPage>({
+    queryKey: ["daily-reports", schema, filters],
+    queryFn: () =>
+      apiClient
+        .get<DailyReportsPage>("/construction/daily-reports/", { params: filters })
+        .then((r) => r.data),
+    enabled: !!schema,
+  });
+}
+
+// ----- Helpers -----
+
 export function getStatusColor(status: string): { bg: string; text: string; border: string } {
   const colors: Record<string, { bg: string; text: string; border: string }> = {
     // Project status
