@@ -30,10 +30,10 @@ interface UsageData {
 
 const menuItems = [
     { icon: LayoutDashboard, label: "Dashboard",    href: "/" },
+    { icon: HardHat,         label: "Obras",        href: "/construction" },
     { icon: FolderKanban,    label: "Projectos",    href: "/projects" },
     { icon: Building2,       label: "Inventário",   href: "/inventory" },
     { icon: Users,           label: "CRM",          href: "/crm" },
-    { icon: HardHat,         label: "Obra",         href: "/construction" },
     { icon: FileText,        label: "Contratos",    href: "/contracts" },
     { icon: Wallet,          label: "Financeiro",   href: "/finance" },
     { icon: Store,           label: "Marketplace",  href: "/marketplace" },

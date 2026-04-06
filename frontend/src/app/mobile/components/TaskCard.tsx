@@ -6,7 +6,7 @@
  * Design: card grande com sombra, status visível, swipe actions
  */
 import { useState, useRef, useCallback } from "react";
-import { Calendar, MapPin, ChevronRight, Check, AlertCircle } from "lucide-react";
+import { Calendar, ChevronRight, Check, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { statusColors, type TaskStatusKey } from "./MobileDesignSystem";
 import type { Task } from "@/types/mobile";
@@ -16,6 +16,7 @@ interface TaskCardProps {
   onStatusChange?: (taskId: string, status: TaskStatusKey) => void;
   onPress?: (task: Task) => void;
   onReportIssue?: (task: Task) => void;
+  onSwipeComplete?: (task: Task) => void;
 }
 
 const SWIPE_THRESHOLD = 80;
@@ -25,6 +26,7 @@ export function TaskCard({
   onStatusChange,
   onPress,
   onReportIssue,
+  onSwipeComplete,
 }: TaskCardProps) {
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -79,6 +81,7 @@ export function TaskCard({
     if (swipeOffset > SWIPE_THRESHOLD) {
       // Swiped right - mark complete
       onStatusChange?.(task.id, "completed");
+      onSwipeComplete?.(task);
     } else if (swipeOffset < -SWIPE_THRESHOLD) {
       // Swiped left - report issue
       onReportIssue?.(task);
@@ -86,7 +89,7 @@ export function TaskCard({
     
     // Reset position
     setSwipeOffset(0);
-  }, [swipeOffset, task, onStatusChange, onReportIssue]);
+  }, [swipeOffset, task, onStatusChange, onReportIssue, onSwipeComplete]);
 
   // Touch events
   const onTouchStart = (e: React.TouchEvent) => {

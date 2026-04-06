@@ -6,7 +6,7 @@
  * Touch targets: 48px+
  */
 import { usePathname } from "next/navigation";
-import { ClipboardList, CheckCircle2, Camera, Settings } from "lucide-react";
+import { ClipboardList, CheckCircle2, RefreshCw, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -21,9 +21,9 @@ const navItems = [
     icon: CheckCircle2,
   },
   {
-    href: "/mobile/photos",
-    label: "Fotos",
-    icon: Camera,
+    href: "/mobile/sync",
+    label: "Sync",
+    icon: RefreshCw,
   },
   {
     href: "/mobile/settings",
@@ -39,8 +39,9 @@ export function MobileBottomNav() {
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-border shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
       <div className="flex items-center justify-around h-16 pb-[env(safe-area-inset-bottom)]">
         {navItems.map((item) => {
-          const isActive = pathname === item.href || 
-            (item.href !== "/mobile/obra" && pathname.startsWith(item.href.replace("?tab=completed", "")));
+          const isActive = 
+            pathname === item.href || 
+            (item.href !== "/mobile/obra" && pathname.startsWith(item.href.split("?")[0]));
           
           return (
             <a

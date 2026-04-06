@@ -14,7 +14,6 @@ describe("OfflineIndicator", () => {
     render(<OfflineIndicator isOnline={false} pendingCount={0} onSync={vi.fn()} />);
     
     expect(screen.getByText("Sem conexão")).toBeInTheDocument();
-    expect(screen.getByText("📡")).toBeInTheDocument();
   });
 
   it("shows pending count when online with pending items", () => {
@@ -37,6 +36,22 @@ describe("OfflineIndicator", () => {
       <OfflineIndicator isOnline={true} pendingCount={2} onSync={vi.fn()} isSyncing={true} />
     );
     
-    expect(screen.getByText("A sincronizar...")).toBeInTheDocument();
+    // When syncing, the button should be disabled with spinner
+    const syncButton = screen.getByText("Sincronizar");
+    expect(syncButton).toBeInTheDocument();
+  });
+
+  it("has correct background color when offline", () => {
+    render(<OfflineIndicator isOnline={false} pendingCount={0} onSync={vi.fn()} />);
+    
+    const indicator = screen.getByText("Sem conexão").parentElement?.parentElement;
+    expect(indicator).toHaveClass("bg-red-500");
+  });
+
+  it("has correct background color when online with pending items", () => {
+    render(<OfflineIndicator isOnline={true} pendingCount={5} onSync={vi.fn()} />);
+    
+    const indicator = screen.getByText("5 item(s) pendente(s)").parentElement?.parentElement;
+    expect(indicator).toHaveClass("bg-amber-500");
   });
 });

@@ -31,7 +31,7 @@ describe("TaskCard", () => {
     render(<TaskCard task={mockTask} />);
     
     expect(screen.getByText("🔴")).toBeInTheDocument();
-    expect(screen.getByText("NÃO INICIADO")).toBeInTheDocument();
+    expect(screen.getByText("Não Iniciado")).toBeInTheDocument();
   });
 
   it("calls onPress when clicked", () => {
@@ -59,12 +59,35 @@ describe("TaskCard", () => {
     const { rerender } = render(<TaskCard task={inProgressTask} />);
     
     expect(screen.getByText("🟡")).toBeInTheDocument();
-    expect(screen.getByText("EM ANDAMENTO")).toBeInTheDocument();
+    expect(screen.getByText("Em Andamento")).toBeInTheDocument();
 
     const completedTask = { ...mockTask, status: "completed" as const };
     rerender(<TaskCard task={completedTask} />);
     
     expect(screen.getByText("🟢")).toBeInTheDocument();
-    expect(screen.getByText("CONCLUÍDO")).toBeInTheDocument();
+    expect(screen.getByText("Concluído")).toBeInTheDocument();
+  });
+
+  it("shows swipe hint", () => {
+    render(<TaskCard task={mockTask} />);
+    
+    expect(screen.getByText(/Deslize para concluir/)).toBeInTheDocument();
+  });
+
+  it("displays overdue styling for past due dates", () => {
+    const overdueTask = {
+      ...mockTask,
+      dueDate: new Date(Date.now() - 86400000).toISOString().slice(0, 10),
+    };
+    render(<TaskCard task={overdueTask} />);
+    
+    const dateElement = screen.getByText(/\d{2} [a-z]{3}/i);
+    expect(dateElement).toHaveClass("text-red-500");
+  });
+
+  it("renders description when provided", () => {
+    render(<TaskCard task={mockTask} />);
+    
+    expect(screen.getByText("Concretar laje do piso 2")).toBeInTheDocument();
   });
 });

@@ -1,75 +1,77 @@
 /**
  * Service Worker — ImoOS Field App
- * Offline-first strategy para redes 3G
- * 
- * Estratégias:
- * - Cache First para assets estáticos
- * - Network First para API calls (com fallback)
- * - Background Sync para updates pendentes
+ * PWA com cache estratégico e background sync
  */
 
-const CACHE_NAME = "imos-mobile-v1";
+const CACHE_NAME = 'imos-mobile-v1';
 const STATIC_ASSETS = [
-  "/",
-  "/mobile/obra",
-  "/mobile/globals.css",
-  "/icons/icon-192x192.png",
-  "/icons/icon-512x512.png",
+  '/mobile/obra',
+  '/mobile',
+  '/manifest.json',
+  '/icons/icon-192x192.png',
+  '/icons/icon-512x512.png',
 ];
 
-const API_CACHE_NAME = "imos-api-cache-v1";
-const API_ROUTES = ["/api/v1/construction/tasks/"];
+// API routes that should use network-first strategy
+const API_ROUTES = [
+  '/api/v1/construction/tasks/',
+];
 
 // Install: Cache static assets
-self.addEventListener("install", (event) => {
+self.addEventListener('install', (event) => {
+  console.log('[SW] Installing...');
+  
   event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then((cache) => cache.addAll(STATIC_ASSETS))
-      .then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then((cache) => {
+      console.log('[SW] Caching static assets');
+      return cache.addAll(STATIC_ASSETS);
+    }).then(() => {
+      return self.skipWaiting();
+    })
   );
 });
 
 // Activate: Clean old caches
-self.addEventListener("activate", (event) => {
+self.addEventListener('activate', (event) => {
+  console.log('[SW] Activating...');
+  
   event.waitUntil(
-    caches
-      .keys()
-      .then((cacheNames) =>
-        Promise.all(
-          cacheNames
-            .filter((name) => name !== CACHE_NAME && name !== API_CACHE_NAME)
-            .map((name) => caches.delete(name))
-        )
-      )
-      .then(() => self.clients.claim())
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames
+          .filter((name) => name !== CACHE_NAME)
+          .map((name) => caches.delete(name))
+      );
+    }).then(() => {
+      return self.clients.claim();
+    })
   );
 });
 
-// Fetch: Route-specific strategies
-self.addEventListener("fetch", (event) => {
+// Fetch: Cache strategies
+self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip non-GET requests (let app handle them)
-  if (request.method !== "GET") {
+  // Skip non-GET requests for API
+  if (request.method !== 'GET' && url.pathname.startsWith('/api/')) {
     return;
   }
 
-  // API calls: Network First with cache fallback
-  if (isApiCall(url.pathname)) {
-    event.respondWith(networkFirstWithCache(request));
+  // API routes: Network first, fallback to cache
+  if (API_ROUTES.some((route) => url.pathname.startsWith(route))) {
+    event.respondWith(networkFirst(request));
     return;
   }
 
-  // Static assets: Cache First
-  if (isStaticAsset(url.pathname)) {
-    event.respondWith(cacheFirstWithNetwork(request));
+  // Static assets: Cache first
+  if (isStaticAsset(request)) {
+    event.respondWith(cacheFirst(request));
     return;
   }
 
-  // Navigation requests (pages): Stale While Revalidate
-  if (request.mode === "navigate") {
+  // Navigation requests: Stale while revalidate
+  if (request.mode === 'navigate') {
     event.respondWith(staleWhileRevalidate(request));
     return;
   }
@@ -78,120 +80,156 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(networkWithCacheFallback(request));
 });
 
-// Background Sync: Process pending syncs
-self.addEventListener("sync", (event) => {
-  if (event.tag === "imos-sync") {
-    event.waitUntil(processBackgroundSync());
+// Background Sync: Queue pending actions
+self.addEventListener('sync', (event) => {
+  console.log('[SW] Background sync:', event.tag);
+  
+  if (event.tag === 'sync-tasks') {
+    event.waitUntil(syncPendingTasks());
   }
 });
 
-// Helper functions
-function isApiCall(pathname) {
-  return API_ROUTES.some((route) => pathname.includes(route));
-}
+// Push notifications (placeholder)
+self.addEventListener('push', (event) => {
+  console.log('[SW] Push received:', event);
+  
+  const data = event.data?.json() || {};
+  const title = data.title || 'ImoOS Obra';
+  const options = {
+    body: data.body || 'Nova notificação',
+    icon: '/icons/icon-192x192.png',
+    badge: '/icons/icon-72x72.png',
+    data: data.data || {},
+    actions: data.actions || [],
+  };
 
-function isStaticAsset(pathname) {
-  return (
-    pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf)$/) !== null
+  event.waitUntil(
+    self.registration.showNotification(title, options)
   );
-}
+});
 
-// Strategy: Cache First, fallback to Network
-async function cacheFirstWithNetwork(request) {
-  const cached = await caches.match(request);
-  if (cached) {
-    return cached;
-  }
+// Notification click handler
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
 
-  try {
-    const response = await fetch(request);
-    if (response.ok) {
-      const cache = await caches.open(CACHE_NAME);
-      cache.put(request, response.clone());
-    }
-    return response;
-  } catch (error) {
-    console.error("[SW] Cache first failed:", error);
-    return new Response("Offline", { status: 503 });
-  }
-}
-
-// Strategy: Network First, fallback to Cache
-async function networkFirstWithCache(request) {
-  try {
-    const networkResponse = await fetch(request);
-    if (networkResponse.ok) {
-      const cache = await caches.open(API_CACHE_NAME);
-      cache.put(request, networkResponse.clone());
-      return networkResponse;
-    }
-    throw new Error("Network response not OK");
-  } catch (error) {
-    const cached = await caches.match(request);
-    if (cached) {
-      console.log("[SW] Serving cached API response");
-      return cached;
-    }
-    console.error("[SW] Network first failed:", error);
-    return new Response(
-      JSON.stringify({ error: "Offline", cached: false }),
-      {
-        status: 503,
-        headers: { "Content-Type": "application/json" },
-      }
+  const { action, data } = event.notification;
+  
+  if (action === 'open') {
+    event.waitUntil(
+      clients.openWindow(data.url || '/mobile/obra')
     );
   }
-}
+});
 
-// Strategy: Stale While Revalidate
-async function staleWhileRevalidate(request) {
-  const cached = await caches.match(request);
+// Message handler from client
+self.addEventListener('message', (event) => {
+  const { type, payload } = event.data;
+  
+  switch (type) {
+    case 'SKIP_WAITING':
+      self.skipWaiting();
+      break;
+    case 'CACHE_ASSETS':
+      cacheAssets(payload.assets);
+      break;
+    default:
+      console.log('[SW] Unknown message type:', type);
+  }
+});
 
-  const fetchPromise = fetch(request)
-    .then((networkResponse) => {
-      if (networkResponse.ok) {
-        const cache = await caches.open(CACHE_NAME);
-        cache.put(request, networkResponse.clone());
-      }
-      return networkResponse;
-    })
-    .catch((error) => {
-      console.log("[SW] Stale while revalidate fetch failed:", error);
-      return cached;
-    });
-
-  return cached || fetchPromise;
-}
-
-// Strategy: Network with cache fallback
-async function networkWithCacheFallback(request) {
+// Cache strategies
+async function networkFirst(request) {
   try {
-    return await fetch(request);
+    const networkResponse = await fetch(request);
+    
+    // Update cache with fresh data
+    const cache = await caches.open(CACHE_NAME);
+    cache.put(request, networkResponse.clone());
+    
+    return networkResponse;
   } catch (error) {
-    const cached = await caches.match(request);
-    if (cached) {
-      return cached;
+    console.log('[SW] Network failed, trying cache:', request.url);
+    const cachedResponse = await caches.match(request);
+    
+    if (cachedResponse) {
+      return cachedResponse;
     }
+    
     throw error;
   }
 }
 
-// Background sync processing
-async function processBackgroundSync() {
-  // This will be handled by the app's useOfflineSync hook
-  // We just notify all clients that sync is available
+async function cacheFirst(request) {
+  const cachedResponse = await caches.match(request);
+  
+  if (cachedResponse) {
+    // Update cache in background
+    fetch(request).then((networkResponse) => {
+      caches.open(CACHE_NAME).then((cache) => {
+        cache.put(request, networkResponse);
+      });
+    }).catch(() => {});
+    
+    return cachedResponse;
+  }
+  
+  const networkResponse = await fetch(request);
+  const cache = await caches.open(CACHE_NAME);
+  cache.put(request, networkResponse.clone());
+  
+  return networkResponse;
+}
+
+async function staleWhileRevalidate(request) {
+  const cachedResponse = await caches.match(request);
+  
+  const networkPromise = fetch(request).then((networkResponse) => {
+    caches.open(CACHE_NAME).then((cache) => {
+      cache.put(request, networkResponse.clone());
+    });
+    return networkResponse;
+  }).catch(() => null);
+  
+  return cachedResponse || networkPromise;
+}
+
+async function networkWithCacheFallback(request) {
+  try {
+    return await fetch(request);
+  } catch (error) {
+    const cachedResponse = await caches.match(request);
+    
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+    
+    throw error;
+  }
+}
+
+// Helper functions
+function isStaticAsset(request) {
+  const url = new URL(request.url);
+  return (
+    request.destination === 'style' ||
+    request.destination === 'script' ||
+    request.destination === 'image' ||
+    url.pathname.startsWith('/_next/') ||
+    url.pathname.startsWith('/icons/')
+  );
+}
+
+async function cacheAssets(assets) {
+  const cache = await caches.open(CACHE_NAME);
+  return cache.addAll(assets);
+}
+
+async function syncPendingTasks() {
+  // Notify all clients to sync
   const clients = await self.clients.matchAll();
   clients.forEach((client) => {
     client.postMessage({
-      type: "SYNC_AVAILABLE",
-      timestamp: Date.now(),
+      type: 'SYNC_PENDING_TASKS',
     });
   });
 }
-
-// Listen for messages from the app
-self.addEventListener("message", (event) => {
-  if (event.data.type === "SKIP_WAITING") {
-    self.skipWaiting();
-  }
-});

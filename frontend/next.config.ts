@@ -8,11 +8,29 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-
-  // Ensure CDN/reverse-proxy (DO App Platform) caches RSC navigation responses
-  // separately from full HTML responses. Without this, the proxy may serve a
-  // cached `text/x-component` RSC payload to a plain browser request, causing
-  // the page to display raw RSC flight data instead of HTML.
+  
+  // Configurações para Three.js e WASM
+  webpack: (config) => {
+    // Suporte para web-ifc (WASM)
+    config.module.rules.push({
+      test: /\.wasm$/,
+      type: 'asset/resource',
+    });
+    
+    // Resolve fallback para módulos Node.js
+    config.resolve = {
+      ...config.resolve,
+      fallback: {
+        ...config.resolve?.fallback,
+        fs: false,
+        path: false,
+      },
+    };
+    
+    return config;
+  },
+  
+  // Headers para WASM e CDN cache
   async headers() {
     return [
       {
@@ -21,6 +39,15 @@ const nextConfig: NextConfig = {
           {
             key: 'Vary',
             value: 'RSC, Next-Router-State-Tree, Next-Router-Prefetch',
+          },
+        ],
+      },
+      {
+        source: '/(.*).wasm',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/wasm',
           },
         ],
       },

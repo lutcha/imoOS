@@ -1,5 +1,9 @@
 "use client";
 
+/**
+ * useMobileTasks — ImoOS Field App
+ * Hook para gestão de tarefas com IndexedDB (offline-first)
+ */
 import { useState, useEffect, useCallback } from 'react';
 import { mobileDB } from '@/lib/mobile-db';
 import type { Task, TaskStatus } from '@/types/mobile';
@@ -108,7 +112,19 @@ interface UseMobileTasksReturn {
   updateTaskStatus: (taskId: string, status: TaskStatus) => Promise<void>;
   addNote: (taskId: string, note: string) => Promise<void>;
   getTaskById: (taskId: string) => Promise<Task | undefined>;
+  searchTasks: (query: string) => Task[];
+  filterTasks: (filters: TaskFilters) => Task[];
+  sortTasks: (tasks: Task[], sortBy: SortType) => Task[];
 }
+
+interface TaskFilters {
+  status?: TaskStatus[];
+  priority?: ('high' | 'medium' | 'low')[];
+  dueDate?: 'today' | 'overdue' | 'week' | 'all';
+  assignedTo?: string;
+}
+
+type SortType = 'dueDate' | 'priority' | 'name' | 'status';
 
 export function useMobileTasks(): UseMobileTasksReturn {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -199,6 +215,89 @@ export function useMobileTasks(): UseMobileTasksReturn {
     return mobileDB.getTaskById(taskId);
   }, [tasks]);
 
+  const searchTasks = useCallback((query: string): Task[] => {
+    const lowerQuery = query.toLowerCase().trim();
+    if (!lowerQuery) return tasks;
+
+    return tasks.filter(task =>
+      task.name.toLowerCase().includes(lowerQuery) ||
+      task.projectName.toLowerCase().includes(lowerQuery) ||
+      task.description?.toLowerCase().includes(lowerQuery) ||
+      task.notes?.toLowerCase().includes(lowerQuery)
+    );
+  }, [tasks]);
+
+  const filterTasks = useCallback((filters: TaskFilters): Task[] => {
+    return tasks.filter(task => {
+      // Status filter
+      if (filters.status && filters.status.length > 0) {
+        if (!filters.status.includes(task.status)) return false;
+      }
+
+      // Priority filter
+      if (filters.priority && filters.priority.length > 0) {
+        if (!filters.priority.includes(task.priority)) return false;
+      }
+
+      // Due date filter
+      if (filters.dueDate && filters.dueDate !== 'all') {
+        const today = new Date().toISOString().slice(0, 10);
+        const taskDate = task.dueDate;
+
+        switch (filters.dueDate) {
+          case 'today':
+            if (taskDate !== today) return false;
+            break;
+          case 'overdue':
+            if (taskDate >= today || task.status === 'completed') return false;
+            break;
+          case 'week': {
+            const weekFromNow = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+            if (taskDate < today || taskDate > weekFromNow) return false;
+            break;
+          }
+        }
+      }
+
+      // Assigned to filter
+      if (filters.assignedTo && task.assignedTo !== filters.assignedTo) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [tasks]);
+
+  const sortTasks = useCallback((tasksToSort: Task[], sortBy: SortType): Task[] => {
+    const sorted = [...tasksToSort];
+    
+    switch (sortBy) {
+      case 'dueDate':
+        sorted.sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+        break;
+      case 'priority': {
+        const priorityOrder = { high: 0, medium: 1, low: 2 };
+        sorted.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+        break;
+      }
+      case 'name':
+        sorted.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case 'status': {
+        const statusOrder: Record<TaskStatus, number> = { 
+          blocked: 0, 
+          pending: 1, 
+          in_progress: 2, 
+          completed: 3 
+        };
+        sorted.sort((a, b) => statusOrder[a.status] - statusOrder[b.status]);
+        break;
+      }
+    }
+    
+    return sorted;
+  }, []);
+
   return {
     tasks,
     isLoading,
@@ -208,6 +307,9 @@ export function useMobileTasks(): UseMobileTasksReturn {
     updateTaskStatus,
     addNote,
     getTaskById,
+    searchTasks,
+    filterTasks,
+    sortTasks,
   };
 }
 
@@ -251,3 +353,6 @@ export function useMobileTask(taskId: string | null): {
     refresh: loadTask,
   };
 }
+
+// Re-export types
+export type { TaskFilters, SortType };

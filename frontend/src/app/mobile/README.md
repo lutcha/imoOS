@@ -13,29 +13,45 @@ Aplicação mobile-first para encarregados de obra gerirem tarefas de construç�
 frontend/src/app/mobile/
 ├── layout.tsx              # Layout mobile (sem sidebar)
 ├── globals.css             # Estilos mobile-specific
+├── page.tsx                # Redirect para /obra
+├── register-sw.tsx         # Service Worker registration
 ├── obra/
-│   ├── page.tsx            # Dashboard da obra
+│   ├── page.tsx            # Dashboard da obra com filtros, search, swipe
+│   ├── layout.tsx          # Layout da secção obra
 │   └── [taskId]/
-│       └── page.tsx        # Detalhe da tarefa
+│       └── page.tsx        # Detalhe da tarefa completo
+├── sync/
+│   └── page.tsx            # Página de gestão de sincronização
+├── settings/
+│   └── page.tsx            # Configurações e info da app
 └── components/
     ├── MobileDesignSystem.tsx  # Tokens de design
     ├── MobileHeader.tsx        # Header otimizado
     ├── MobileBottomNav.tsx     # Navegação inferior
     ├── OfflineIndicator.tsx    # Banner online/offline
-    ├── TaskCard.tsx            # Card com swipe
+    ├── TaskCard.tsx            # Card com swipe actions
     ├── QuickStatusUpdate.tsx   # 🔴🟡🟢 selector
     ├── PhotoUpload.tsx         # Camera + compressão
-    ├── VoiceRecorder.tsx       # Notas de voz
+    ├── VoiceRecorder.tsx       # Notas de voz 30s
     └── SyncBadge.tsx           # Status de sync
 
 frontend/src/lib/mobile/
 ├── image-compression.ts    # Compressão <500KB
-└── sync-manager.ts         # Background sync
+├── api-sync.ts             # API client para sync
+└── mobile-db.ts            # IndexedDB wrapper (existente)
 
 frontend/src/hooks/
-├── useMobileTasks.ts       # (existente) Tasks com IndexedDB
-├── useOfflineSync.ts       # (existente) Sync queue
-└── useConstructionTasksMobile.ts  # TanStack Query otimizado
+├── useMobileTasks.ts       # Tasks com IndexedDB
+├── useOfflineSync.ts       # Sync completo com retry
+└── mobile/
+    └── useConstructionTasksMobile.ts  # TanStack Query
+
+frontend/public/
+├── manifest.json           # PWA manifest
+├── sw.js                   # Service Worker
+└── icons/                  # Ícones PWA
+
+frontend/src/test/mobile/   # Testes unitários
 ```
 
 ## 🚀 Quick Start
@@ -49,12 +65,15 @@ npm install
 
 ### 2. Configurar PWA
 
-O `manifest.json` já está configurado em `public/manifest.json`. Adicionar ao layout raiz:
+O `manifest.json` está configurado em `public/manifest.json`. O Service Worker em `public/sw.js`.
+
+Adicionar ao layout raiz se ainda não existir:
 
 ```tsx
 // app/layout.tsx
+import { RegisterSW } from "./register-sw";
+
 export const metadata = {
-  // ... existing metadata
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -62,35 +81,6 @@ export const metadata = {
     title: "ImoOS Obra",
   },
 };
-```
-
-### 3. Registar Service Worker
-
-Criar `app/register-sw.tsx`:
-
-```tsx
-"use client";
-
-import { useEffect } from "react";
-
-export function RegisterSW() {
-  useEffect(() => {
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker
-        .register("/sw.js")
-        .then((reg) => console.log("SW registered:", reg))
-        .catch((err) => console.log("SW registration failed:", err));
-    }
-  }, []);
-
-  return null;
-}
-```
-
-E adicionar ao layout:
-
-```tsx
-import { RegisterSW } from "./register-sw";
 
 export default function RootLayout({ children }) {
   return (
@@ -104,81 +94,10 @@ export default function RootLayout({ children }) {
 }
 ```
 
-## 🎨 Design System
-
-### Touch Targets
-
-- Mínimo: **48px** (WCAG 2.1)
-- Botões principais: **56-64px**
-- Cards: padding **16-20px**
-
-### Cores de Status
-
-| Status | Cor | Icon |
-|--------|-----|------|
-| Não Iniciado | 🔴 Red-500 | 🔴 |
-| Em Andamento | 🟡 Amber-500 | 🟡 |
-| Concluído | 🟢 Green-500 | 🟢 |
-| Bloqueado | ⚫ Gray-500 | ⚫ |
-
-### Tipografia
-
-- Base: **16px** (acessibilidade)
-- Títulos: **18-20px bold**
-- Labels: **12px uppercase semibold**
-
-## 📡 Offline-First
-
-### Fluxo de Sync
-
-1. **Update Local**: Guarda em IndexedDB imediatamente
-2. **Queue Action**: Adiciona à fila de sync
-3. **Try Network**: Se online, tenta enviar
-4. **Background Sync**: Quando online, processa fila
-5. **Retry**: Exponential backoff (5s, 15s, 30s, 60s)
-
-### IndexedDB Schema
-
-```
-imos_mobile_db (v1)
-├── tasks (keyPath: id)
-├── photos (keyPath: id, indexes: taskId, synced)
-├── voiceNotes (keyPath: id, indexes: taskId, synced)
-├── actions (autoIncrement, indexes: timestamp, type)
-└── syncMeta (keyPath: key)
-```
-
-## 🧪 Testes
-
-### Testar Offline
-
-1. Abrir app em modo normal
-2. Ativar "Airplane Mode"
-3. Fazer alterações
-4. Verificar badge "Pendente sincronizar"
-5. Desativar Airplane Mode
-6. Verificar sync automático
-
-### Testar Compressão de Fotos
-
-```tsx
-import { compressPhoto } from "@/lib/mobile/image-compression";
-
-const compressed = await compressPhoto(file, {
-  maxWidth: 1200,
-  quality: 0.7,
-  maxSizeMB: 0.5,
-});
-
-console.log(`Original: ${file.size / 1024}KB`);
-console.log(`Compressed: ${compressed.size / 1024}KB`);
-```
-
-## 🔧 Configuração Next.js
-
-### next.config.ts
+### 3. Configurar Next.js
 
 ```typescript
+// next.config.ts
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -202,6 +121,120 @@ const nextConfig: NextConfig = {
 
 export default nextConfig;
 ```
+
+## 🎨 Design System
+
+### Touch Targets
+
+- Mínimo: **48px** (WCAG 2.1)
+- Botões principais: **56-64px**
+- Cards: padding **16-20px**
+
+### Cores de Status
+
+| Status | Cor | Icon |
+|--------|-----|------|
+| Não Iniciado | 🔴 Red-500 | 🔴 |
+| Em Andamento | 🟡 Amber-500 | 🟡 |
+| Concluído | 🟢 Green-500 | 🟢 |
+| Bloqueado | ⚫ Gray-500 | ⚫ |
+
+### Funcionalidades da Lista (/mobile/obra)
+
+- **Pull-to-refresh**: Puxe para baixo para atualizar
+- **Filtros rápidos**: Todas, Hoje, Atrasadas, Urgentes, Em Andamento
+- **Ordenação**: Por data, prioridade, nome, status
+- **Search**: Pesquisa por nome, projeto, descrição
+- **Swipe actions**: Direita = Concluir, Esquerda = Reportar Problema
+
+### Funcionalidades do Detalhe (/mobile/obra/[taskId])
+
+- **Status update**: Seletor 🔴🟡🟢 grande
+- **Ações rápidas**: Botões grandes para status
+- **Fotos**: Grid 3 colunas, compressão automática
+- **Notas de voz**: Gravação até 30s, preview antes de enviar
+- **Notas de texto**: Textarea para observações
+- **Histórico**: Timeline de alterações
+
+## 📡 Offline-First
+
+### Fluxo de Sync
+
+1. **Update Local**: Guarda em IndexedDB imediatamente
+2. **Queue Action**: Adiciona à fila de sync
+3. **Try Network**: Se online, tenta enviar
+4. **Background Sync**: Service Worker processa quando online
+5. **Retry**: Exponential backoff (5s, 15s, 30s, 60s, 5min)
+6. **Conflict Resolution**: Last write wins
+
+### IndexedDB Schema
+
+```
+imos_mobile_db (v1)
+├── tasks (keyPath: id, indexes: status, dueDate, projectId)
+├── photos (keyPath: id, indexes: taskId, synced)
+├── voiceNotes (keyPath: id, indexes: taskId, synced)
+├── actions (autoIncrement, indexes: timestamp, type)
+└── syncMeta (keyPath: key)
+```
+
+### API de Sync
+
+```typescript
+import { useOfflineSync } from "@/hooks/useOfflineSync";
+
+function MyComponent() {
+  const { 
+    isOnline, 
+    pendingCount, 
+    isSyncing, 
+    syncNow,
+    queueAction 
+  } = useOfflineSync();
+  
+  const handleComplete = async (taskId: string) => {
+    // 1. Update local
+    await updateTaskLocal(taskId, 'completed');
+    
+    // 2. Queue for sync
+    await queueAction({
+      type: 'task_complete',
+      payload: { taskId },
+    });
+  };
+}
+```
+
+## 🧪 Testes
+
+### Executar testes
+
+```bash
+# Testes unitários
+npm test
+
+# Com cobertura
+npm run test:coverage
+
+# Testes E2E
+npm run test:e2e
+```
+
+### Testar Offline
+
+1. Abrir app em modo normal
+2. Ativar "Airplane Mode"
+3. Fazer alterações
+4. Verificar badge "Pendente sincronizar"
+5. Desativar Airplane Mode
+6. Verificar sync automático
+
+### Testar PWA
+
+1. Abrir Chrome DevTools
+2. Lighthouse → PWA
+3. Verificar critérios
+4. Testar "Add to Home Screen"
 
 ## 📱 iOS PWA
 
@@ -227,11 +260,12 @@ Criar em `public/icons/`:
 ## 🌐 APIs Utilizadas
 
 ```
-GET    /api/v1/construction/tasks/         # Listar tarefas
-GET    /api/v1/construction/tasks/{id}/    # Detalhe
-PATCH  /api/v1/construction/tasks/{id}/    # Atualizar status
-POST   /api/v1/construction/tasks/{id}/photos/      # Upload foto
+GET    /api/v1/construction/tasks/              # Listar tarefas
+GET    /api/v1/construction/tasks/{id}/         # Detalhe
+PATCH  /api/v1/construction/tasks/{id}/         # Atualizar status
+POST   /api/v1/construction/tasks/{id}/photos/  # Upload foto
 POST   /api/v1/construction/tasks/{id}/voice-notes/ # Upload voz
+POST   /api/v1/construction/tasks/{id}/notes/   # Adicionar nota
 ```
 
 ## 📊 Performance Targets
@@ -243,6 +277,7 @@ POST   /api/v1/construction/tasks/{id}/voice-notes/ # Upload voz
 | Time to Interactive | < 3s |
 | Tamanho de foto | < 500KB |
 | Cache de tasks | 5 min stale |
+| Sync retry | Exponential backoff |
 
 ## 🐛 Troubleshooting
 
@@ -254,6 +289,12 @@ POST   /api/v1/construction/tasks/{id}/voice-notes/ # Upload voz
 
 ### Problema: IndexedDB falha
 **Solução**: Verificar quota de storage em Safari Settings → Advanced.
+
+### Problema: Service Worker não regista
+**Solução**: Verificar HTTPS (obrigatório para SW exceto localhost).
+
+### Problema: Swipe não funciona
+**Solução**: Verificar touch events não estão bloqueados por parent elements.
 
 ## 📄 Licença
 

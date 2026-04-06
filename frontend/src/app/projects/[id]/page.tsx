@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Building2, MapPin, CalendarClock, Layers, Building, BookmarkPlus } from "lucide-react";
+import { ArrowLeft, Building2, MapPin, CalendarClock, Layers, Building, BookmarkPlus, Box, FileImage } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProject, featureToProject } from "@/hooks/useProjects";
 import { useUnits } from "@/hooks/useUnits";
@@ -13,12 +13,13 @@ import { formatDate, formatArea, formatCve, formatEur } from "@/lib/format";
 import { UnitReservationModal } from "@/components/crm/UnitReservationModal";
 import type { Unit } from "@/hooks/useUnits";
 
-type Tab = "overview" | "units" | "buildings";
+type Tab = "overview" | "units" | "buildings" | "bim";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "overview", label: "Visão Geral" },
   { id: "units", label: "Unidades" },
   { id: "buildings", label: "Edifícios" },
+  { id: "bim", label: "BIM" },
 ];
 
 export default function ProjectDetailPage() {
@@ -104,7 +105,25 @@ export default function ProjectDetailPage() {
             </div>
           </div>
 
-          <div className="flex items-center space-x-6">
+          <div className="flex items-center space-x-4">
+            {/* BIM Buttons */}
+            <button
+              onClick={() => router.push(`/projects/${id}/plans`)}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium transition-colors"
+            >
+              <FileImage className="h-4 w-4" />
+              Plantas 2D
+            </button>
+            <button
+              onClick={() => router.push(`/projects/${id}/bim`)}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-700 text-sm font-medium transition-colors"
+            >
+              <Box className="h-4 w-4" />
+              BIM 3D
+            </button>
+            
+            <div className="w-px h-8 bg-border" />
+            
             {project.start_date && (
               <div className="flex flex-col items-end">
                 <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">Início</span>
@@ -304,6 +323,62 @@ export default function ProjectDetailPage() {
             )}
           </div>
         )}
+
+        {/* Tab: BIM */}
+        {tab === "bim" && (
+          <div className="space-y-6">
+            {/* BIM Overview Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card 
+                icon={<Box className="h-8 w-8 text-blue-600" />}
+                title="Modelo BIM 3D"
+                description="Visualize o modelo 3D do projeto, navegue pelos elementos e associe-os a tarefas."
+                action="Abrir Viewer 3D"
+                onAction={() => router.push(`/projects/${id}/bim`)}
+              />
+              <Card 
+                icon={<FileImage className="h-8 w-8 text-emerald-600" />}
+                title="Plantas 2D"
+                description="Consulte as plantas arquitetónicas, cortes e outras representações 2D."
+                action="Ver Plantas"
+                onAction={() => router.push(`/projects/${id}/plans`)}
+              />
+              <Card 
+                icon={<Layers className="h-8 w-8 text-violet-600" />}
+                title="Elementos"
+                description="Lista completa de elementos BIM: paredes, portas, janelas, etc."
+                action="Explorar"
+                onAction={() => router.push(`/projects/${id}/bim`)}
+              />
+            </div>
+
+            {/* Quick Info */}
+            <div className="rounded-2xl border border-border bg-white p-8 shadow-sm">
+              <h2 className="text-lg font-bold text-foreground mb-4">Sobre o Módulo BIM</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                O módulo BIM (Building Information Modeling) permite visualizar e gerir o modelo digital 
+                da construção. Associe elementos 3D a tarefas de obra e unidades habitacionais para 
+                um acompanhamento integrado do projeto.
+              </p>
+              <div className="mt-6 flex gap-4">
+                <button
+                  onClick={() => router.push(`/projects/${id}/bim`)}
+                  className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium"
+                >
+                  <Box className="h-4 w-4" />
+                  Abrir Modelo 3D
+                </button>
+                <button
+                  onClick={() => router.push(`/projects/${id}/plans`)}
+                  className="flex items-center gap-2 px-4 py-2 bg-white border border-border text-foreground rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                >
+                  <FileImage className="h-4 w-4" />
+                  Ver Plantas 2D
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Reservation modal — unit-first flow */}
@@ -312,6 +387,33 @@ export default function ProjectDetailPage() {
         onClose={() => setReservingUnit(null)}
         onSuccess={() => setReservingUnit(null)}
       />
+    </div>
+  );
+}
+
+// BIM Card Component
+interface CardProps {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  action: string;
+  onAction: () => void;
+}
+
+function Card({ icon, title, description, action, onAction }: CardProps) {
+  return (
+    <div className="rounded-2xl border border-border bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
+      <div className="h-12 w-12 rounded-xl bg-gray-50 flex items-center justify-center mb-4">
+        {icon}
+      </div>
+      <h3 className="font-bold text-foreground mb-2">{title}</h3>
+      <p className="text-sm text-muted-foreground mb-4">{description}</p>
+      <button
+        onClick={onAction}
+        className="text-sm font-bold text-primary hover:text-primary/80 transition-colors"
+      >
+        {action} →
+      </button>
     </div>
   );
 }
