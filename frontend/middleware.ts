@@ -12,7 +12,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 // (auth) route group → URL is /login, not /auth/login
-const PUBLIC_PATHS = ["/login", "/api/auth", "/api/health", "/_next", "/favicon.ico", "/robots.txt"];
+const PUBLIC_PATHS = ["/login", "/superadmin/login", "/api/auth", "/api/health", "/_next", "/favicon.ico", "/robots.txt"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -21,11 +21,20 @@ export function middleware(request: NextRequest) {
 
   if (isPublic) {
     // Already authenticated — don't show login page again
-    if (pathname.startsWith("/login")) {
+    if (pathname.startsWith("/login") && !pathname.startsWith("/superadmin/login")) {
       const hasSession = request.cookies.has("refresh_token");
       if (hasSession) {
         return NextResponse.redirect(new URL("/", request.url));
       }
+    }
+    return NextResponse.next();
+  }
+
+  // Superadmin routes use a separate session cookie
+  if (pathname.startsWith("/superadmin")) {
+    const hasSuperAdminSession = request.cookies.has("superadmin_refresh_token");
+    if (!hasSuperAdminSession) {
+      return NextResponse.redirect(new URL("/superadmin/login", request.url));
     }
     return NextResponse.next();
   }
