@@ -1,10 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { Topbar } from "@/components/layout/Topbar";
 import { Providers } from "@/providers/Providers";
 import { RegisterSW } from "@/components/RegisterSW";
+import { AppShell } from "@/components/layout/AppShell";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -54,16 +53,9 @@ export default function RootLayout({
       >
         <Providers>
           <RegisterSW />
-          <Sidebar />
-          <div className="flex flex-col min-h-screen bg-muted/30 ml-64">
-            <Topbar />
-            <main className="flex-1 mt-16 p-8">
-              {children}
-            </main>
-          </div>
+          <AppShell>{children}</AppShell>
         </Providers>
       </body>
     </html>
   );
 }
-
