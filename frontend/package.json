@@ -34,7 +34,9 @@
     "next": "15.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "camera-controls": "^2.10.1",
     "recharts": "^3.8.1",
+    "sonner": "^2.0.3",
     "tailwind-merge": "^3.5.0",
     "three": "^0.183.2",
     "web-ifc": "^0.0.77"
