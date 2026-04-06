@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('crm', '0001_initial'),  # Adjust as needed
-        ('construction', '0001_initial'),  # Adjust as needed
+        ('construction', '0003_constructiontask'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
