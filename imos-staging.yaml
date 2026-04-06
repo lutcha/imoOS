@@ -95,11 +95,10 @@ jobs:
     kind: PRE_DEPLOY
     name: migrate
     run_command:
-      bash -c 'python manage.py migrate_schemas --shared && python manage.py
-      migrate_schemas && python manage.py ensure_public_tenant && 
-      python manage.py create_staging_tenant || echo "Staging tenant creation skipped" && 
-      python manage.py create_superuser_public --email=admin@proptech.cv --password=ImoOS2026 || 
-      echo "Migration completed with warnings"'
+      bash -c 'python manage.py migrate_schemas --shared && 
+      python manage.py migrate_schemas --executor=parallel && 
+      python manage.py ensure_public_tenant && 
+      echo "Migrations completed. Use /api/v1/setup/superuser/ endpoint to create superuser"'
     source_dir: /
 name: imos-staging
 region: ams
