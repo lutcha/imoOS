@@ -41,10 +41,13 @@ if _redis_url.startswith('rediss://'):
 from urllib.parse import urlparse as _urlparse
 
 _database_url = config('DATABASE_URL', default='')
+# PostGIS + django-tenants combined backend (supports PointField, PolygonField)
+_DB_ENGINE = 'config.postgis_backend'
+
 if _database_url:
     _parsed = _urlparse(_database_url)
     _db_cfg = {
-        'ENGINE': 'django_tenants.postgresql_backend',
+        'ENGINE': _DB_ENGINE,
         'NAME': _parsed.path.lstrip('/').split('?')[0],
         'USER': _parsed.username,
         'PASSWORD': _parsed.password,
@@ -55,7 +58,7 @@ if _database_url:
     }
 else:
     _db_cfg = {
-        'ENGINE': 'django_tenants.postgresql_backend',
+        'ENGINE': _DB_ENGINE,
         'NAME': config('DB_NAME'),
         'USER': config('DB_USER'),
         'PASSWORD': config('DB_PASSWORD'),
