@@ -7,19 +7,18 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const API_URL = process.env.API_URL ?? "http://localhost:8000";
-// TENANT_DOMAIN overrides the Host header sent to Django.
-// Required when running behind Docker/reverse-proxy where the browser-facing
-// host (e.g. localhost:3001) differs from the Django tenant domain (e.g. demo.localhost).
 const TENANT_DOMAIN = process.env.TENANT_DOMAIN;
+const PLATFORM_DOMAIN = process.env.PLATFORM_DOMAIN ?? "proptech.cv";
 
 export async function POST(request: NextRequest) {
-  const { email, password } = await request.json();
+  const { email, password, tenant_domain } = await request.json();
 
   // Resolve the tenant hostname to send to Django:
-  // 1. Use TENANT_DOMAIN env var if set (Docker / production proxy)
-  // 2. Fall back to the host header from the browser request
+  // 1. Explicit tenant_domain from client (e.g. for superadmin login)
+  // 2. TENANT_DOMAIN env var if set
+  // 3. Fall back to the host header from the browser request
   const requestHost = request.headers.get("host") || "localhost:3000";
-  const tenantHost = TENANT_DOMAIN ?? requestHost.split(':')[0];
+  const tenantHost = tenant_domain ?? TENANT_DOMAIN ?? requestHost.split(':')[0];
 
   const djangoResp = await fetch(`${API_URL}/api/v1/users/auth/token/`, {
     method: "POST",

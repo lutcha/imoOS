@@ -141,7 +141,13 @@ function LoginForm() {
         </form>
       </div>
 
-      <p className="mt-6 text-center text-xs text-muted-foreground">
+      <p className="mt-4 text-center text-xs text-muted-foreground">
+        Administrador da plataforma?{" "}
+        <a href="/superadmin/login" className="text-primary underline underline-offset-2">
+          Entrar como Super Admin
+        </a>
+      </p>
+      <p className="mt-2 text-center text-xs text-muted-foreground">
         ImoOS © {new Date().getFullYear()} — Sistema de Gestão Imobiliária
       </p>
     </div>
