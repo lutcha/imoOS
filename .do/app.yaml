@@ -237,13 +237,13 @@ jobs:
 
 # ------------------------------------------------------------------
 # Managed Databases
-# PG + Redis provisionados pelo App Platform (sem custo extra em staging).
+# PG externo (imos-db-postgresql) + Redis/Valkey (imos-redis-staging)
 # ------------------------------------------------------------------
 databases:
   - name: db
     engine: PG
-    version: "15"
-    production: false
+    cluster_name: imos-db-postgresql
+    production: true
   - name: redis
     engine: VALKEY
     production: true
