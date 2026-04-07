@@ -40,6 +40,11 @@ _HEALTH_PATHS = frozenset([
     '/api/v1/health/detailed/',
 ])
 
+# Auth paths that should always work on public schema
+_AUTH_PATHS = frozenset([
+    '/api/v1/users/auth/superadmin/token/',
+])
+
 
 class ImoOSTenantMiddleware(TenantMainMiddleware):
     """
@@ -64,8 +69,9 @@ class ImoOSTenantMiddleware(TenantMainMiddleware):
             raise Http404("Tenant não encontrado")
 
     def process_request(self, request):
-        if request.path in _HEALTH_PATHS:
+        if request.path in _HEALTH_PATHS or request.path in _AUTH_PATHS:
             # Set public schema — no tenant resolution needed for health probes
+            # or superadmin auth (superadmin always operates on public schema)
             TenantModel = get_tenant_model()
             try:
                 public_tenant = TenantModel.objects.get(schema_name=get_public_schema_name())

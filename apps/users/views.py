@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.db import connection
 from .models import User
 from .serializers import UserSerializer, TenantTokenObtainPairSerializer
 
@@ -12,6 +13,39 @@ class TenantTokenObtainPairView(TokenObtainPairView):
     Custom Login view to inject tenant claims in JWT.
     """
     serializer_class = TenantTokenObtainPairSerializer
+
+
+class SuperAdminTokenObtainPairView(TokenObtainPairView):
+    """
+    Superadmin login view - always operates on public schema.
+    Validates that user is_superuser=True.
+    """
+    serializer_class = TenantTokenObtainPairSerializer
+    
+    def post(self, request, *args, **kwargs):
+        # Force public schema for superadmin lookup
+        connection.set_schema_to_public()
+        
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        # Get user and verify is_superuser
+        email = request.data.get('email', '').lower().strip()
+        try:
+            user = User.objects.get(email=email)
+            if not user.is_superuser:
+                return Response(
+                    {'detail': 'Acesso restrito a super administradores.'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+        except User.DoesNotExist:
+            # Return same error as regular auth to avoid user enumeration
+            return Response(
+                {'detail': 'Credenciais inválidas.'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        
+        return Response(serializer.validated_data, status=status.HTTP_200_OK)
 
 
 class TenantTokenRefreshView(TokenRefreshView):

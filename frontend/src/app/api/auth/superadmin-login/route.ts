@@ -24,7 +24,8 @@ function decodeJwtPayload(token: string): Record<string, unknown> {
 export async function POST(request: NextRequest) {
   const { email, password } = await request.json();
 
-  const djangoResp = await fetch(`${API_URL}/api/v1/users/auth/token/`, {
+  // Use the superadmin-specific endpoint (always on public schema)
+  const djangoResp = await fetch(`${API_URL}/api/v1/users/auth/superadmin/token/`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { access, refresh, tenant_schema } = await djangoResp.json();
+  const { access, refresh } = await djangoResp.json();
 
   // Validate is_staff before issuing the session
   const claims = decodeJwtPayload(access);
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
 
   const response = NextResponse.json({
     access_token: access,
-    tenant_schema: tenant_schema ?? "public",
+    tenant_schema: "public",
   });
 
   response.cookies.set("superadmin_refresh_token", refresh, {
