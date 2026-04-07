@@ -11,8 +11,35 @@ from .serializers import UserSerializer, TenantTokenObtainPairSerializer
 class TenantTokenObtainPairView(TokenObtainPairView):
     """
     Custom Login view to inject tenant claims in JWT.
+
+    Supports explicit tenant resolution via `tenant_domain` in the request body.
+    Node.js 18+ native fetch treats `Host` as a forbidden header and silently
+    ignores overrides, so we cannot rely on the Host header for service-to-service
+    calls from Next.js. The client must pass `tenant_domain` in the POST body.
     """
     serializer_class = TenantTokenObtainPairSerializer
+
+    def post(self, request, *args, **kwargs):
+        # If the caller supplies `tenant_domain` in the body, switch to that
+        # tenant's schema before authentication.  This is necessary because
+        # Node.js fetch (Node 18+) forbids overriding the Host header, so we
+        # cannot use the Host-based django-tenants resolution for server-side
+        # calls from the Next.js API route.
+        tenant_domain = request.data.get('tenant_domain')
+        if tenant_domain:
+            try:
+                from apps.tenants.models import Domain
+                domain_obj = Domain.objects.select_related('tenant').get(
+                    domain=tenant_domain
+                )
+                connection.set_tenant(domain_obj.tenant)
+            except Exception:
+                from rest_framework.response import Response as _Response
+                return _Response(
+                    {'detail': 'Tenant não encontrado.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        return super().post(request, *args, **kwargs)
 
 
 class SuperAdminTokenObtainPairView(TokenObtainPairView):

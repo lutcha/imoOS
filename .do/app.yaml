@@ -199,7 +199,7 @@ jobs:
       branch: develop
     source_dir: /
     dockerfile_path: docker/Dockerfile.staging
-    run_command: 'bash -c ''python manage.py shell -c "from django.db import connection; connection.cursor().execute(\"CREATE EXTENSION IF NOT EXISTS postgis\")" || true && python manage.py migrate_schemas --shared && python manage.py ensure_public_tenant && python manage.py migrate_schemas && (python manage.py ensure_demo_tenant --schema demo_promotora --name "Demo Promotora" --domain demo.proptech.cv --plan pro || echo "WARNING: Demo tenant creation failed.") && python manage.py create_platform_admin'''
+    run_command: 'bash -c ''python manage.py shell -c "from django.db import connection; connection.cursor().execute(\"CREATE EXTENSION IF NOT EXISTS postgis\")" || true && python manage.py migrate_schemas --shared && python manage.py ensure_public_tenant && python manage.py migrate_schemas && (python manage.py ensure_demo_tenant --schema demo_promotora --name "Demo Promotora" --domain demo.proptech.cv --plan pro || echo "WARNING: Demo tenant creation failed.") && (python manage.py ensure_demo_users --tenant demo_promotora || echo "WARNING: Demo users failed.") && python manage.py create_platform_admin'''
     envs:
       - key: DJANGO_SETTINGS_MODULE
         value: config.settings.staging
