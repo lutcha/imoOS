@@ -1,6 +1,6 @@
-"""
-usePermissions — Hook for granular permission checking
-"""
+/**
+ * usePermissions — Hook for granular permission checking
+ */
 import { useAuth } from "@/contexts/AuthContext";
 
 // Permission matrix matching backend

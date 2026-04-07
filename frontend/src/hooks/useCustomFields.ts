@@ -1,6 +1,6 @@
-"""
-useCustomFields — Hook for CRM custom fields
-"""
+/**
+ * useCustomFields — Hook for CRM custom fields
+ */
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import apiClient from "@/lib/api-client";
 

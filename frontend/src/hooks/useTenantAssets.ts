@@ -1,6 +1,6 @@
-"""
-useTenantAssets — Hook for uploading logo and favicon
-"""
+/**
+ * useTenantAssets — Hook for uploading logo and favicon
+ */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import apiClient from "@/lib/api-client";
 
