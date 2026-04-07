@@ -13,7 +13,15 @@ function LoginForm() {
   const { login } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") ?? "/";
+  // Normalize `next` param: strip legacy /app basePath prefix, fallback to /
+  const rawNext = searchParams.get("next") ?? "/";
+  const next = rawNext.startsWith("/app/")
+    ? rawNext.slice(4)           // /app/projects → /projects
+    : rawNext === "/app"
+    ? "/"
+    : rawNext.startsWith("/")
+    ? rawNext
+    : "/";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

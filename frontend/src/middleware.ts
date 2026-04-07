@@ -1,57 +1,81 @@
 /**
- * ImoOS — Simplified Middleware
- * Only handles API auth and basic public path detection
- * Client-side auth handled by AuthContext
+ * ImoOS — Next.js Edge Middleware (Next.js 15)
+ * Skill: nextjs-tenant-routing / auth-jwt-handling
+ *
+ * Strategy: httpOnly cookie `refresh_token` as the session indicator.
+ *   - Set by /api/auth/login, cleared by /api/auth/logout.
+ *   - Middleware does NOT validate JWT signature (Edge has no access to secret).
+ *   - Real validation happens server-side in /api/auth/refresh (called by
+ *     AuthContext.restoreSession on every mount). Two-layer defence: middleware
+ *     handles the obvious unauthenticated case; AuthContext handles stale cookies.
+ *
+ * Next.js 15: NextResponse.redirect() from middleware correctly triggers a
+ * full-page navigation even for RSC (client-side router) fetch requests.
+ * The old "return 401 for RSC" pattern is no longer needed and caused the
+ * router to crash with errors on sidebar tab clicks for unauthenticated users.
  */
 import { NextRequest, NextResponse } from "next/server";
 
-const PUBLIC_PATHS = [
-  "/login",
+// Prefix-based public paths (startsWith check)
+const PUBLIC_PREFIXES = [
+  "/api/auth/",
+  "/_next/",
   "/register",
   "/verify-email",
   "/superadmin/login",
   "/impersonate",
-  "/_next/",
-  "/api/auth/",
+  "/api/health",
+];
+
+// Exact public paths
+const PUBLIC_EXACT = new Set([
+  "/login",
   "/favicon.ico",
   "/robots.txt",
   "/manifest.json",
-];
+]);
 
 function isPublicPath(pathname: string): boolean {
-  return PUBLIC_PATHS.some((p) => pathname.startsWith(p));
+  if (PUBLIC_EXACT.has(pathname)) return true;
+  return PUBLIC_PREFIXES.some((p) => pathname.startsWith(p));
 }
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Allow all public paths
+  // ── 1. Public paths ──────────────────────────────────────────────────
   if (isPublicPath(pathname)) {
-    return NextResponse.next();
-  }
-
-  // Check for auth cookies
-  const hasSession = request.cookies.has("refresh_token");
-  const hasSuperAdminSession = request.cookies.has("superadmin_refresh_token");
-
-  // Superadmin routes check
-  if (pathname.startsWith("/superadmin")) {
-    if (!hasSuperAdminSession && pathname !== "/superadmin/login") {
-      return NextResponse.redirect(new URL("/superadmin/login", request.url));
+    // Authenticated user hitting /login → bounce to app root
+    if (pathname === "/login" && request.cookies.has("refresh_token")) {
+      const home = request.nextUrl.clone();
+      home.pathname = "/";
+      home.search = "";
+      return NextResponse.redirect(home);
     }
     return NextResponse.next();
   }
 
-  // For RSC/navigation requests without cookie, return 401
-  // This lets AuthContext handle the redirect client-side
-  const isRSC = request.headers.has("RSC") || request.headers.has("Next-Router-State-Tree");
-  
-  if (!hasSession && isRSC) {
-    return new NextResponse(null, { status: 401 });
+  // ── 2. Superadmin area ───────────────────────────────────────────────
+  if (pathname.startsWith("/superadmin")) {
+    if (!request.cookies.has("superadmin_refresh_token")) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/superadmin/login";
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
+    return NextResponse.next();
   }
 
-  // For non-RSC requests without cookie, let them through
-  // AuthContext will check and redirect if needed
+  // ── 3. Protected routes — require refresh_token cookie ───────────────
+  //    NextResponse.redirect() in Next.js 15 triggers a full-page navigation
+  //    even when the original request is an RSC fetch (client-side router).
+  if (!request.cookies.has("refresh_token")) {
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = "/login";
+    loginUrl.searchParams.set("next", pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
   return NextResponse.next();
 }
 

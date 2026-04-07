@@ -4,7 +4,8 @@
  * AppShell — renders Sidebar+Topbar only for authenticated app routes.
  * Auth routes (/login) and superadmin routes (/superadmin) render children directly.
  */
-import { usePathname } from "next/navigation";
+import { useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth, useRequireAuth } from "@/contexts/AuthContext";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
@@ -12,45 +13,39 @@ import { Topbar } from "./Topbar";
 const AUTH_PATHS = ["/login", "/register", "/verify-email", "/superadmin/login", "/impersonate"];
 const SUPERADMIN_PATHS = ["/superadmin"];
 
-function isAuthPath(pathname: string): boolean {
-  return AUTH_PATHS.some((p) => pathname.startsWith(p));
+function isAuthPath(p: string): boolean {
+  return AUTH_PATHS.some((prefix) => p.startsWith(prefix));
 }
-
-function isSuperAdminPath(pathname: string): boolean {
-  return SUPERADMIN_PATHS.some((p) => pathname.startsWith(p));
+function isSuperAdminPath(p: string): boolean {
+  return SUPERADMIN_PATHS.some((prefix) => p.startsWith(prefix));
 }
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { isLoading, isAuthenticated } = useAuth();
 
-  // Public/auth pages - no shell
-  if (isAuthPath(pathname)) {
+  const isPublic = isAuthPath(pathname) || isSuperAdminPath(pathname);
+
+  // Client-side auth guard for protected pages:
+  // Handles the case where the cookie expires while the user is already on a page.
+  // The middleware covers unauthenticated initial page loads; this covers session expiry.
+  useEffect(() => {
+    if (!isPublic && !isLoading && !isAuthenticated) {
+      router.replace("/login?next=" + encodeURIComponent(pathname));
+    }
+  }, [isPublic, isLoading, isAuthenticated, pathname, router]);
+
+  // Auth/public pages — no shell
+  if (isPublic) {
     return <>{children}</>;
   }
 
-  // Superadmin pages - different shell (handled by superadmin layout)
-  if (isSuperAdminPath(pathname)) {
-    return <>{children}</>;
-  }
-
-  // Protected pages - require auth
-  // useRequireAuth will redirect to login if not authenticated
-  // But we need to handle the loading state
-  if (isLoading) {
+  // Loading or awaiting redirect after session expiry
+  if (isLoading || !isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  // If not authenticated and not on public page, show loading
-  // The redirect will happen via useRequireAuth in child components
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
       </div>
     );
   }
