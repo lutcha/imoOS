@@ -2,18 +2,12 @@
 
 /**
  * AuthContext — ImoOS
- * Pattern: in-memory access token + httpOnly refresh cookie
- * Skill: auth-jwt-handling
+ * Simplified auth with proper error handling
  */
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { jwtDecode } from "jwt-decode";
-import { setAccessToken, setTenantSchema } from "@/lib/api-client";
+import { setAccessToken, setTenantSchema, getAccessToken } from "@/lib/api-client";
 
 interface JwtClaims {
   user_id: string;
@@ -48,8 +42,8 @@ interface AuthState {
 }
 
 interface AuthContextValue extends AuthState {
-  login: (email: string, password: string, tenantDomain?: string) => Promise<void>;
-  logout: () => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -81,6 +75,8 @@ function hydrateFromToken(token: string): { user: User; tenant: Tenant } {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+  const pathname = usePathname();
   const [state, setState] = useState<AuthState>({
     user: null,
     tenant: null,
@@ -88,13 +84,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isAuthenticated: false,
   });
 
-  // On mount: attempt silent refresh to restore session from httpOnly cookie
+  // Restore session on mount
   useEffect(() => {
     async function restoreSession() {
       try {
-        const resp = await fetch("/api/auth/refresh", { method: "POST" });
-        if (!resp.ok) throw new Error("No session");
+        const resp = await fetch("/api/auth/refresh", { 
+          method: "POST",
+          credentials: "include",
+        });
+        
+        if (!resp.ok) {
+          throw new Error("Session expired");
+        }
+        
         const { access_token, tenant_schema } = await resp.json();
+        
+        if (!access_token) {
+          throw new Error("No token received");
+        }
 
         setAccessToken(access_token);
         setTenantSchema(tenant_schema);
@@ -102,16 +109,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setState({ user, tenant, isLoading: false, isAuthenticated: true });
       } catch {
         setState({ user: null, tenant: null, isLoading: false, isAuthenticated: false });
+        // Only redirect if not on public pages
+        const publicPaths = ["/login", "/register", "/verify-email"];
+        if (!publicPaths.includes(pathname)) {
+          router.replace("/login?next=" + encodeURIComponent(pathname));
+        }
       }
     }
     restoreSession();
   }, []);
 
-  const login = useCallback(async (email: string, password: string, tenantDomain?: string) => {
+  const login = useCallback(async (email: string, password: string) => {
     const resp = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, tenant_domain: tenantDomain }),
+      credentials: "include",
+      body: JSON.stringify({ email, password }),
     });
 
     if (!resp.ok) {
@@ -120,18 +133,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     const { access_token, tenant_schema } = await resp.json();
+    
+    if (!access_token) {
+      throw new Error("Invalid response from server");
+    }
+    
     setAccessToken(access_token);
     setTenantSchema(tenant_schema);
     const { user, tenant } = hydrateFromToken(access_token);
     setState({ user, tenant, isLoading: false, isAuthenticated: true });
   }, []);
 
-  const logout = useCallback(async () => {
-    await fetch("/api/auth/logout", { method: "POST" }).catch(() => { });
+  const logout = useCallback(() => {
+    fetch("/api/auth/logout", { 
+      method: "POST",
+      credentials: "include",
+    }).catch(() => {});
+    
     setAccessToken(null);
     setTenantSchema(null);
     setState({ user: null, tenant: null, isLoading: false, isAuthenticated: false });
-    window.location.href = "/login";
+    
+    // Hard redirect to login
+    window.location.replace("/login");
   }, []);
 
   return (
@@ -145,4 +169,20 @@ export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used within <AuthProvider>");
   return ctx;
+}
+
+// Hook for protected routes
+export function useRequireAuth() {
+  const { isAuthenticated, isLoading } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      const publicPaths = ["/login", "/register", "/verify-email"];
+      if (!publicPaths.includes(pathname)) {
+        router.replace("/login?next=" + encodeURIComponent(pathname));
+      }
+    }
+  }, [isAuthenticated, isLoading, pathname, router]);
 }
