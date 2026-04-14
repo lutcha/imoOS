@@ -46,6 +46,12 @@ _AUTH_PATHS = frozenset([
     '/api/v1/users/auth/superadmin/token/refresh/',
 ])
 
+# Setup paths for initial superuser creation (DigitalOcean deployment)
+_SETUP_PATHS = frozenset([
+    '/api/v1/setup/status/',
+    '/api/v1/setup/superuser/',
+])
+
 
 class ImoOSTenantMiddleware(TenantMainMiddleware):
     """
@@ -70,7 +76,7 @@ class ImoOSTenantMiddleware(TenantMainMiddleware):
             raise Http404("Tenant não encontrado")
 
     def process_request(self, request):
-        if request.path in _HEALTH_PATHS or request.path in _AUTH_PATHS:
+        if request.path in _HEALTH_PATHS or request.path in _AUTH_PATHS or request.path in _SETUP_PATHS:
             # Set public schema — no tenant resolution needed for health probes
             # or superadmin auth (superadmin always operates on public schema)
             TenantModel = get_tenant_model()
