@@ -1,0 +1,43 @@
+#!/bin/bash
+# =============================================================================
+# Pre-commit hook to prevent DEV_SKIP_AUTH from being committed
+# Install: cp .git-hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+# =============================================================================
+
+echo "🔍 Checking for DEV_SKIP_AUTH in committed files..."
+
+# Check if DEV_SKIP_AUTH = True is being committed
+if git diff --cached --name-only | grep -q "settings/development.py"; then
+    if git diff --cached config/settings/development.py | grep -q "DEV_SKIP_AUTH = True"; then
+        echo ""
+        echo "❌ ERROR: Cannot commit DEV_SKIP_AUTH = True!"
+        echo ""
+        echo "This is a development-only bypass and should NEVER be committed."
+        echo ""
+        echo "To proceed:"
+        echo "  1. Comment out or remove: DEV_SKIP_AUTH = True"
+        echo "  2. Or use: git commit --no-verify (NOT RECOMMENDED)"
+        echo ""
+        exit 1
+    fi
+fi
+
+# Check if views.py bypass methods are being committed
+if git diff --cached --name-only | grep -q "apps/users/views.py"; then
+    if git diff --cached apps/users/views.py | grep -q "_dev_bypass_login\|_dev_bypass_superadmin_login"; then
+        echo ""
+        echo "⚠️  WARNING: Dev bypass methods detected in views.py"
+        echo ""
+        echo "Make sure these are wrapped in 'if getattr(settings, \"DEV_SKIP_AUTH\", False):'"
+        echo "and that DEV_SKIP_AUTH is not being committed."
+        echo ""
+        echo "Continue anyway? (y/n)"
+        read -r response
+        if [[ ! "$response" =~ ^[Yy]$ ]]; then
+            exit 1
+        fi
+    fi
+fi
+
+echo "✅ Pre-commit checks passed"
+exit 0

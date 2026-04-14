@@ -1,0 +1,109 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    🚀 IMOS - QUICK START (LOGIN FIX)                        ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ ⚡ SOLUÇÃO RÁPIDA (5 minutos)                                                │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+PASSO 1: INICIAR DOCKER
+━━━━━━━━━━━━━━━━━━━━━━━━
+✓ Abrir Docker Desktop
+✓ Aguardar status "running"
+✓ Verificar: docker ps
+
+PASSO 2: EXECUTAR SETUP
+━━━━━━━━━━━━━━━━━━━━━━
+No terminal (pasta c:\Dev\imos):
+
+    .\setup-database.bat
+
+O script vai:
+  ✓ Iniciar todos os serviços
+  ✓ Criar banco de dados
+  ✓ Executar migrations
+  ✓ Criar tenant demo_promotora
+  ✓ Criar usuários (admin + demo)
+
+Tempo: ~2-3 minutos
+
+PASSO 3: TESTAR LOGIN
+━━━━━━━━━━━━━━━━━━━━
+
+Opção A - Super Admin:
+  URL:     http://localhost:8001/superadmin/login
+  Email:   admin@proptech.cv
+  Senha:   ImoOS2026
+
+Opção B - Tenant Normal:
+  URL:     http://localhost:8001/login
+  Email:   gerente@demo.cv
+  Senha:   Demo2026!
+
+OU: Usar QUALQUER credencial (modo DEV ativo)
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 🎯 O QUE ESPERAR                                                             │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+✅ Banner amarelo no topo: "MODO DESENVOLVIMENTO"
+✅ Login funciona com qualquer credencial
+✅ Redireciona para dashboard após login
+✅ Backend logs mostram: "⚠️ DEV_SKIP_AUTH is enabled"
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 🚨 SE NÃO FUNCIONAR                                                          │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+Verificar serviços:
+    docker-compose -f docker-compose.dev.yml ps
+
+Ver logs:
+    docker-compose -f docker-compose.dev.yml logs -f web
+
+Reset completo:
+    docker-compose -f docker-compose.dev.yml down -v
+    .\setup-database.bat
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│  DOCUMENTAÇÃO COMPLETA                                                     │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+📖 docs/SOLUCAO_LOGIN.md          → Guia completo + troubleshooting
+📖 docs/diagnostico_autenticacao.md → Análise técnica detalhada
+📖 RESUMO_EXECUTIVO.md             → Resumo executivo
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ ⚠️ IMPORTANTE                                                                │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+❌ NUNCA commitar DEV_SKIP_AUTH para main/develop
+❌ NUNCA usar em produção
+✅ SEMPRE verificar banner amarelo antes de testar
+✅ USAR apenas para desenvolvimento local
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 🔧 CREDENCIAIS CRIADAS                                                       │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+SUPER ADMIN (schema público):
+  Email:    admin@proptech.cv
+  Senha:    ImoOS2026
+  Permissão: Staff/Superuser
+
+USUÁRIOS DEMO (tenant demo_promotora):
+  admin@demo.cv      / Demo2026!   (admin, staff)
+  gerente@demo.cv    / Demo2026!   (gestor)
+  vendas@demo.cv     / Demo2026!   (vendedor)
+  obra@demo.cv       / Demo2026!   (engenheiro)
+  cliente1@demo.cv   / Demo2026!   (gestor)
+  cliente2@demo.cv   / Demo2026!   (gestor)
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 🎉 PRONTO!                                                                   │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+Execute: .\setup-database.bat
+Depois:  Abrir http://localhost:8001/login
+
+═══════════════════════════════════════════════════════════════════════════════

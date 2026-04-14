@@ -1,0 +1,35 @@
+# =============================================================================
+# .gitignore additions for development bypass
+# Add these lines to your .gitignore if not already present
+# =============================================================================
+
+# Prevent accidental commit of dev bypass settings
+# (These should already be in .gitignore, but double-check!)
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Node
+node_modules/
+.next/
+out/
+
+# Media
+media/
+
+# Backups
+backups/
+*.bak
