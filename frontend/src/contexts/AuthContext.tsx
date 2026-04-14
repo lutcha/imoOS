@@ -109,9 +109,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setState({ user, tenant, isLoading: false, isAuthenticated: true });
       } catch {
         setState({ user: null, tenant: null, isLoading: false, isAuthenticated: false });
-        // Only redirect if not on public pages
-        const publicPaths = ["/login", "/register", "/verify-email"];
-        if (!publicPaths.includes(pathname)) {
+        // Don't redirect superadmin, auth, or impersonation paths — they manage
+        // their own sessions independently of the tenant refresh_token cookie.
+        const noRedirectPrefixes = ["/login", "/register", "/verify-email", "/superadmin", "/impersonate"];
+        if (!noRedirectPrefixes.some((p) => pathname.startsWith(p))) {
           router.replace("/login?next=" + encodeURIComponent(pathname));
         }
       }
@@ -179,8 +180,8 @@ export function useRequireAuth() {
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      const publicPaths = ["/login", "/register", "/verify-email"];
-      if (!publicPaths.includes(pathname)) {
+      const noRedirectPrefixes = ["/login", "/register", "/verify-email", "/superadmin", "/impersonate"];
+      if (!noRedirectPrefixes.some((p) => pathname.startsWith(p))) {
         router.replace("/login?next=" + encodeURIComponent(pathname));
       }
     }
