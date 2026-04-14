@@ -111,7 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setState({ user: null, tenant: null, isLoading: false, isAuthenticated: false });
         // Don't redirect superadmin, auth, or impersonation paths — they manage
         // their own sessions independently of the tenant refresh_token cookie.
-        const noRedirectPrefixes = ["/login", "/register", "/verify-email", "/superadmin", "/impersonate"];
+        const noRedirectPrefixes = ["/login", "/register", "/verify-email", "/superadmin", "/impersonate", "/landing"];
         if (!noRedirectPrefixes.some((p) => pathname.startsWith(p))) {
           router.replace("/login?next=" + encodeURIComponent(pathname));
         }
@@ -180,7 +180,7 @@ export function useRequireAuth() {
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      const noRedirectPrefixes = ["/login", "/register", "/verify-email", "/superadmin", "/impersonate"];
+      const noRedirectPrefixes = ["/login", "/register", "/verify-email", "/superadmin", "/impersonate", "/landing"];
       if (!noRedirectPrefixes.some((p) => pathname.startsWith(p))) {
         router.replace("/login?next=" + encodeURIComponent(pathname));
       }
