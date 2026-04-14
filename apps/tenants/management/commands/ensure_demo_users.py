@@ -90,10 +90,18 @@ class Command(BaseCommand):
         connection.set_tenant(tenant)
         self.stdout.write(f"Creating demo users in schema '{schema}'…")
 
+        # Temporarily disconnect the integrations signal that creates
+        # NotificationPreference, because the demo schema may not have the
+        # integrations tables yet (causes transaction abort on PostgreSQL).
+        from django.db.models.signals import post_save
+        from django.conf import settings
+        from apps.integrations.signals import create_notification_preferences
+        post_save.disconnect(create_notification_preferences, sender=settings.AUTH_USER_MODEL)
+
         created_count = 0
-        for data in DEMO_USERS:
-            email = data['email']
-            try:
+        try:
+            for data in DEMO_USERS:
+                email = data['email']
                 user, created = User.objects.get_or_create(
                     email=email,
                     defaults={
@@ -106,17 +114,13 @@ class Command(BaseCommand):
                 )
                 if created:
                     user.set_password(DEFAULT_PASSWORD)
-                    try:
-                        user.save(update_fields=['password'])
-                    except Exception:
-                        # Fallback if transaction was affected by a signal error
-                        user.save()
+                    user.save(update_fields=['password'])
                     created_count += 1
                     self.stdout.write(f"  ✓ Created {email}")
                 else:
                     self.stdout.write(f"  — {email} already exists")
-            except Exception as exc:
-                self.stdout.write(self.style.WARNING(f"  ⚠ Failed to create {email}: {exc}"))
+        finally:
+            post_save.connect(create_notification_preferences, sender=settings.AUTH_USER_MODEL)
 
         self.stdout.write(
             self.style.SUCCESS(
