@@ -93,23 +93,30 @@ class Command(BaseCommand):
         created_count = 0
         for data in DEMO_USERS:
             email = data['email']
-            user, created = User.objects.get_or_create(
-                email=email,
-                defaults={
-                    'first_name': data['first_name'],
-                    'last_name': data['last_name'],
-                    'role': data['role'],
-                    'is_staff': data.get('is_staff', False),
-                    'is_active': True,
-                },
-            )
-            if created:
-                user.set_password(DEFAULT_PASSWORD)
-                user.save(update_fields=['password'])
-                created_count += 1
-                self.stdout.write(f"  ✓ Created {email}")
-            else:
-                self.stdout.write(f"  — {email} already exists")
+            try:
+                user, created = User.objects.get_or_create(
+                    email=email,
+                    defaults={
+                        'first_name': data['first_name'],
+                        'last_name': data['last_name'],
+                        'role': data['role'],
+                        'is_staff': data.get('is_staff', False),
+                        'is_active': True,
+                    },
+                )
+                if created:
+                    user.set_password(DEFAULT_PASSWORD)
+                    try:
+                        user.save(update_fields=['password'])
+                    except Exception:
+                        # Fallback if transaction was affected by a signal error
+                        user.save()
+                    created_count += 1
+                    self.stdout.write(f"  ✓ Created {email}")
+                else:
+                    self.stdout.write(f"  — {email} already exists")
+            except Exception as exc:
+                self.stdout.write(self.style.WARNING(f"  ⚠ Failed to create {email}: {exc}"))
 
         self.stdout.write(
             self.style.SUCCESS(
