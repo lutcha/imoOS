@@ -10,7 +10,7 @@ import { useAuth, useRequireAuth } from "@/contexts/AuthContext";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
 
-const AUTH_PATHS = ["/login", "/register", "/verify-email", "/superadmin/login", "/impersonate"];
+const AUTH_PATHS = ["/login", "/register", "/verify-email", "/superadmin/login", "/impersonate", "/landing"];
 const SUPERADMIN_PATHS = ["/superadmin"];
 
 function isAuthPath(p: string): boolean {
