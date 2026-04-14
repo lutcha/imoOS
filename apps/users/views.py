@@ -60,9 +60,9 @@ class SuperAdminTokenObtainPairView(TokenObtainPairView):
         email = request.data.get('email', '').lower().strip()
         try:
             user = User.objects.get(email=email)
-            if not user.is_superuser:
+            if not user.is_staff:
                 return Response(
-                    {'detail': 'Acesso restrito a super administradores.'},
+                    {'detail': 'Acesso restrito a administradores da plataforma.'},
                     status=status.HTTP_403_FORBIDDEN
                 )
         except User.DoesNotExist:
@@ -112,6 +112,19 @@ class TenantTokenRefreshView(TokenRefreshView):
             'tenant_schema': tenant_schema,
             'tenant_name': tenant_name,
         })
+
+
+class SuperAdminTokenRefreshView(TenantTokenRefreshView):
+    """
+    Superadmin token refresh — forces public schema before validating the JWT.
+    Registered at /auth/superadmin/token/refresh/ which is in _AUTH_PATHS so the
+    tenant middleware bypasses Host-based resolution and sets the public schema.
+    The actual JWT validation is purely cryptographic (no extra DB query needed).
+    """
+
+    def post(self, request, *args, **kwargs):
+        connection.set_schema_to_public()
+        return super().post(request, *args, **kwargs)
 
 
 class UserViewSet(viewsets.ModelViewSet):

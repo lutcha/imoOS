@@ -43,6 +43,7 @@ _HEALTH_PATHS = frozenset([
 # Auth paths that should always work on public schema
 _AUTH_PATHS = frozenset([
     '/api/v1/users/auth/superadmin/token/',
+    '/api/v1/users/auth/superadmin/token/refresh/',
 ])
 
 

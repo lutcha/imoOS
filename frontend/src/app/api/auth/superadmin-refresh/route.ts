@@ -17,14 +17,18 @@ export async function POST() {
     return NextResponse.json({ detail: "No session" }, { status: 401 });
   }
 
-  const djangoResp = await fetch(`${API_URL}/api/v1/users/auth/token/refresh/`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Host: PLATFORM_DOMAIN,
-    },
-    body: JSON.stringify({ refresh: refreshToken }),
-  });
+  // Use the dedicated superadmin refresh endpoint — it's in _AUTH_PATHS so the
+  // tenant middleware sets public schema without relying on the Host header
+  // (Node.js 18+ ignores Host overrides in fetch, so Host-based resolution
+  // cannot be used for server-to-server calls).
+  const djangoResp = await fetch(
+    `${API_URL}/api/v1/users/auth/superadmin/token/refresh/`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh: refreshToken }),
+    }
+  );
 
   if (!djangoResp.ok) {
     const response = NextResponse.json({ detail: "Session expired" }, { status: 401 });

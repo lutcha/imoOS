@@ -70,7 +70,7 @@ export function useSuperAdminSession() {
   }, [refresh]);
 
   const logout = useCallback(async () => {
-    await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+    await fetch("/api/auth/superadmin-logout", { method: "POST" }).catch(() => {});
     setAccessToken(null);
     setTenantSchema(null);
     setState({ user: null, isLoading: false, isAuthenticated: false });
