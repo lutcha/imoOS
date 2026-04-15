@@ -35,7 +35,11 @@ function LoginForm() {
     setIsLoading(true);
 
     try {
-      await login(email, password);
+      // Pass the tenant domain so the API route resolves the correct schema.
+      // NEXT_PUBLIC_TENANT_DOMAIN is set per-deployment in app.yaml (demo.proptech.cv).
+      // If absent (local dev), the login API route falls back to the Host header.
+      const tenantDomain = process.env.NEXT_PUBLIC_TENANT_DOMAIN;
+      await login(email, password, tenantDomain);
       router.replace(next);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao iniciar sessão");
