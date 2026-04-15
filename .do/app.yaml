@@ -115,6 +115,8 @@ services:
         value: "true"
       - key: PLATFORM_DOMAIN
         value: proptech.cv
+      - key: NEXT_PUBLIC_PLATFORM_DOMAIN
+        value: proptech.cv
 
 # ------------------------------------------------------------------
 # Workers — Celery (background, no HTTP port)

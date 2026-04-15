@@ -2,6 +2,18 @@ FROM node:20-slim AS builder
 
 WORKDIR /app
 
+# Build-time env vars for Next.js NEXT_PUBLIC_ inlining.
+# DO App Platform passes these as --build-arg when app.yaml defines them as
+# env vars on the frontend service.  Without ARG declarations here the values
+# are not visible during `next build` and every NEXT_PUBLIC_ reference gets
+# substituted with `undefined` in the client bundle.
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_TENANT_DOMAIN
+ARG NEXT_PUBLIC_PLATFORM_DOMAIN
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_TENANT_DOMAIN=$NEXT_PUBLIC_TENANT_DOMAIN
+ENV NEXT_PUBLIC_PLATFORM_DOMAIN=$NEXT_PUBLIC_PLATFORM_DOMAIN
+
 COPY package.json package-lock.json* ./
 RUN npm install --legacy-peer-deps
 

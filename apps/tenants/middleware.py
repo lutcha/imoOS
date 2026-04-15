@@ -40,8 +40,16 @@ _HEALTH_PATHS = frozenset([
     '/api/v1/health/detailed/',
 ])
 
-# Auth paths that should always work on public schema
+# Auth paths where the middleware sets public schema as a starting point.
+# The login/refresh views switch to the correct tenant schema themselves via
+# `tenant_domain` in the request body.  Adding them here prevents the
+# middleware from returning 404 on deployments where `proptech.cv` is not yet
+# registered as a domain (e.g. first-ever deploy before ensure_public_tenant
+# completes).  Belt-and-suspenders: the views still call connection.set_tenant
+# to get the right schema before touching the DB.
 _AUTH_PATHS = frozenset([
+    '/api/v1/users/auth/token/',
+    '/api/v1/users/auth/token/refresh/',
     '/api/v1/users/auth/superadmin/token/',
     '/api/v1/users/auth/superadmin/token/refresh/',
 ])
