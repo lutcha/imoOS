@@ -18,9 +18,17 @@ logger = logging.getLogger('apps.integrations')
 def create_notification_preferences(sender, instance, created, **kwargs):
     """
     Criar preferências de notificação padrão quando um novo utilizador é criado.
+
+    Uses a savepoint so a missing table (e.g. integrations not yet migrated in a
+    new tenant schema) aborts only this sub-transaction and not the outer one.
+    Without the savepoint, PostgreSQL marks the whole transaction as aborted and
+    every subsequent query fails — even though we catch the Python exception.
     """
-    if created:
-        try:
+    if not created:
+        return
+    from django.db import transaction
+    try:
+        with transaction.atomic():
             NotificationPreference.objects.get_or_create(
                 user=instance,
                 defaults={
@@ -34,8 +42,8 @@ def create_notification_preferences(sender, instance, created, **kwargs):
                 }
             )
             logger.info(f'Preferências criadas para utilizador {instance.email}')
-        except Exception as e:
-            logger.error(f'Erro ao criar preferências: {e}')
+    except Exception as e:
+        logger.warning(f'Could not create notification preferences for {instance.email}: {e}')
 
 
 # Signals para ConstructionTask - comentados para evitar import circular
