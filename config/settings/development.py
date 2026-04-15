@@ -18,7 +18,3 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-# ⚠️ TEMPORÁRIO: Bypass de autenticação para desenvolvimento
-# ⚠️ REMOVER antes de commitar para produção!
-# ⚠️ Permite login sem validar credenciais (apenas para testes locais)
-DEV_SKIP_AUTH = True

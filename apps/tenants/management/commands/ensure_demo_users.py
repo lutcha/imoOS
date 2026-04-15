@@ -113,12 +113,13 @@ class Command(BaseCommand):
                     },
                 )
                 if created:
-                    user.set_password(DEFAULT_PASSWORD)
-                    user.save(update_fields=['password'])
                     created_count += 1
                     self.stdout.write(f"  ✓ Created {email}")
                 else:
-                    self.stdout.write(f"  — {email} already exists")
+                    self.stdout.write(f"  — {email} already exists (resetting password)")
+                # Always reset password so re-deploys reliably restore known credentials
+                user.set_password(DEFAULT_PASSWORD)
+                user.save(update_fields=['password'])
         finally:
             post_save.connect(create_notification_preferences, sender=settings.AUTH_USER_MODEL)
 

@@ -4,7 +4,6 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.db import connection
-from django.conf import settings
 from .models import User
 from .serializers import UserSerializer, TenantTokenObtainPairSerializer
 
@@ -21,10 +20,6 @@ class TenantTokenObtainPairView(TokenObtainPairView):
     serializer_class = TenantTokenObtainPairSerializer
 
     def post(self, request, *args, **kwargs):
-        # ⚠️ DEV BYPASS - Temporário para desenvolvimento
-        if getattr(settings, 'DEV_SKIP_AUTH', False):
-            return self._dev_bypass_login(request)
-        
         # If the caller supplies `tenant_domain` in the body, switch to that
         # tenant's schema before authentication.  This is necessary because
         # Node.js fetch (Node 18+) forbids overriding the Host header, so we
@@ -45,79 +40,23 @@ class TenantTokenObtainPairView(TokenObtainPairView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
         return super().post(request, *args, **kwargs)
-    
-    def _dev_bypass_login(self, request):
-        """
-        ⚠️ DEV ONLY: Returns valid token without validating credentials.
-        ⚠️ REMOVE before committing to production!
-        """
-        from apps.tenants.models import Domain, Client
-        import warnings
-        warnings.warn("⚠️ DEV_SKIP_AUTH is enabled - authentication bypassed!")
-        
-        tenant_domain = request.data.get('tenant_domain', 'demo.proptech.cv')
-        
-        # Try to resolve tenant
-        try:
-            domain_obj = Domain.objects.select_related('tenant').get(domain=tenant_domain)
-            connection.set_tenant(domain_obj.tenant)
-            tenant = domain_obj.tenant
-        except Exception:
-            # Fallback: use first active tenant
-            tenant = Client.objects.filter(is_active=True).first()
-            if not tenant:
-                return Response(
-                    {'detail': 'Nenhum tenant configurado. Execute: python manage.py ensure_demo_tenant'},
-                    status=status.HTTP_404_NOT_FOUND
-                )
-            connection.set_tenant(tenant)
-        
-        # Get first active user (prefer admin/staff)
-        user = User.objects.filter(is_active=True).order_by('-is_staff', '-is_superuser').first()
-        
-        if not user:
-            return Response(
-                {'detail': 'Nenhum usuário disponível. Execute: python manage.py ensure_demo_users'},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        
-        # Generate token without password validation
-        refresh = self.serializer_class.get_token(user)
-        
-        return Response({
-            'access': str(refresh.access_token),
-            'refresh': str(refresh),
-            'tenant_schema': connection.schema_name,
-            'tenant_name': tenant.name,
-            'user': {
-                'id': str(user.id),
-                'email': user.email,
-                'full_name': user.get_full_name() or user.email,
-                'role': user.role,
-                'is_staff': user.is_staff,
-            }
-        }, status=status.HTTP_200_OK)
 
 
 class SuperAdminTokenObtainPairView(TokenObtainPairView):
     """
     Superadmin login view - always operates on public schema.
-    Validates that user is_superuser=True.
+    Validates that user is_staff=True.
     """
     serializer_class = TenantTokenObtainPairSerializer
 
     def post(self, request, *args, **kwargs):
-        # ⚠️ DEV BYPASS - Temporário para desenvolvimento
-        if getattr(settings, 'DEV_SKIP_AUTH', False):
-            return self._dev_bypass_superadmin_login(request)
-        
         # Force public schema for superadmin lookup
         connection.set_schema_to_public()
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        # Get user and verify is_superuser
+        # Get user and verify is_staff
         email = request.data.get('email', '').lower().strip()
         try:
             user = User.objects.get(email=email)
@@ -134,79 +73,39 @@ class SuperAdminTokenObtainPairView(TokenObtainPairView):
             )
 
         return Response(serializer.validated_data, status=status.HTTP_200_OK)
-    
-    def _dev_bypass_superadmin_login(self, request):
-        """
-        ⚠️ DEV ONLY: Returns superadmin token without validating credentials.
-        ⚠️ REMOVE before committing to production!
-        """
-        import warnings
-        warnings.warn("⚠️ DEV_SKIP_AUTH is enabled - superadmin authentication bypassed!")
-        
-        # Force public schema
-        connection.set_schema_to_public()
-        
-        # Get or create a superuser
-        user = User.objects.filter(is_staff=True, is_active=True).first()
-        
-        if not user:
-            # Create a temporary superuser
-            user = User.objects.create_superuser(
-                email='dev@proptech.cv',
-                password='dev',
-                first_name='Dev',
-                last_name='Admin'
-            )
-        
-        # Generate token
-        refresh = self.serializer_class.get_token(user)
-        
-        return Response({
-            'access': str(refresh.access_token),
-            'refresh': str(refresh),
-            'tenant_schema': 'public',
-            'tenant_name': 'Platform',
-            'user': {
-                'id': str(user.id),
-                'email': user.email,
-                'full_name': user.get_full_name() or user.email,
-                'role': user.role,
-                'is_staff': True,
-            }
-        }, status=status.HTTP_200_OK)
 
 
 class TenantTokenRefreshView(TokenRefreshView):
     """
     Custom TokenRefreshView that preserves tenant claims in the new access token.
-    
+
     The default TokenRefreshView only returns { access } without re-injecting
     the tenant claims (tenant_schema, tenant_name, email, role, full_name).
-    
+
     This custom view:
     1. Decodes the refresh token to extract tenant claims
     2. Creates a new access token with the same claims
     3. Returns { access, tenant_schema, tenant_name } for frontend convenience
     """
-    
+
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        
+
         refresh_token_str = serializer.validated_data['refresh']
         refresh = RefreshToken(refresh_token_str)
-        
+
         # Extract tenant claims from refresh token
         tenant_schema = refresh.get('tenant_schema')
         tenant_name = refresh.get('tenant_name')
-        
+
         # Create new access token with the same claims
         access = refresh.access_token
         if tenant_schema:
             access['tenant_schema'] = tenant_schema
         if tenant_name:
             access['tenant_name'] = tenant_name
-        
+
         # Return both the access token and tenant info for frontend convenience
         return Response({
             'access': str(access),

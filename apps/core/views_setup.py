@@ -1,8 +1,10 @@
 """
-Setup views for initial configuration.
-These endpoints are only available when DEBUG=True or when no superusers exist.
+Setup views for initial platform configuration.
+ONLY available when DEBUG=True (development/staging) AND no superusers exist.
+NOT exposed in production (settings.DEBUG = False).
 """
 import os
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import connection
 from rest_framework.decorators import api_view, permission_classes
@@ -18,54 +20,51 @@ User = get_user_model()
 def setup_superuser(request):
     """
     Create initial superuser if none exists.
-    This endpoint is protected by a secret token.
+    Protected by SETUP_SECRET_TOKEN env var (required — no insecure default).
+    Only works when DEBUG=True.
     """
-    # Check if setup is allowed
-    secret_token = os.environ.get('SETUP_SECRET_TOKEN', 'imos-setup-2026')
+    if not settings.DEBUG:
+        return Response({'error': 'Not available'}, status=status.HTTP_404_NOT_FOUND)
+
+    secret_token = os.environ.get('SETUP_SECRET_TOKEN')
+    if not secret_token:
+        return Response(
+            {'error': 'SETUP_SECRET_TOKEN environment variable not set'},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+
     provided_token = request.headers.get('X-Setup-Token')
-    
-    if provided_token != secret_token:
-        return Response(
-            {'error': 'Invalid setup token'},
-            status=status.HTTP_403_FORBIDDEN
-        )
-    
-    # Check if superusers already exist
+    if not provided_token or provided_token != secret_token:
+        return Response({'error': 'Invalid setup token'}, status=status.HTTP_403_FORBIDDEN)
+
     connection.set_schema_to_public()
+
     if User.objects.filter(is_superuser=True).exists():
-        return Response(
-            {'error': 'Superuser already exists'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-    
-    # Create superuser
+        return Response({'message': 'Superuser already exists'}, status=status.HTTP_200_OK)
+
     email = request.data.get('email', 'admin@proptech.cv')
-    password = request.data.get('password', 'ImoOS2026')
-    first_name = request.data.get('first_name', 'Admin')
-    last_name = request.data.get('last_name', 'ImoOS')
-    
-    user = User.objects.create_superuser(
+    password = request.data.get('password')
+    if not password:
+        return Response({'error': 'password is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    User.objects.create_superuser(
         email=email,
         password=password,
-        first_name=first_name,
-        last_name=last_name
+        first_name=request.data.get('first_name', 'Admin'),
+        last_name=request.data.get('last_name', 'ImoOS'),
     )
-    
-    return Response({
-        'message': 'Superuser created successfully',
-        'email': email,
-        'password': password
-    }, status=status.HTTP_201_CREATED)
+
+    # Never return the password
+    return Response({'message': 'Superuser created', 'email': email}, status=status.HTTP_201_CREATED)
 
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def setup_status(request):
-    """Check if setup is needed (no superusers exist)."""
+    """Check if setup is needed. Only works when DEBUG=True."""
+    if not settings.DEBUG:
+        return Response({'error': 'Not available'}, status=status.HTTP_404_NOT_FOUND)
+
     connection.set_schema_to_public()
-    needs_setup = not User.objects.filter(is_superuser=True).exists()
-    
-    return Response({
-        'needs_setup': needs_setup,
-        'has_superuser': not needs_setup
-    })
+    has_superuser = User.objects.filter(is_superuser=True).exists()
+    return Response({'needs_setup': not has_superuser, 'has_superuser': has_superuser})
