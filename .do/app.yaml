@@ -32,6 +32,7 @@ services:
 
     routes:
       - path: /api/v1
+        preserve_path_prefix: true
     health_check:
       http_path: /api/v1/health/
       initial_delay_seconds: 60

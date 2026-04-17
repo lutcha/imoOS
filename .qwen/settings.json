@@ -3,7 +3,10 @@
     "allow": [
       "Bash(dir *)",
       "Bash(powershell *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(timeout *)",
+      "Bash(curl *)"
     ]
   },
   "$version": 3
