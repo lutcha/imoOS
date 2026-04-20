@@ -23,7 +23,10 @@ from .serializers import (
     ContractSerializer,
     PaymentMarkPaidSerializer,
     PaymentSerializer,
+    GeneratePaymentPlanSerializer,
 )
+from dateutil.relativedelta import relativedelta
+from decimal import Decimal
 
 
 class ContractViewSet(viewsets.ModelViewSet):
@@ -224,6 +227,73 @@ class ContractViewSet(viewsets.ModelViewSet):
             sign_url=sign_url,
         )
         return Response({'signature_url': sign_url, 'expires_at': sr.expires_at})
+
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsTenantAdmin])
+    def generate_payment_plan(self, request, pk=None):
+        """
+        Generate a payment plan for the contract based on provided percentages and installments.
+        """
+        contract = self.get_object()
+        if contract.status != Contract.STATUS_DRAFT:
+            return Response(
+                {'detail': 'Apenas contratos em rascunho podem gerar planos de pagamento.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = GeneratePaymentPlanSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        with transaction.atomic():
+            # Limpar pagamentos PENDENTES existentes para não duplicar
+            contract.payments.filter(status=Payment.STATUS_PENDING).delete()
+
+            total_cve = contract.total_price_cve
+            deposit_cve = (total_cve * data['deposit_percentage']) / Decimal('100.0')
+            final_cve = (total_cve * data['final_percentage']) / Decimal('100.0')
+            installments_cve = total_cve - deposit_cve - final_cve
+
+            payments_to_create = []
+
+            # 1. Deposit (Sinal)
+            if deposit_cve > 0:
+                payments_to_create.append(Payment(
+                    contract=contract,
+                    payment_type=Payment.PAYMENT_DEPOSIT,
+                    amount_cve=deposit_cve,
+                    due_date=data['start_date'],
+                    status=Payment.STATUS_PENDING,
+                ))
+
+            # 2. Installments (Prestações Mensais)
+            current_date = data['start_date']
+            if data['installments_count'] > 0 and installments_cve > 0:
+                monthly_amount = installments_cve / Decimal(str(data['installments_count']))
+                for i in range(data['installments_count']):
+                    current_date = current_date + relativedelta(months=1)
+                    payments_to_create.append(Payment(
+                        contract=contract,
+                        payment_type=Payment.PAYMENT_INSTALLMENT,
+                        amount_cve=monthly_amount,
+                        due_date=current_date,
+                        status=Payment.STATUS_PENDING,
+                    ))
+
+            # 3. Final Payment (Pagamento Final / Escritura)
+            if final_cve > 0:
+                current_date = current_date + relativedelta(months=1)
+                payments_to_create.append(Payment(
+                    contract=contract,
+                    payment_type=Payment.PAYMENT_FINAL,
+                    amount_cve=final_cve,
+                    due_date=current_date,
+                    status=Payment.STATUS_PENDING,
+                ))
+
+            Payment.objects.bulk_create(payments_to_create)
+
+        return Response(PaymentSerializer(contract.payments.order_by('due_date'), many=True).data)
 
 
 class PaymentViewSet(viewsets.ModelViewSet):

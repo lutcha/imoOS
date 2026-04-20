@@ -102,7 +102,7 @@ def send_whatsapp_template(
         components = [{'type': 'body', 'parameters': parameters}] if parameters else []
             
         # 5. Send Notification
-        client = WhatsAppCloudClient(phone_id)
+        client = WhatsAppCloudClient(phone_id, getattr(settings_obj, 'whatsapp_access_token', None))
         try:
             resp = client.send_template(
                 to=lead.phone,

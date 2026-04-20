@@ -84,6 +84,7 @@ class TenantSettings(models.Model):
         help_text='Publicar automaticamente unidades AVAILABLE no imo.cv',
     )
     whatsapp_phone_id = models.CharField(max_length=50, blank=True)
+    whatsapp_access_token = models.CharField(max_length=512, blank=True, help_text='Token permanente do Meta App')
 
     history = HistoricalRecords()
 

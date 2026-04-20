@@ -12,10 +12,12 @@ import { LeadStatusBadge } from "@/components/ui/StatusBadge";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { formatDate } from "@/lib/format";
 import { KanbanBoard } from "@/components/crm/KanbanBoard";
+import { LeadModal } from "@/components/crm/LeadModal";
 
 export default function CrmPage() {
   const [viewType, setViewType] = useState<"kanban" | "list">("kanban");
   const [search, setSearch] = useState("");
+  const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
 
   const { data: leadsPage, isLoading: leadsLoading } = useLeads({
     search: search || undefined,
@@ -56,7 +58,10 @@ export default function CrmPage() {
             </button>
           </div>
 
-          <button className="flex items-center space-x-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-primary/90 shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98]">
+          <button 
+            onClick={() => setIsLeadModalOpen(true)}
+            className="flex items-center space-x-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-primary/90 shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98]"
+          >
             <Users2 className="h-4 w-4" />
             <span>Novo Lead</span>
           </button>
@@ -142,6 +147,11 @@ export default function CrmPage() {
           </div>
         )}
       </div>
+
+      <LeadModal 
+        isOpen={isLeadModalOpen} 
+        onClose={() => setIsLeadModalOpen(false)} 
+      />
     </div>
   );
 }

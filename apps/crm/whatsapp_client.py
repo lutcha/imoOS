@@ -12,13 +12,13 @@ from django.conf import settings
 class WhatsAppCloudClient:
     BASE_URL = 'https://graph.facebook.com/v18.0'
 
-    def __init__(self, phone_number_id: str):
+    def __init__(self, phone_number_id: str, access_token: str = None):
         self.phone_number_id = phone_number_id
         self.session = requests.Session()
         # Assumindo a variável de ambiente principal ser partilhada,
         # fallback para TOKEN caso não exista específica, de acordo 
         # com standard config/settings/base.py.
-        token = getattr(settings, 'WHATSAPP_ACCESS_TOKEN', getattr(settings, 'WHATSAPP_API_TOKEN', ''))
+        token = access_token or getattr(settings, 'WHATSAPP_ACCESS_TOKEN', getattr(settings, 'WHATSAPP_API_TOKEN', ''))
         self.session.headers['Authorization'] = f'Bearer {token}'
         self.session.headers['Content-Type'] = 'application/json'
 

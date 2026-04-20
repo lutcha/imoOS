@@ -38,6 +38,8 @@ def _schema_from_jwt(request) -> str | None:
 _HEALTH_PATHS = frozenset([
     '/api/v1/health/',
     '/api/v1/health/detailed/',
+    '/health/',
+    '/health/detailed/',
 ])
 
 # Auth paths where the middleware sets public schema as a starting point.
@@ -62,6 +64,8 @@ _AUTH_PATHS = frozenset([
 _SETUP_PATHS = frozenset([
     '/api/v1/setup/status/',
     '/api/v1/setup/superuser/',
+    '/setup/status/',
+    '/setup/superuser/',
 ])
 
 

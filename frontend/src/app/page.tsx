@@ -11,6 +11,17 @@ import {
   AlertCircle,
   Banknote,
 } from "lucide-react";
+import {
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -220,6 +231,85 @@ export default function DashboardPage() {
           <span>Não foi possível carregar as estatísticas. Verifique a ligação à API.</span>
         </div>
       )}
+
+      {/* Charts Grid */}
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+        {/* Sales Chart */}
+        <div className="rounded-2xl border border-border bg-white p-6 shadow-sm flex flex-col h-96">
+          <div className="mb-4">
+            <h2 className="text-lg font-bold">Evolução de Vendas</h2>
+            <p className="text-sm text-muted-foreground">Volume financeiro (CVE) nos últimos 6 meses</p>
+          </div>
+          <div className="flex-1 w-full relative">
+            {statsLoading ? (
+               <div className="absolute inset-0 flex items-center justify-center text-muted-foreground text-sm">A carregar gráfico...</div>
+            ) : (!stats?.sales_chart || stats.sales_chart.length === 0) ? (
+               <div className="absolute inset-0 flex items-center justify-center text-muted-foreground text-sm">Sem dados suficientes.</div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={stats.sales_chart} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} dy={10} />
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fontSize: 12, fill: '#64748b' }} 
+                    tickFormatter={(value) => value >= 1000000 ? `${(value / 1000000).toFixed(1)}M` : value}
+                    dx={-10}
+                    width={80}
+                  />
+                  <Tooltip 
+                    formatter={(value: number) => [new Intl.NumberFormat("pt-CV", { style: "currency", currency: "CVE", maximumFractionDigits: 0 }).format(value), "Faturação"]}
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)' }}
+                  />
+                  <Area type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </div>
+
+        {/* Leads Chart */}
+        <div className="rounded-2xl border border-border bg-white p-6 shadow-sm flex flex-col h-96">
+          <div className="mb-4">
+            <h2 className="text-lg font-bold">Captação de Leads</h2>
+            <p className="text-sm text-muted-foreground">Novos contactos gerados nos últimos 6 meses</p>
+          </div>
+          <div className="flex-1 w-full relative">
+            {statsLoading ? (
+               <div className="absolute inset-0 flex items-center justify-center text-muted-foreground text-sm">A carregar gráfico...</div>
+            ) : (!stats?.leads_chart || stats.leads_chart.length === 0) ? (
+               <div className="absolute inset-0 flex items-center justify-center text-muted-foreground text-sm">Sem dados suficientes.</div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={stats.leads_chart} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} dy={10} />
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fontSize: 12, fill: '#64748b' }}
+                    allowDecimals={false} 
+                    dx={-10}
+                    width={40}
+                  />
+                  <Tooltip 
+                    cursor={{ fill: '#f1f5f9' }}
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)' }}
+                  />
+                  <Bar dataKey="count" name="Novos Leads" fill="#4f46e5" radius={[4, 4, 0, 0]} barSize={40} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* Main grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">

@@ -21,6 +21,10 @@ export interface DashboardStats {
   reservations_expiring_soon: number;
   /** Counts keyed by Contract.status (DRAFT, ACTIVE, COMPLETED, CANCELLED) */
   contracts: Record<string, number>;
+  /** Historical sales revenue for the last 6 months */
+  sales_chart: Array<{ month: string, revenue: number }>;
+  /** Historical leads generation for the last 6 months */
+  leads_chart: Array<{ month: string, count: number }>;
 }
 
 export const PIPELINE_TERMINAL_STAGES = new Set(["won", "lost"]);

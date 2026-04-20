@@ -36,7 +36,7 @@ const apiClient = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// Request interceptor — inject JWT + tenant header
+// Request interceptor — inject JWT + tenant header + trailing slash
 apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const token = getAccessToken();
   const schema = getTenantSchema();
@@ -48,6 +48,15 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
     // Observability / logging; Django uses JWT claim for actual auth
     config.headers["X-Tenant-Schema"] = schema;
   }
+  
+  // Ensure trailing slash on backend requests to prevent Django 301 redirects destroying POST data
+  if (config.url && !config.url.endsWith('/') && !config.url.includes('?')) {
+    config.url += '/';
+  } else if (config.url && config.url.includes('?') && !config.url.split('?')[0].endsWith('/')) {
+    const parts = config.url.split('?');
+    config.url = `${parts[0]}/?${parts[1]}`;
+  }
+
   return config;
 });
 

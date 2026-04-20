@@ -3,7 +3,9 @@ from datetime import timedelta
 from django.core.cache import cache
 from django.db import connection
 from django.db.models import Count, Sum
+from django.db.models.functions import TruncMonth
 from django.utils import timezone
+from dateutil.relativedelta import relativedelta
 from rest_framework import status
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
@@ -160,12 +162,65 @@ class DashboardStatsView(APIView):
         )
         contracts = {item['status']: item['count'] for item in contracts_qs}
 
+        # 6 Months Window Chart Data
+        six_months_ago = timezone.now().date().replace(day=1) - relativedelta(months=5)
+
+        # Sales Chart (Revenue by month)
+        sales_qs = (
+            Contract.objects
+            .filter(status__in=[Contract.STATUS_ACTIVE, Contract.STATUS_COMPLETED], created_at__date__gte=six_months_ago)
+            .annotate(month=TruncMonth('created_at'))
+            .values('month')
+            .annotate(revenue=Sum('total_price_cve'))
+            .order_by('month')
+        )
+        
+        # Leads Chart (Volume by month)
+        leads_qs = (
+            Lead.objects
+            .filter(created_at__date__gte=six_months_ago)
+            .annotate(month=TruncMonth('created_at'))
+            .values('month')
+            .annotate(count=Count('id'))
+            .order_by('month')
+        )
+
+        import locale
+        
+        # Generate complete timeline for the last 6 months to avoid gaps
+        sales_chart = []
+        leads_chart = []
+        
+        # Dictionary for easy lookup
+        sales_data_map = {item['month'].date(): float(item['revenue'] or 0) for item in sales_qs if item['month']}
+        leads_data_map = {item['month'].date(): item['count'] for item in leads_qs if item['month']}
+        
+        # Portuguese month names (hardcoded to avoid locale dependency on deployment systems)
+        pt_months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
+
+        for i in range(6):
+            current_month = six_months_ago + relativedelta(months=i)
+            # Short month name (e.g. "Mai")
+            month_label = f"{pt_months[current_month.month - 1]} {current_month.year}"
+            
+            sales_chart.append({
+                'month': month_label,
+                'revenue': sales_data_map.get(current_month, 0)
+            })
+            
+            leads_chart.append({
+                'month': month_label,
+                'count': leads_data_map.get(current_month, 0)
+            })
+
         data = {
             'inventory': inventory,
             'revenue_cve': str(revenue_cve),
             'pipeline': pipeline,
             'reservations_expiring_soon': expiring_soon,
             'contracts': contracts,
+            'sales_chart': sales_chart,
+            'leads_chart': leads_chart,
         }
         cache.set(cache_key, data, timeout=30)
         return Response(data)

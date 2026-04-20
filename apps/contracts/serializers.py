@@ -90,3 +90,15 @@ class ContractCreateSerializer(serializers.Serializer):
 class PaymentMarkPaidSerializer(serializers.Serializer):
     paid_date = serializers.DateField(default=date.today)
     reference = serializers.CharField(required=False, allow_blank=True, default='')
+
+
+class GeneratePaymentPlanSerializer(serializers.Serializer):
+    deposit_percentage = serializers.DecimalField(max_digits=5, decimal_places=2, required=True)
+    final_percentage = serializers.DecimalField(max_digits=5, decimal_places=2, required=True)
+    installments_count = serializers.IntegerField(min_value=0, required=True)
+    start_date = serializers.DateField(required=True)
+    
+    def validate(self, data):
+        if data['deposit_percentage'] + data['final_percentage'] > 100:
+            raise serializers.ValidationError("A soma da percentagem de sinal e final não pode exceder 100%.")
+        return data

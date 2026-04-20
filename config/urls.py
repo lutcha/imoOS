@@ -15,15 +15,21 @@ DJANGO_SUPERADMIN_URL = getattr(settings, 'DJANGO_SUPERADMIN_URL', 'django-admin
 urlpatterns = [
     path(DJANGO_SUPERADMIN_URL, admin.site.urls),
     path('api/v1/health/', health_check, name='health-check'),
+    path('health/', health_check),
     path('api/v1/health/detailed/', DetailedHealthCheckView.as_view(), name='health-detailed'),
+    path('health/detailed/', DetailedHealthCheckView.as_view()),
     
     # Setup endpoints (for initial configuration)
     path('api/v1/', include('apps.core.urls')),
+    path('', include('apps.core.urls')),
     
     # Tenant Registration (Sprint 7 - Prompt 03) - Public endpoints
     path('api/v1/register/', TenantRegistrationCreateView.as_view(), name='tenant-register'),
+    path('register/', TenantRegistrationCreateView.as_view()),
     path('api/v1/register/verify/', TenantRegistrationVerifyView.as_view(), name='tenant-register-verify'),
+    path('register/verify/', TenantRegistrationVerifyView.as_view()),
     path('api/v1/register/status/', TenantRegistrationStatusView.as_view(), name='tenant-register-status'),
+    path('register/status/', TenantRegistrationStatusView.as_view()),
     
     # API V1
     path('api/v1/', include('apps.tenants.urls')),
