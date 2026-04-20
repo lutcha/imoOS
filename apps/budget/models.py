@@ -10,6 +10,7 @@ from decimal import Decimal
 from django.conf import settings
 from django.db import models
 from django.core.validators import MinValueValidator
+from django.utils import timezone
 from apps.core.models import TenantAwareModel
 
 
@@ -807,3 +808,155 @@ class UserPriceScore(TenantAwareModel):
             self.rank = self.RANK_CONTRIBUIDOR
         else:
             self.rank = self.RANK_NOVATO
+
+
+class ConstructionExpense(TenantAwareModel):
+    """
+    Despesa real de construção (Realizado).
+    
+    Cada despesa deve ser vinculada a uma tarefa específica para granularidade,
+    mas permite vínculo apenas ao projecto para custos gerais.
+    """
+    project = models.ForeignKey(
+        'projects.Project', 
+        on_delete=models.CASCADE, 
+        related_name='construction_expenses',
+        verbose_name='Projecto'
+    )
+    budget_item = models.ForeignKey(
+        'budget.BudgetItem', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='expenses',
+        verbose_name='Item do Orçamento'
+    )
+    task = models.ForeignKey(
+        'construction.ConstructionTask', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='expenses',
+        verbose_name='Tarefa de Construção'
+    )
+    
+    description = models.CharField(
+        max_length=255,
+        verbose_name='Descrição/Factura'
+    )
+    amount_cve = models.DecimalField(
+        max_digits=14, 
+        decimal_places=2, 
+        verbose_name='Valor (CVE)',
+        validators=[MinValueValidator(Decimal('0.01'))]
+    )
+    date = models.DateField(
+        default=timezone.now,
+        verbose_name='Data da Despesa'
+    )
+    supplier = models.CharField(
+        max_length=255, 
+        blank=True,
+        verbose_name='Fornecedor'
+    )
+    receipt_photo = models.URLField(
+        blank=True, 
+        verbose_name='Foto do Recibo',
+        help_text='URL da foto no S3'
+    )
+    
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.SET_NULL, 
+        null=True,
+        verbose_name='Registado por'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        app_label = 'budget'
+        verbose_name = 'Despesa de Obra'
+        verbose_name_plural = 'Despesas de Obra'
+        ordering = ['-date', '-created_at']
+
+    def __str__(self):
+        return f'{self.description} - {self.amount_cve} CVE'
+
+    @property
+    def amount_eur(self):
+        """Conversão para EUR baseada na taxa fixa de 110.265."""
+        return (self.amount_cve / Decimal('110.265')).quantize(Decimal('0.02'))
+
+
+class ConstructionAdvance(TenantAwareModel):
+    """
+    Adiantamentos pagos a empreiteiros ou fornecedores.
+    """
+    STATUS_PENDING = 'PENDING'
+    STATUS_PAID = 'PAID'
+    STATUS_SETTLED = 'SETTLED'
+    
+    STATUS_CHOICES = [
+        (STATUS_PENDING, 'Pendente'),
+        (STATUS_PAID, 'Pago'),
+        (STATUS_SETTLED, 'Liquidado/Compensado'),
+    ]
+
+    project = models.ForeignKey(
+        'projects.Project', 
+        on_delete=models.CASCADE, 
+        related_name='construction_advances',
+        verbose_name='Projecto'
+    )
+    contractor_name = models.CharField(
+        max_length=255,
+        verbose_name='Nome do Empreiteiro/Fornecedor'
+    )
+    description = models.TextField(
+        blank=True,
+        verbose_name='Motivo do Adiantamento'
+    )
+    amount_cve = models.DecimalField(
+        max_digits=14, 
+        decimal_places=2, 
+        verbose_name='Valor Adiantado (CVE)',
+        validators=[MinValueValidator(Decimal('0.01'))]
+    )
+    date = models.DateField(
+        default=timezone.now,
+        verbose_name='Data do Pagamento'
+    )
+    status = models.CharField(
+        max_length=20, 
+        choices=STATUS_CHOICES, 
+        default=STATUS_PENDING,
+        verbose_name='Estado'
+    )
+    settlement_date = models.DateField(
+        null=True, 
+        blank=True,
+        verbose_name='Data de Liquidação',
+        help_text='Data em que o adiantamento foi compensado em facturas'
+    )
+    
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.SET_NULL, 
+        null=True,
+        verbose_name='Registado por'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        app_label = 'budget'
+        verbose_name = 'Adiantamento de Obra'
+        verbose_name_plural = 'Adiantamentos de Obra'
+        ordering = ['-date']
+
+    def __str__(self):
+        return f'Adiantamento: {self.contractor_name} - {self.amount_cve} CVE'
+
+    @property
+    def amount_eur(self):
+        """Conversão para EUR baseada na taxa fixa de 110.265."""
+        return (self.amount_cve / Decimal('110.265')).quantize(Decimal('0.02'))

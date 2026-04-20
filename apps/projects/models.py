@@ -104,3 +104,45 @@ class Floor(TenantAwareModel):
     def __str__(self):
         return f'{self.building} — Piso {self.number}'
 
+
+class ProjectDocument(TenantAwareModel):
+    """
+    Project Data Room Document
+    Armazenamento e versionamento de plantas arquitetónicas, licenças e cadernos de encargos.
+    """
+    CATEGORY_PLAN = 'PLAN'
+    CATEGORY_LICENSE = 'LICENSE'
+    CATEGORY_CONTRACT = 'CONTRACT'
+    CATEGORY_OTHER = 'OTHER'
+    
+    CATEGORY_CHOICES = [
+        (CATEGORY_PLAN, 'Planta Arquitetónica'),
+        (CATEGORY_LICENSE, 'Licença'),
+        (CATEGORY_CONTRACT, 'Caderno de Encargos / Contrato'),
+        (CATEGORY_OTHER, 'Outro')
+    ]
+
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='documents')
+    file = models.FileField(upload_to='projects/documents/%Y/%m/', help_text='Ficheiro técnico')
+    version = models.PositiveIntegerField(default=1)
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default=CATEGORY_OTHER)
+    uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='uploaded_project_documents')
+    
+    history = HistoricalRecords()
+
+    class Meta:
+        verbose_name = 'Documento de Projecto'
+        verbose_name_plural = 'Documentos de Projecto'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.get_category_display()} - v{self.version} ({self.project.name})'
+
+    def save(self, *args, **kwargs):
+        if self._state.adding:
+            # Lógica de Versionamento: Encontrar o documento mais recente com a mesma categoria para este projecto
+            latest_doc = ProjectDocument.objects.filter(project=self.project, category=self.category).order_by('-version').first()
+            if latest_doc:
+                self.version = latest_doc.version + 1
+        super().save(*args, **kwargs)
+

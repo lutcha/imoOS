@@ -5,7 +5,8 @@ from rest_framework import serializers
 
 from apps.budget.models import (
     LocalPriceItem, SimpleBudget, BudgetItem,
-    CrowdsourcedPrice, UserPriceScore
+    CrowdsourcedPrice, UserPriceScore,
+    ConstructionExpense, ConstructionAdvance
 )
 
 
@@ -235,3 +236,52 @@ class ExcelImportSerializer(serializers.Serializer):
         if not value.name.endswith(('.xlsx', '.xls')):
             raise serializers.ValidationError('Ficheiro deve ser Excel (.xlsx ou .xls)')
         return value
+
+
+class ConstructionExpenseSerializer(serializers.ModelSerializer):
+    """Serializer para despesas de construção."""
+    
+    category_display = serializers.CharField(source='get_category_display', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    project_name = serializers.CharField(source='project.name', read_only=True)
+    task_name = serializers.CharField(source='task.name', read_only=True, default=None)
+    amount_eur = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+    created_by_name = serializers.CharField(source='created_by.email', read_only=True)
+    
+    class Meta:
+        model = ConstructionExpense
+        fields = [
+            'id', 'project', 'project_name', 'task', 'task_name',
+            'description', 'category', 'category_display',
+            'amount_cve', 'amount_eur', 'payment_date', 'supplier',
+            'invoice_number', 'receipt_photo', 'status', 'status_display',
+            'notes', 'created_by', 'created_by_name', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_by', 'created_at', 'updated_at', 'amount_eur']
+    
+    def create(self, validated_data):
+        validated_data['created_by'] = self.context['request'].user
+        return super().create(validated_data)
+
+
+class ConstructionAdvanceSerializer(serializers.ModelSerializer):
+    """Serializer para adiantamentos a empreiteiros."""
+    
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    project_name = serializers.CharField(source='project.name', read_only=True)
+    amount_eur = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+    created_by_name = serializers.CharField(source='created_by.email', read_only=True)
+    
+    class Meta:
+        model = ConstructionAdvance
+        fields = [
+            'id', 'project', 'project_name', 'description',
+            'amount_cve', 'amount_eur', 'payment_date', 'recipient',
+            'is_settled', 'settled_at', 'status', 'status_display',
+            'notes', 'created_by', 'created_by_name', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_by', 'created_at', 'updated_at', 'amount_eur', 'settled_at']
+    
+    def create(self, validated_data):
+        validated_data['created_by'] = self.context['request'].user
+        return super().create(validated_data)

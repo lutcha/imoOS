@@ -9,10 +9,13 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
+from django.http import HttpResponse
+from django.utils import timezone
 
 from apps.budget.models import (
     LocalPriceItem, SimpleBudget, BudgetItem,
-    CrowdsourcedPrice, UserPriceScore
+    CrowdsourcedPrice, UserPriceScore,
+    ConstructionExpense, ConstructionAdvance
 )
 from apps.budget.serializers import (
     LocalPriceItemSerializer, LocalPriceItemListSerializer,
@@ -21,9 +24,13 @@ from apps.budget.serializers import (
     CrowdsourcedPriceVerifySerializer, UserPriceScoreSerializer,
     PriceSuggestionRequestSerializer, PriceAnomalyCheckSerializer,
     BudgetCreateFromTemplateSerializer, BudgetCompareSerializer,
-    ExcelImportSerializer
+    ExcelImportSerializer, ConstructionExpenseSerializer,
+    ConstructionAdvanceSerializer
 )
 from apps.budget.services import PriceEngine, BudgetCalculator, ExcelImporter, ExcelExporter
+from apps.budget.services.financial_service import FinancialConsolidationService
+from apps.budget.services.report_service import ConstructionReportService
+from apps.projects.models import Project
 
 
 class LocalPriceItemViewSet(viewsets.ModelViewSet):
@@ -462,3 +469,79 @@ class UserPriceScoreViewSet(viewsets.ReadOnlyModelViewSet):
         """
         score, created = UserPriceScore.objects.get_or_create(user=request.user)
         return Response(UserPriceScoreSerializer(score).data)
+
+
+class ConstructionExpenseViewSet(viewsets.ModelViewSet):
+    """ViewSet para despesas de construção."""
+    
+    queryset = ConstructionExpense.objects.all()
+    serializer_class = ConstructionExpenseSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['project', 'task', 'category', 'status', 'supplier']
+    search_fields = ['description', 'invoice_number', 'supplier']
+    ordering_fields = ['payment_date', 'amount_cve', 'created_at']
+    ordering = ['-payment_date']
+    
+    def get_queryset(self):
+        """Filtrar por projecto se especificado."""
+        queryset = super().get_queryset()
+        project_id = self.request.query_params.get('project')
+        if project_id:
+            queryset = queryset.filter(project_id=project_id)
+        return queryset
+    
+    @action(detail=False, methods=['get'])
+    def project_summary(self, request):
+        """
+        Resumo financeiro de um projecto (Budget vs Actual).
+        GET /api/v1/budget/expenses/project_summary/?project=<uuid>
+        """
+        project_id = request.query_params.get('project')
+        if not project_id:
+            return Response(
+                {'detail': 'O parâmetro project é obrigatório.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        service = FinancialConsolidationService()
+        data = service.get_project_financial_status(project_id)
+        
+        if not data:
+            return Response(
+                {'detail': 'Projecto não encontrado ou sem dados financeiros.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+            
+        return Response(data)
+
+
+class ConstructionAdvanceViewSet(viewsets.ModelViewSet):
+    """ViewSet para adiantamentos a empreiteiros."""
+    
+    queryset = ConstructionAdvance.objects.all()
+    serializer_class = ConstructionAdvanceSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['project', 'status', 'is_settled', 'recipient']
+    search_fields = ['description', 'recipient']
+    ordering_fields = ['payment_date', 'amount_cve', 'created_at']
+    ordering = ['-payment_date']
+    
+    def get_queryset(self):
+        """Filtrar por projecto se especificado."""
+        queryset = super().get_queryset()
+        project_id = self.request.query_params.get('project')
+        if project_id:
+            queryset = queryset.filter(project_id=project_id)
+        return queryset
+    
+    @action(detail=True, methods=['post'])
+    def settle(self, request, pk=None):
+        """Marcar adiantamento como liquidado."""
+        advance = self.get_object()
+        advance.is_settled = True
+        advance.settled_at = timezone.now()
+        advance.status = ConstructionAdvance.STATUS_PAID
+        advance.save()
+        return Response(ConstructionAdvanceSerializer(advance).data)

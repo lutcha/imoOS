@@ -37,6 +37,7 @@ class ConstructionPhaseSerializer(serializers.ModelSerializer):
     )
     task_count = serializers.SerializerMethodField()
     completed_task_count = serializers.SerializerMethodField()
+    deadline_deviation_days = serializers.IntegerField(read_only=True)
     
     class Meta:
         model = ConstructionPhase
@@ -44,7 +45,7 @@ class ConstructionPhaseSerializer(serializers.ModelSerializer):
             'id', 'project', 'phase_type', 'name', 'description',
             'start_planned', 'end_planned', 'start_actual', 'end_actual',
             'status', 'progress_percent', 'order',
-            'task_count', 'completed_task_count',
+            'deadline_deviation_days', 'task_count', 'completed_task_count',
             'created_at', 'updated_at',
         ]
         read_only_fields = ['created_at', 'updated_at']

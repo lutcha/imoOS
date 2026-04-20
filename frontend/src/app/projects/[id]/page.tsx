@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Building2, MapPin, CalendarClock, Layers, Building, BookmarkPlus, Box, FileImage } from "lucide-react";
+import { ArrowLeft, Building2, MapPin, CalendarClock, Layers, Building, BookmarkPlus, Box, FileImage, FolderSearch, Clock3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProject, featureToProject } from "@/hooks/useProjects";
 import { useUnits } from "@/hooks/useUnits";
@@ -105,14 +105,31 @@ export default function ProjectDetailPage() {
             </div>
           </div>
 
-          <div className="flex items-center space-x-4">
-            {/* BIM Buttons */}
+          <div className="flex items-center space-x-3">
+            {/* Eco Construction Buttons */}
+            <button
+              onClick={() => router.push(`/projects/${id}/data-room`)}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-sm font-bold transition-all border border-emerald-200/50"
+            >
+              <FolderSearch className="h-4 w-4" />
+              Data Room
+            </button>
+            <button
+              onClick={() => router.push(`/projects/${id}/timeline`)}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 text-sm font-bold transition-all border border-amber-200/50"
+            >
+              <Clock3 className="h-4 w-4" />
+              Obra
+            </button>
+            
+            <div className="w-px h-8 bg-border mx-1" />
+
             <button
               onClick={() => router.push(`/projects/${id}/plans`)}
               className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium transition-colors"
             >
               <FileImage className="h-4 w-4" />
-              Plantas 2D
+              Plantas
             </button>
             <button
               onClick={() => router.push(`/projects/${id}/bim`)}
@@ -121,27 +138,6 @@ export default function ProjectDetailPage() {
               <Box className="h-4 w-4" />
               BIM 3D
             </button>
-            
-            <div className="w-px h-8 bg-border" />
-            
-            {project.start_date && (
-              <div className="flex flex-col items-end">
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">Início</span>
-                <span className="flex items-center text-sm font-bold text-foreground mt-0.5">
-                  <CalendarClock className="h-3.5 w-3.5 mr-1.5 text-primary/60" />
-                  {formatDate(project.start_date)}
-                </span>
-              </div>
-            )}
-            {project.expected_delivery_date && (
-              <div className="flex flex-col items-end">
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">Entrega</span>
-                <span className="flex items-center text-sm font-bold text-foreground mt-0.5">
-                  <CalendarClock className="h-3.5 w-3.5 mr-1.5 text-primary/60" />
-                  {formatDate(project.expected_delivery_date)}
-                </span>
-              </div>
-            )}
           </div>
         </div>
       </div>

@@ -132,6 +132,19 @@ class ConstructionPhase(TenantAwareModel):
     def __str__(self):
         return f'{self.name} ({self.get_phase_type_display()})'
     
+    @property
+    def deadline_deviation_days(self):
+        """
+        Desvio de prazo em dias. Positivo = atrasado. Negativo/Zero = no prazo.
+        If concluded: end_actual - end_planned
+        If ongoing: today - end_planned
+        """
+        if self.end_actual:
+            return (self.end_actual - self.end_planned).days
+        else:
+            from django.utils import timezone
+            return (timezone.now().date() - self.end_planned).days
+    
     def recalculate_progress(self):
         """Recalcular progresso baseado nas tasks."""
         tasks = self.tasks.all()

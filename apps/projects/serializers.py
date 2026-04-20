@@ -1,6 +1,6 @@
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
 from rest_framework import serializers
-from .models import Project, Building, Floor
+from .models import Project, Building, Floor, ProjectDocument
 
 class FloorSerializer(serializers.ModelSerializer):
     class Meta:
@@ -27,3 +27,9 @@ class ProjectSerializer(GeoFeatureModelSerializer):
             'created_at', 'updated_at', 'buildings',
         )
         read_only_fields = ('id', 'created_at', 'updated_at')
+
+class ProjectDocumentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProjectDocument
+        fields = '__all__'
+        read_only_fields = ('id', 'version', 'uploaded_by', 'created_at', 'updated_at')
