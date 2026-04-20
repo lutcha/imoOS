@@ -5,17 +5,35 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { FileCode2, Plus, AlertCircle, CheckCircle2, Clock } from "lucide-react";
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { TemplateModal } from "@/components/contracts/TemplateModal";
+import { useState } from "react";
 
 export default function TemplatesPage() {
   const { data, isLoading, isError } = useContractTemplates();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
+  
   const templates = data?.results ?? [];
+
+  const handleEdit = (tpl: any) => {
+    setSelectedTemplate(tpl);
+    setIsModalOpen(true);
+  };
+
+  const handleCreate = () => {
+    setSelectedTemplate(null);
+    setIsModalOpen(true);
+  };
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
       {/* Action Bar */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-foreground">Templates de Documentos</h2>
-        <button className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-xl font-bold text-xs shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95">
+        <button 
+          onClick={handleCreate}
+          className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-xl font-bold text-xs shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95"
+        >
           <Plus className="h-4 w-4" />
           Novo Template
         </button>
@@ -83,12 +101,23 @@ export default function TemplatesPage() {
                   <Clock className="h-3 w-3" />
                   Actualizado em {formatDate(tpl.updated_at)}
                 </div>
-                <button className="text-primary font-bold hover:underline">Editar</button>
+                <button 
+                    onClick={() => handleEdit(tpl)}
+                    className="text-primary font-bold hover:underline"
+                >
+                    Editar
+                </button>
               </div>
             </div>
           ))}
         </div>
       )}
+
+      <TemplateModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        initialData={selectedTemplate}
+      />
     </div>
   );
 }

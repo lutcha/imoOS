@@ -5,8 +5,10 @@ import { useContractTemplates } from "@/hooks/useContractSettings";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import apiClient from "@/lib/api-client";
 import { useTenant } from "@/contexts/TenantContext";
-import { FileCode2, Settings, Check, Loader2 } from "lucide-react";
+import { FileCode2, Settings, Check, Loader2, Send, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useRequestSignature } from "@/hooks/useSignatures";
+import { toast } from "sonner";
 
 interface ContractSettingsProps {
   contractId: string;
@@ -14,19 +16,50 @@ interface ContractSettingsProps {
 }
 
 export function ContractSettings({ contractId, currentTemplateId }: ContractSettingsProps) {
-  const { schema } = useTenant();
   const qc = useQueryClient();
-  const { data: templatesData } = useContractTemplates();
-  const [selectedTemplate, setSelectedTemplate] = useState(currentTemplateId || "");
+  const { schema } = useTenant();
+  const requestSignature = useRequestSignature();
+
   const [isEditing, setIsEditing] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState(currentTemplateId || "");
+
+  const { data: templatesData } = useContractTemplates();
 
   const updateContract = useMutation({
     mutationFn: (data: { template_id: string | null }) =>
-      apiClient.patch(`/contracts/contracts/${contractId}/`, { template: data.template_id }),
+      apiClient.patch(`/contracts/contracts/${contractId}/`, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["contracts", schema, "detail", contractId] });
+      toast.success("Definições actualizadas.");
       setIsEditing(false);
+      qc.invalidateQueries({ queryKey: ["contracts", schema, "detail", contractId] });
     },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.detail || "Erro ao atualizar contrato.");
+    }
+  });
+
+  const activateContract = useMutation({
+    mutationFn: () =>
+      apiClient.post(`/contracts/contracts/${contractId}/activate/`),
+    onSuccess: () => {
+      toast.success("Contrato activado! O PDF está a ser gerado.");
+      qc.invalidateQueries({ queryKey: ["contracts", schema, "detail", contractId] });
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.detail || "Erro ao activar contrato.");
+    }
+  });
+
+  const updatePdf = useMutation({
+    mutationFn: () =>
+      apiClient.post(`/contracts/contracts/${contractId}/update_pdf/`),
+    onSuccess: () => {
+      toast.success("PDF em actualização. Aguarde alguns segundos.");
+      qc.invalidateQueries({ queryKey: ["contracts", schema, "detail", contractId] });
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.detail || "Erro ao actualizar PDF.");
+    }
   });
 
   const templates = templatesData?.results ?? [];
@@ -97,6 +130,53 @@ export function ContractSettings({ contractId, currentTemplateId }: ContractSett
               Guardar
             </button>
           </div>
+        )}
+      </div>
+
+      <div className="mt-6 pt-6 border-t border-slate-100 flex flex-col gap-3">
+        <button
+          onClick={() => activateContract.mutate()}
+          disabled={activateContract.isPending || !currentTemplateId}
+          className="w-full py-2.5 bg-slate-900 text-white text-xs font-black rounded-xl hover:bg-slate-800 transition-all flex items-center justify-center gap-2 shadow-lg shadow-slate-200 disabled:opacity-50"
+        >
+          {activateContract.isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Zap className="h-4 w-4 text-amber-400" />
+          )}
+          Activar Contrato
+        </button>
+
+        <button
+          onClick={() => requestSignature.mutate(contractId)}
+          disabled={requestSignature.isPending || !currentTemplateId}
+          className="w-full py-2.5 bg-emerald-600 text-white text-xs font-black rounded-xl hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-100 disabled:opacity-50"
+        >
+          {requestSignature.isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Send className="h-4 w-4" />
+          )}
+          Solicitar Assinatura
+        </button>
+
+        <button
+          onClick={() => updatePdf.mutate()}
+          disabled={updatePdf.isPending || !currentTemplateId}
+          className="w-full py-2.5 bg-white border border-slate-200 text-slate-600 text-xs font-bold rounded-xl hover:bg-slate-50 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+        >
+          {updatePdf.isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <FileCode2 className="h-4 w-4" />
+          )}
+          Recalcular PDF
+        </button>
+        
+        {!currentTemplateId && (
+            <p className="text-[10px] text-center text-amber-600 font-bold">
+                * Seleccione um template para activar
+            </p>
         )}
       </div>
     </div>

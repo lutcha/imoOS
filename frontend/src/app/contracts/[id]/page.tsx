@@ -24,6 +24,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { formatDate, formatCve } from "@/lib/format";
 import { PatternSelector } from "./_components/PatternSelector";
 import { ContractSettings } from "./_components/ContractSettings";
+import { SignatureStatus } from "./_components/SignatureStatus";
 
 // ----- Contract status badge -----
 
@@ -154,11 +155,20 @@ export default function ContractDetailPage({
             </div>
           </div>
 
-          {contract.pdf_s3_key && (
+          {contract.pdf_s3_key ? (
+            <a
+              href={`https://fra1.digitaloceanspaces.com/imos/${contract.pdf_s3_key}`}
+              target="_blank"
+              className="inline-flex items-center gap-2 rounded-xl bg-slate-900 border border-slate-800 px-4 py-2.5 text-sm font-bold text-white hover:bg-slate-800 transition-all shadow-lg shadow-slate-200"
+            >
+              <FileDown className="h-4 w-4" />
+              Download PDF
+            </a>
+          ) : (
             <button
               disabled
               className="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2.5 text-sm font-bold text-muted-foreground cursor-not-allowed opacity-60"
-              title="PDF disponível em breve"
+              title="PDF disponível após activação"
             >
               <FileDown className="h-4 w-4" />
               PDF
@@ -293,27 +303,33 @@ export default function ContractDetailPage({
             currentTemplateId={contract.template}
           />
 
-          {/* Verification / PDF Status */}
-          <div className="bg-slate-900 rounded-2xl p-5 text-white shadow-xl shadow-slate-200">
-            <h3 className="text-sm font-bold mb-4 flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-              Estado do Documento
+          <SignatureStatus requests={contract.signature_requests ?? []} />
+
+          {/* Verification / Metadata */}
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <h3 className="text-sm font-bold mb-4 flex items-center gap-2 text-slate-800">
+              <CheckCircle2 className="h-4 w-4 text-primary" />
+              Verificações
             </h3>
             <div className="space-y-4">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-400">Template Base:</span>
-                <span className="font-bold">{contract.template ? "Activado" : "Padrão"}</span>
+                <span className="text-muted-foreground">Template Base:</span>
+                <span className={cn("font-bold", contract.template ? "text-emerald-600" : "text-amber-600")}>
+                    {contract.template ? "Definido" : "Pendente"}
+                </span>
               </div>
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-400">Pagamentos:</span>
-                <span className="font-bold text-emerald-400">{hasPlan ? "Configurado" : "Pendente"}</span>
+                <span className="text-muted-foreground">Plano de Pagamentos:</span>
+                <span className={cn("font-bold", hasPlan ? "text-emerald-600" : "text-amber-600")}>
+                    {hasPlan ? "Configurado" : "Pendente"}
+                </span>
               </div>
-              <button 
-                disabled={!contract.template || !hasPlan}
-                className="w-full mt-2 py-2.5 bg-white text-slate-900 text-xs font-black rounded-xl hover:bg-slate-100 transition-all disabled:opacity-30"
-              >
-                Actualizar PDF
-              </button>
+              <div className="flex items-center justify-between text-xs border-t border-slate-200 pt-4">
+                <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-tight">Assinatura:</span>
+                <span className={cn("font-bold", contract.signed_at ? "text-emerald-600" : "text-slate-400")}>
+                    {contract.signed_at ? "OK" : "Pendente"}
+                </span>
+              </div>
             </div>
           </div>
         </div>

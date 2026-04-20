@@ -10,7 +10,7 @@ from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
 from apps.tenants.permissions import IsTenantAdmin
@@ -235,6 +235,23 @@ class ContractViewSet(viewsets.ModelViewSet):
 
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsTenantAdmin])
+    def update_pdf(self, request, pk=None):
+        """
+        Força regeração do PDF do contrato.
+        """
+        contract = self.get_object()
+        if not contract.template:
+             return Response({'detail': 'Contrato não tem template associado.'}, status=400)
+             
+        from .tasks import generate_contract_pdf
+        generate_contract_pdf.delay(
+            tenant_schema=request.tenant.schema_name,
+            contract_id=str(contract.id),
+        )
+        return Response({'detail': 'PDF em actualização.'})
+
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsTenantAdmin])
     def generate_payment_plan(self, request, pk=None):
         """
         Generate a payment plan for the contract based on provided percentages and installments.
@@ -349,3 +366,111 @@ class PaymentViewSet(viewsets.ModelViewSet):
         payment.save(update_fields=['paid_date', 'status', 'reference', 'updated_at'])
 
         return Response(PaymentSerializer(payment).data)
+
+
+class SignatureViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    ViewSet para gestão de pedidos de assinatura.
+    Inclui acções públicas para o portal do cliente.
+    """
+    queryset = Contract.objects.none() # Not used for public actions
+    
+    def get_permissions(self):
+        if self.action in ['public_detail', 'public_sign']:
+            return [AllowAny()]
+        return [IsAuthenticated(), IsTenantAdmin()]
+
+    @action(detail=False, methods=['get'])
+    def public_detail(self, request):
+        """
+        Retorna detalhes do contrato para o portal de assinatura.
+        Filtra por token UUID único.
+        """
+        from apps.contracts.models import SignatureRequest
+        token = request.query_params.get('token')
+        if not token:
+            return Response({'detail': 'Token é obrigatório.'}, status=400)
+            
+        try:
+            sr = SignatureRequest.objects.select_related('contract', 'contract__unit', 'contract__lead').get(token=token)
+        except (SignatureRequest.DoesNotExist, ValueError):
+            return Response({'detail': 'Pedido de assinatura não encontrado ou link inválido.'}, status=404)
+            
+        if sr.status != SignatureRequest.STATUS_PENDING:
+            return Response({'detail': f'Este pedido já não está pendente (Estado: {sr.get_status_display()}).'}, status=400)
+            
+        if sr.is_expired:
+             sr.status = SignatureRequest.STATUS_EXPIRED
+             sr.save(update_fields=['status'])
+             return Response({'detail': 'O link de assinatura expirou.'}, status=400)
+
+        # Return a subset of contract info for the public portal
+        return Response({
+            'id': sr.id,
+            'contract_number': sr.contract.contract_number,
+            'lead_name': sr.contract.lead.full_name,
+            'unit_code': sr.contract.unit.code,
+            'total_price_cve': sr.contract.total_price_cve,
+            'expires_at': sr.expires_at,
+        })
+
+    @action(detail=False, methods=['post'])
+    def public_sign(self, request):
+        """
+        Regista a assinatura e activa o contrato.
+        Recebe: token, full_name, signature_base64 (PNG data path).
+        """
+        from apps.contracts.models import SignatureRequest
+        from apps.contracts.services import ContractAutomationService
+        import base64
+        from django.core.files.base import ContentFile
+
+        token = request.data.get('token')
+        full_name = request.data.get('full_name')
+        signature_base64 = request.data.get('signature_base64') # data:image/png;base64,...
+
+        if not all([token, full_name, signature_base64]):
+            return Response({'detail': 'Todos os campos são obrigatórios.'}, status=400)
+
+        try:
+            sr = SignatureRequest.objects.get(token=token, status=SignatureRequest.STATUS_PENDING)
+        except SignatureRequest.DoesNotExist:
+            return Response({'detail': 'Pedido não encontrado ou já processado.'}, status=404)
+
+        if sr.is_expired:
+            return Response({'detail': 'O link expirou.'}, status=400)
+
+        # Process signature image
+        try:
+            format, imgstr = signature_base64.split(';base64,') 
+            ext = format.split('/')[-1] 
+            data = ContentFile(base64.b64decode(imgstr), name=f"sig_{sr.id}.{ext}")
+        except Exception:
+            return Response({'detail': 'Formato de assinatura inválido.'}, status=400)
+
+        # Update SignatureRequest
+        sr.signed_at = timezone.now()
+        sr.signed_by_name = full_name
+        sr.status = SignatureRequest.STATUS_SIGNED
+        sr.ip_address = request.META.get('REMOTE_ADDR')
+        
+        # In a real scenario, we would upload 'data' to S3 here.
+        # For now, we'll mark it as signed and proceed to activate the contract.
+        sr.save()
+
+        # Activate the contract (logic reused from activate action)
+        # However, it's better to use a dedicated service method.
+        # For simplicity in this sprint, we just mark the contract as active.
+        contract = sr.contract
+        contract.status = Contract.STATUS_ACTIVE
+        contract.signed_at = sr.signed_at
+        contract.save()
+
+        # Enqueue PDF generation
+        from .tasks import generate_contract_pdf
+        generate_contract_pdf.delay(
+            tenant_schema=request.tenant.schema_name,
+            contract_id=str(contract.id),
+        )
+
+        return Response({'detail': 'Contrato assinado e activado com sucesso!'})

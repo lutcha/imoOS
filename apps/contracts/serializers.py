@@ -39,11 +39,22 @@ class PaymentSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'created_at')
 
 
+class SignatureRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SignatureRequest
+        fields = (
+            'id', 'token', 'expires_at', 'signed_at', 
+            'signed_by_name', 'status', 'created_at'
+        )
+        read_only_fields = fields
+
+
 class ContractSerializer(serializers.ModelSerializer):
     unit_code = serializers.CharField(source='unit.code', read_only=True)
     lead_name = serializers.SerializerMethodField()
     vendor_email = serializers.EmailField(source='vendor.email', read_only=True)
     payments = PaymentSerializer(many=True, read_only=True)
+    signature_requests = SignatureRequestSerializer(many=True, read_only=True)
 
     class Meta:
         model = Contract
@@ -65,6 +76,7 @@ class ContractSerializer(serializers.ModelSerializer):
             'template',
             'payment_pattern',
             'payments',
+            'signature_requests',
             'created_at',
             'updated_at',
         )
@@ -76,6 +88,7 @@ class ContractSerializer(serializers.ModelSerializer):
             'vendor_email',
             'pdf_s3_key',
             'payments',
+            'signature_requests',
             'created_at',
             'updated_at',
         )

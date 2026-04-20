@@ -5,17 +5,35 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { CreditCard, Plus, AlertCircle, CheckCircle2, Clock, CalendarDays, Percent } from "lucide-react";
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { PatternModal } from "@/components/contracts/PatternModal";
+import { useState } from "react";
 
 export default function PatternsPage() {
   const { data, isLoading, isError } = usePaymentPatterns();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPattern, setSelectedPattern] = useState<any>(null);
+  
   const patterns = data?.results ?? [];
+
+  const handleEdit = (ptn: any) => {
+    setSelectedPattern(ptn);
+    setIsModalOpen(true);
+  };
+
+  const handleCreate = () => {
+    setSelectedPattern(null);
+    setIsModalOpen(true);
+  };
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
       {/* Action Bar */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-foreground">Padrões de Pagamento</h2>
-        <button className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-xl font-bold text-xs shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95">
+        <button 
+          onClick={handleCreate}
+          className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-xl font-bold text-xs shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95"
+        >
           <Plus className="h-4 w-4" />
           Novo Padrão
         </button>
@@ -97,12 +115,23 @@ export default function PatternsPage() {
                   <Clock className="h-3 w-3" />
                   Atualizado {formatDate(ptn.updated_at)}
                 </div>
-                <button className="text-primary font-bold hover:underline">Configurar</button>
+                <button 
+                    onClick={() => handleEdit(ptn)}
+                    className="text-primary font-bold hover:underline"
+                >
+                    Configurar
+                </button>
               </div>
             </div>
           ))}
         </div>
       )}
+
+      <PatternModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        initialData={selectedPattern}
+      />
     </div>
   );
 }
