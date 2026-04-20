@@ -58,8 +58,17 @@ CORS_ALLOW_CREDENTIALS = True
 
 # Ensure x-tenant-schema and all others are allowed for multi-tenancy
 from corsheaders.defaults import default_headers
-CORS_ALLOW_ALL_HEADERS = True
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'x-tenant-schema',
+]
 CORS_EXPOSE_HEADERS = ['Content-Disposition', 'x-tenant-schema']
+
+# CSRF Trusted Origins for tenant subdomains
+CSRF_TRUSTED_ORIGINS = [
+    'https://demo.proptech.cv',
+    'https://proptech.cv',
+]
+
 
 # =============================================================
 # Static & Media
