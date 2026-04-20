@@ -238,6 +238,19 @@ export function useUpdateTaskStatus() {
   });
 }
 
+export function useCreateConstructionProject() {
+  const qc = useQueryClient();
+  const { schema } = useTenant();
+
+  return useMutation({
+    mutationFn: (data: Partial<ConstructionProject>) =>
+      apiClient.post<ConstructionProject>("/construction/projects/", data).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: constructionStatsKeys.all(schema) });
+    },
+  });
+}
+
 // ----- Helpers -----
 
 export function getStatusLabel(status: string): string {

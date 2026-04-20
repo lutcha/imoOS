@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils";
 import { useContracts, type ContractStatus } from "@/hooks/useContracts";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { formatDate, formatCve } from "@/lib/format";
+import { Plus } from "lucide-react";
+import { ContractModal } from "@/components/contracts/ContractModal";
 
 // ----- Status config -----
 
@@ -43,6 +45,7 @@ const STATUS_FILTERS: { value: ContractStatus | "ALL"; label: string }[] = [
 export default function ContractsPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<ContractStatus | "ALL">("ALL");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { data, isLoading, isError } = useContracts({
     search: search || undefined,
@@ -55,6 +58,27 @@ export default function ContractsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-end justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Contratos</h1>
+          <p className="text-muted-foreground mt-1">
+            {data ? `${data.count} contrato${data.count !== 1 ? "s" : ""}` : "A carregar…"}
+          </p>
+        </div>
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="flex items-center space-x-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary/90 shadow-md shadow-primary/20"
+        >
+          <Plus className="h-4 w-4" />
+          <span>Novo Contrato</span>
+        </button>
+      </div>
+
+      <ContractModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+      />
 
       {/* Filters bar */}
       <div className="flex flex-col sm:flex-row gap-3">

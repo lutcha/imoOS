@@ -7,7 +7,8 @@
  * Skill: unit-status-workflow, unit-pricing-currency
  */
 import { useState, useCallback } from "react";
-import { Search, SlidersHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, SlidersHorizontal, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { UnitModal } from "@/components/inventory/UnitModal";
 import { cn } from "@/lib/utils";
 import { useUnits, type UnitStatus } from "@/hooks/useUnits";
 import { UnitStatusBadge } from "@/components/ui/StatusBadge";
@@ -46,6 +47,7 @@ export default function InventoryPage() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<UnitStatus | "">("");
   const [showFilters, setShowFilters] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [areaMin, setAreaMin] = useState("");
   const [areaMax, setAreaMax] = useState("");
 
@@ -83,7 +85,19 @@ export default function InventoryPage() {
               : "A carregar…"}
           </p>
         </div>
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="flex items-center space-x-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary/90 shadow-md shadow-primary/20"
+        >
+          <Plus className="h-4 w-4" />
+          <span>Nova Unidade</span>
+        </button>
       </div>
+
+      <UnitModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+      />
 
       {/* Filter bar */}
       <div className="flex flex-wrap gap-3 items-center">

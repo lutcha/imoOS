@@ -13,11 +13,13 @@ import { cn } from "@/lib/utils";
 import { useConstructionProjects, useConstructionAggregatedStats } from "@/hooks/useConstructionStats";
 import { ConstructionStatsCards, ObrasTable, ProgressChart } from "@/components/dashboard";
 import { Button } from "@/components/ui/button";
+import { ConstructionModal } from "@/components/construction/ConstructionModal";
 
 type ViewMode = "list" | "grid";
 
 export default function ConstructionListPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("list");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { data: projectsPage, isLoading: projectsLoading, error: projectsError } = useConstructionProjects({ page_size: 50 });
   const { data: stats, isLoading: statsLoading } = useConstructionAggregatedStats();
@@ -69,12 +71,17 @@ export default function ConstructionListPage() {
             </button>
           </div>
 
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => setIsModalOpen(true)}>
             <Plus className="h-4 w-4" />
             Nova Obra
           </Button>
         </div>
       </div>
+
+      <ConstructionModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+      />
 
       {/* Stats Cards */}
       <ConstructionStatsCards 

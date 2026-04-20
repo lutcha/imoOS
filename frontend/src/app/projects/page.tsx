@@ -8,6 +8,7 @@ import { useProjects, featureToProject, type ProjectStatus } from "@/hooks/usePr
 import { ProjectStatusBadge } from "@/components/ui/StatusBadge";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { formatDate } from "@/lib/format";
+import { ProjectModal } from "@/components/projects/ProjectModal";
 
 const STATUS_OPTIONS: { value: ProjectStatus | ""; label: string }[] = [
   { value: "",             label: "Todos os estados" },
@@ -40,6 +41,7 @@ function ProjectCardSkeleton() {
 export default function ProjectsPage() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<ProjectStatus | "">("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { data, isLoading, isError } = useProjects({
     search: search || undefined,
@@ -59,11 +61,19 @@ export default function ProjectsPage() {
             {data ? `${data.count} projecto${data.count !== 1 ? "s" : ""}` : "A carregar…"}
           </p>
         </div>
-        <button className="flex items-center space-x-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary/90 shadow-md shadow-primary/20">
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="flex items-center space-x-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary/90 shadow-md shadow-primary/20"
+        >
           <Plus className="h-4 w-4" />
           <span>Novo Projecto</span>
         </button>
       </div>
+
+      <ProjectModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+      />
 
       {/* Filter bar */}
       <div className="flex flex-wrap gap-3">

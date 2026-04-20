@@ -124,3 +124,16 @@ export function useCancelContract() {
     },
   });
 }
+
+export function useCreateContract() {
+  const qc = useQueryClient();
+  const { schema } = useTenant();
+
+  return useMutation({
+    mutationFn: (data: Partial<Contract>) =>
+      apiClient.post<Contract>("/contracts/contracts/", data).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: contractKeys.all(schema) });
+    },
+  });
+}

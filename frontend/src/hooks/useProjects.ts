@@ -6,7 +6,7 @@
  * Each API result item is a GeoJSON Feature — project data lives in `.properties`.
  * API path: api/v1/projects/projects/ (router prefix + resource)
  */
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import apiClient from "@/lib/api-client";
 import { useTenant } from "@/contexts/TenantContext";
 
@@ -121,5 +121,18 @@ export function useProject(id: string) {
         .get<GeoFeatureProject>(`/projects/projects/${id}/`)
         .then((r) => r.data),
     enabled: !!schema && !!id,
+  });
+}
+
+export function useCreateProject() {
+  const qc = useQueryClient();
+  const { schema } = useTenant();
+
+  return useMutation({
+    mutationFn: (data: Partial<ProjectProperties>) =>
+      apiClient.post<GeoFeatureProject>("/projects/projects/", data).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: projectKeys.all(schema) });
+    },
   });
 }

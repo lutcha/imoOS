@@ -140,3 +140,29 @@ export function useUpdateUnitStatus() {
     },
   });
 }
+
+export function useCreateUnit() {
+  const qc = useQueryClient();
+  const { schema } = useTenant();
+
+  return useMutation({
+    mutationFn: (data: Partial<Unit>) =>
+      apiClient.post<Unit>("/inventory/units/", data).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: unitKeys.all(schema) });
+    },
+  });
+}
+
+export function useUnitTypes() {
+  const { schema } = useTenant();
+
+  return useQuery<UnitType[]>({
+    queryKey: ["unit-types", schema],
+    queryFn: () =>
+      apiClient
+        .get<{ results: UnitType[] }>("/inventory/unit-types/")
+        .then((r) => r.data.results),
+    enabled: !!schema,
+  });
+}

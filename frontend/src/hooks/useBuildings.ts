@@ -33,3 +33,32 @@ export function useBuildings(projectId: string) {
         enabled: !!schema && !!projectId,
     });
 }
+
+export interface Floor {
+    id: string;
+    building: string;
+    level: number;
+    description: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface FloorsPage {
+    count: number;
+    next: string | null;
+    previous: string | null;
+    results: Floor[];
+}
+
+export function useFloors(buildingId?: string) {
+    const { schema } = useTenant();
+
+    return useQuery<Floor[]>({
+        queryKey: ["floors", schema, buildingId],
+        queryFn: () =>
+            apiClient
+                .get<FloorsPage>(`/projects/floors/`, { params: { building: buildingId } })
+                .then((r) => r.data.results),
+        enabled: !!schema && !!buildingId,
+    });
+}
