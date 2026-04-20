@@ -17,14 +17,17 @@ from apps.tenants.permissions import IsTenantAdmin
 from apps.users.permissions import IsTenantMember
 
 from .filters import ContractFilter, PaymentFilter
-from .models import Contract, Payment
+from .models import Contract, Payment, ContractTemplate, PaymentPattern
 from .serializers import (
     ContractCreateSerializer,
     ContractSerializer,
     PaymentMarkPaidSerializer,
     PaymentSerializer,
     GeneratePaymentPlanSerializer,
+    ContractTemplateSerializer,
+    PaymentPatternSerializer,
 )
+from .services import ContractAutomationService
 from dateutil.relativedelta import relativedelta
 from decimal import Decimal
 
@@ -79,6 +82,8 @@ class ContractViewSet(viewsets.ModelViewSet):
             lead_id=data['lead_id'],
             vendor=self.request.user,
             total_price_cve=data['total_price_cve'],
+            template_id=data.get('template_id'),
+            payment_pattern_id=data.get('payment_pattern_id'),
             notes=data.get('notes', ''),
             contract_number=contract_number,
             status=Contract.STATUS_DRAFT,
@@ -245,55 +250,60 @@ class ContractViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        with transaction.atomic():
-            # Limpar pagamentos PENDENTES existentes para não duplicar
-            contract.payments.filter(status=Payment.STATUS_PENDING).delete()
-
-            total_cve = contract.total_price_cve
-            deposit_cve = (total_cve * data['deposit_percentage']) / Decimal('100.0')
-            final_cve = (total_cve * data['final_percentage']) / Decimal('100.0')
-            installments_cve = total_cve - deposit_cve - final_cve
-
-            payments_to_create = []
-
-            # 1. Deposit (Sinal)
-            if deposit_cve > 0:
-                payments_to_create.append(Payment(
-                    contract=contract,
-                    payment_type=Payment.PAYMENT_DEPOSIT,
-                    amount_cve=deposit_cve,
-                    due_date=data['start_date'],
-                    status=Payment.STATUS_PENDING,
-                ))
-
-            # 2. Installments (Prestações Mensais)
-            current_date = data['start_date']
-            if data['installments_count'] > 0 and installments_cve > 0:
-                monthly_amount = installments_cve / Decimal(str(data['installments_count']))
-                for i in range(data['installments_count']):
-                    current_date = current_date + relativedelta(months=1)
-                    payments_to_create.append(Payment(
-                        contract=contract,
-                        payment_type=Payment.PAYMENT_INSTALLMENT,
-                        amount_cve=monthly_amount,
-                        due_date=current_date,
-                        status=Payment.STATUS_PENDING,
-                    ))
-
-            # 3. Final Payment (Pagamento Final / Escritura)
-            if final_cve > 0:
-                current_date = current_date + relativedelta(months=1)
-                payments_to_create.append(Payment(
-                    contract=contract,
-                    payment_type=Payment.PAYMENT_FINAL,
-                    amount_cve=final_cve,
-                    due_date=current_date,
-                    status=Payment.STATUS_PENDING,
-                ))
-
-            Payment.objects.bulk_create(payments_to_create)
+        ContractAutomationService.generate_payments_from_params(
+            contract,
+            data['deposit_percentage'],
+            data['final_percentage'],
+            data['installments_count'],
+            data['start_date']
+        )
 
         return Response(PaymentSerializer(contract.payments.order_by('due_date'), many=True).data)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsTenantAdmin])
+    def apply_pattern(self, request, pk=None):
+        """
+        Apply a saved PaymentPattern to the contract.
+        Body: {"pattern_id": "...", "start_date": "YYYY-MM-DD"}
+        """
+        contract = self.get_object()
+        if contract.status != Contract.STATUS_DRAFT:
+            return Response({'detail': 'Apenas rascunhos podem ser alterados.'}, status=400)
+
+        pattern_id = request.data.get('pattern_id')
+        start_date_str = request.data.get('start_date')
+
+        if not pattern_id or not start_date_str:
+            return Response({'detail': 'pattern_id e start_date são obrigatórios.'}, status=400)
+
+        try:
+            pattern = PaymentPattern.objects.get(id=pattern_id)
+            start_date = timezone.datetime.strptime(start_date_str, '%Y-%m-%d').date()
+        except (PaymentPattern.DoesNotExist, ValueError):
+            return Response({'detail': 'Padrão ou data inválida.'}, status=400)
+
+        ContractAutomationService.apply_payment_pattern(contract, pattern, start_date)
+        
+        contract.payment_pattern = pattern
+        contract.save(update_fields=['payment_pattern', 'updated_at'])
+
+        return Response(PaymentSerializer(contract.payments.order_by('due_date'), many=True).data)
+
+
+class ContractTemplateViewSet(viewsets.ModelViewSet):
+    queryset = ContractTemplate.objects.all()
+    serializer_class = ContractTemplateSerializer
+    permission_classes = [IsAuthenticated, IsTenantAdmin]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name']
+
+
+class PaymentPatternViewSet(viewsets.ModelViewSet):
+    queryset = PaymentPattern.objects.all()
+    serializer_class = PaymentPatternSerializer
+    permission_classes = [IsAuthenticated, IsTenantAdmin]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name']
 
 
 class PaymentViewSet(viewsets.ModelViewSet):

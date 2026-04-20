@@ -22,6 +22,8 @@ import {
 } from "@/hooks/usePaymentPlans";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { formatDate, formatCve } from "@/lib/format";
+import { PatternSelector } from "./_components/PatternSelector";
+import { ContractSettings } from "./_components/ContractSettings";
 
 // ----- Contract status badge -----
 
@@ -182,111 +184,139 @@ export default function ContractDetailPage({
           ))}
         </div>
 
-        {/* Notes */}
-        {contract.notes && (
-          <div className="mt-6 pt-6 border-t border-border">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
-              Notas
-            </p>
-            <p className="text-sm text-foreground whitespace-pre-wrap">{contract.notes}</p>
-          </div>
         )}
       </div>
 
-      {/* Payment plan card */}
-      <div className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-border flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <Wallet className="h-5 w-5 text-primary" />
-            <h2 className="text-base font-bold text-foreground">Plano de Pagamentos</h2>
-          </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Content: Payment Plan */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden h-full">
+            <div className="px-6 py-4 border-b border-border flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <Wallet className="h-5 w-5 text-primary" />
+                <h2 className="text-base font-bold text-foreground">Plano de Pagamentos</h2>
+              </div>
 
-          {!hasPlan && contract.status !== "CANCELLED" && (
-            <button
-              onClick={() => generatePlan.mutate(contract.id)}
-              disabled={generatePlan.isPending}
-              className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white shadow-md shadow-primary/20 hover:opacity-90 transition-opacity disabled:opacity-60"
-            >
-              {generatePlan.isPending ? "A gerar…" : "Gerar Plano"}
-            </button>
-          )}
+              {!hasPlan && contract.status !== "CANCELLED" && (
+                <div className="text-xs text-muted-foreground font-medium italic">
+                  Aguardando configuração
+                </div>
+              )}
+            </div>
+
+            {generatePlan.isError && (
+              <div className="px-6 py-3 border-b border-red-200 bg-red-50">
+                <p className="text-xs font-bold text-red-600">
+                  Erro ao gerar plano.
+                </p>
+              </div>
+            )}
+
+            {!hasPlan ? (
+              <div className="p-8 flex flex-col gap-6 items-center">
+                <div className="flex-1 flex flex-col items-center text-center p-8 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 w-full">
+                  <div className="h-14 w-14 rounded-2xl bg-white shadow-sm border border-slate-100 flex items-center justify-center mb-4">
+                    <Wallet className="h-7 w-7 text-primary/40" />
+                  </div>
+                  <p className="text-sm font-bold text-foreground">Sem plano de pagamentos</p>
+                  <p className="text-xs text-muted-foreground mt-1 max-w-[200px]">
+                    {contract.status === "CANCELLED"
+                      ? "Contrato cancelado."
+                      : "Seleccione um padrão para gerar as tranches."}
+                  </p>
+                </div>
+
+                {contract.status !== "CANCELLED" && (
+                  <div className="w-full">
+                    <PatternSelector contractId={contract.id} />
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border bg-slate-50/50">
+                      {["Tipo", "Valor CVE", "Data", "Referência", "Estado", ""].map((h) => (
+                        <th key={h} className="px-6 py-4 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-widest whitespace-nowrap">
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {payments.map((p) => {
+                      const isActionable = p.status === "PENDING";
+                      const isMarking = markPaid.isPending && (markPaid.variables as MarkPaidPayload)?.payment_id === p.id;
+                      return (
+                        <tr key={p.id} className="hover:bg-slate-50/70 transition-colors">
+                          <td className="px-6 py-4 font-medium text-foreground whitespace-nowrap text-xs">
+                            {PAYMENT_TYPE_LABELS[p.payment_type as PaymentType] ?? p.payment_type}
+                          </td>
+                          <td className="px-6 py-4 font-black text-foreground whitespace-nowrap text-xs">
+                            {formatCve(p.amount_cve)}
+                          </td>
+                          <td className="px-6 py-4 text-muted-foreground text-[11px] whitespace-nowrap">
+                            {formatDate(p.due_date)}
+                          </td>
+                          <td className="px-6 py-4 font-mono text-[10px] text-muted-foreground italic">
+                            {p.reference || "—"}
+                          </td>
+                          <td className="px-6 py-4">
+                            <PaymentStatusBadge status={p.status} dueDate={p.due_date} />
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            {p.status !== "PAID" && (
+                              <button
+                                onClick={() => markPaid.mutate({ payment_id: p.id })}
+                                disabled={isMarking}
+                                className="text-[10px] font-bold text-primary hover:underline disabled:opacity-50"
+                              >
+                                {isMarking ? "…" : "Confirmar"}
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
 
-        {generatePlan.isError && (
-          <div className="px-6 py-3 border-b border-red-200 bg-red-50">
-            <p className="text-xs font-bold text-red-600">
-              Erro ao gerar plano de pagamentos. Tente novamente.
-            </p>
-          </div>
-        )}
+        {/* Sidebar: Settings & Meta */}
+        <div className="lg:col-span-1 space-y-6">
+          <ContractSettings 
+            contractId={contract.id} 
+            currentTemplateId={contract.template}
+          />
 
-        {!hasPlan ? (
-          <div className="p-16 flex flex-col items-center text-center">
-            <div className="h-14 w-14 rounded-2xl bg-muted flex items-center justify-center mb-4">
-              <Wallet className="h-7 w-7 text-muted-foreground/40" />
+          {/* Verification / PDF Status */}
+          <div className="bg-slate-900 rounded-2xl p-5 text-white shadow-xl shadow-slate-200">
+            <h3 className="text-sm font-bold mb-4 flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+              Estado do Documento
+            </h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-400">Template Base:</span>
+                <span className="font-bold">{contract.template ? "Activado" : "Padrão"}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-400">Pagamentos:</span>
+                <span className="font-bold text-emerald-400">{hasPlan ? "Configurado" : "Pendente"}</span>
+              </div>
+              <button 
+                disabled={!contract.template || !hasPlan}
+                className="w-full mt-2 py-2.5 bg-white text-slate-900 text-xs font-black rounded-xl hover:bg-slate-100 transition-all disabled:opacity-30"
+              >
+                Actualizar PDF
+              </button>
             </div>
-            <p className="text-sm font-bold text-foreground">Sem plano de pagamentos</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              {contract.status === "CANCELLED"
-                ? "Contrato cancelado."
-                : "Clique em «Gerar Plano» para criar as prestações."}
-            </p>
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-slate-50/50">
-                  {["Tipo", "Valor CVE", "Data Prevista", "Referência MBE", "Estado", ""].map((h) => (
-                    <th
-                      key={h}
-                      className="px-6 py-4 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-widest whitespace-nowrap"
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {payments.map((p) => {
-                  const isActionable = p.status === "PENDING";
-                  const isMarking = markPaid.isPending && (markPaid.variables as MarkPaidPayload)?.payment_id === p.id;
-
-                  return (
-                    <tr key={p.id} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="px-6 py-4 font-medium text-foreground whitespace-nowrap">
-                        {PAYMENT_TYPE_LABELS[p.payment_type as PaymentType] ?? p.payment_type}
-                      </td>
-                      <td className="px-6 py-4 font-black text-foreground whitespace-nowrap">
-                        {formatCve(p.amount_cve)}
-                      </td>
-                      <td className="px-6 py-4 text-muted-foreground text-xs whitespace-nowrap">
-                        {formatDate(p.due_date)}
-                      </td>
-                      <td className="px-6 py-4 font-mono text-xs text-muted-foreground">
-                        {p.reference || <span className="opacity-40">—</span>}
-                      </td>
-                      <td className="px-6 py-4">
-                        <PaymentStatusBadge status={p.status} dueDate={p.due_date} />
-                      </td>
-                      <td className="px-6 py-4">
-                        {p.status !== "PAID" && (
-                          <button
-                            onClick={() => markPaid.mutate({ payment_id: p.id })}
-                            disabled={isMarking}
-                            className="text-xs border border-primary/30 text-primary rounded-lg px-3 py-1.5 hover:bg-primary/10 transition-colors disabled:opacity-60 whitespace-nowrap"
-                          >
-                            {isMarking ? "A processar…" : "Marcar como Pago"}
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );

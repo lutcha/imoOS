@@ -143,7 +143,15 @@ def generate_contract_pdf(self, tenant_schema: str, contract_id: str) -> dict:
             'price_eur': price_eur,
         }
 
-        html_string = render_to_string('contracts/contract.html', context)
+        from apps.contracts.services import ContractAutomationService
+
+        if contract.template:
+            # Use the dynamic template from DB
+            html_string = ContractAutomationService.render_contract_content(contract)
+            # Wrap in base styling if needed, or assume template is complete
+        else:
+            # Fallback to legacy hardcoded template
+            html_string = render_to_string('contracts/contract.html', context)
 
     # ------------------------------------------------------------------
     # 3. Render PDF — outside tenant_context (no DB access needed)

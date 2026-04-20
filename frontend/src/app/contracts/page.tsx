@@ -55,20 +55,6 @@ export default function ContractsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Page header */}
-      <div className="flex items-start justify-between flex-wrap gap-4">
-        <div className="flex items-center space-x-4">
-          <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/10">
-            <FileText className="h-8 w-8 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">Contratos</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              {data?.count != null ? `${data.count} contrato${data.count !== 1 ? "s" : ""}` : "A carregar…"}
-            </p>
-          </div>
-        </div>
-      </div>
 
       {/* Filters bar */}
       <div className="flex flex-col sm:flex-row gap-3">

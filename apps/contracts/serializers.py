@@ -2,7 +2,24 @@ from datetime import date
 
 from rest_framework import serializers
 
-from .models import Contract, Payment
+from .models import Contract, Payment, ContractTemplate, PaymentPattern
+
+
+class ContractTemplateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractTemplate
+        fields = ('id', 'name', 'html_content', 'is_default', 'created_at')
+        read_only_fields = ('id', 'created_at')
+
+
+class PaymentPatternSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PaymentPattern
+        fields = (
+            'id', 'name', 'deposit_percentage', 'final_percentage',
+            'installments_count', 'is_default', 'created_at'
+        )
+        read_only_fields = ('id', 'created_at')
 
 
 class PaymentSerializer(serializers.ModelSerializer):
@@ -45,6 +62,8 @@ class ContractSerializer(serializers.ModelSerializer):
             'signed_at',
             'pdf_s3_key',
             'notes',
+            'template',
+            'payment_pattern',
             'payments',
             'created_at',
             'updated_at',
@@ -72,6 +91,8 @@ class ContractCreateSerializer(serializers.Serializer):
     unit_id = serializers.UUIDField()
     lead_id = serializers.UUIDField()
     total_price_cve = serializers.DecimalField(max_digits=14, decimal_places=2)
+    template_id = serializers.UUIDField(required=False, allow_null=True)
+    payment_pattern_id = serializers.UUIDField(required=False, allow_null=True)
     notes = serializers.CharField(required=False, allow_blank=True, default='')
 
     def validate_reservation_id(self, value):

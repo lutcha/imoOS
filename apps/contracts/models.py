@@ -14,6 +14,48 @@ import uuid
 from apps.core.models import TenantAwareModel
 
 
+class ContractTemplate(TenantAwareModel):
+    """
+    Template de contrato (HTML) com placeholders para substituição dinâmica.
+    Permite que cada promotora personalize as suas cláusulas.
+    """
+    name = models.CharField(max_length=100, verbose_name='Nome do Template')
+    html_content = models.TextField(verbose_name='Conteúdo HTML', help_text='Use {{ variable }} para placeholders')
+    is_default = models.BooleanField(default=False, verbose_name='Template Padrão')
+    
+    history = HistoricalRecords()
+
+    class Meta:
+        app_label = 'contracts'
+        verbose_name = 'Template de Contrato'
+        verbose_name_plural = 'Templates de Contrato'
+
+    def __str__(self):
+        return self.name
+
+
+class PaymentPattern(TenantAwareModel):
+    """
+    Padrão genérico de parcelamento para automatização de tranches.
+    Ex: "30/60/10" -> 30% Sinal, 60% em X tranches, 10% Final.
+    """
+    name = models.CharField(max_length=100, verbose_name='Nome do Padrão')
+    deposit_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0, verbose_name='Sinal (%)')
+    final_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0, verbose_name='Pagamento Final (%)')
+    installments_count = models.PositiveIntegerField(default=0, verbose_name='Número de Prestações')
+    is_default = models.BooleanField(default=False, verbose_name='Padrão Padrão')
+
+    history = HistoricalRecords()
+
+    class Meta:
+        app_label = 'contracts'
+        verbose_name = 'Padrão de Pagamento'
+        verbose_name_plural = 'Padrões de Pagamento'
+
+    def __str__(self):
+        return self.name
+
+
 class Contract(TenantAwareModel):
     """
     Contrato de compra e venda entre a promotora e um comprador (Lead).
@@ -128,6 +170,24 @@ class Contract(TenantAwareModel):
     notes = models.TextField(
         blank=True,
         verbose_name='Notas internas',
+    )
+
+    # Advanced Management Links
+    template = models.ForeignKey(
+        ContractTemplate,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='contracts',
+        verbose_name='Template utilizado',
+    )
+    payment_pattern = models.ForeignKey(
+        PaymentPattern,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='contracts',
+        verbose_name='Padrão de pagamento',
     )
 
     history = HistoricalRecords()

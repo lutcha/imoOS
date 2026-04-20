@@ -2,7 +2,6 @@ import csv
 import io
 from datetime import datetime
 from django.template.loader import render_to_string
-from weasyprint import HTML
 from django.core.files.base import ContentFile
 from apps.budget.services.financial_service import FinancialConsolidationService
 from apps.budget.models import ConstructionExpense
@@ -13,6 +12,12 @@ class ConstructionReportService:
         """
         Generates a PDF Executive Summary for a construction project.
         """
+        try:
+            from weasyprint import HTML
+        except ImportError:
+            # Fallback or error handling if weasyprint is missing
+            return None
+
         summary = FinancialConsolidationService.get_project_summary(project.id)
         # Get last 10 expenses for the report
         expenses = ConstructionExpense.objects.filter(project=project).order_by('-payment_date')[:10]

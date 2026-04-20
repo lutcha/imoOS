@@ -36,6 +36,8 @@ export interface Contract {
   signed_at: string | null;
   pdf_s3_key: string;
   notes: string;
+  template: string | null;
+  pattern: string | null;
   payments: PaymentSummary[];
   created_at: string;
   updated_at: string;
