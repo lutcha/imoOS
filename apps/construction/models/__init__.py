@@ -14,6 +14,8 @@ from .task import ConstructionTask
 from .progress import TaskPhoto, TaskProgressLog
 from .cpm import TaskDependency, CPMSnapshot
 from .evm import EVMSnapshot
+from .daily_report import DailyReport, ConstructionPhoto, ConstructionProgress
+from .project import ConstructionProject
 
 __all__ = [
     'ConstructionPhase',
@@ -23,4 +25,9 @@ __all__ = [
     'TaskDependency',
     'CPMSnapshot',
     'EVMSnapshot',
+    'DailyReport',
+    'ConstructionPhoto',
+    'ConstructionProgress',
+    'ConstructionProject',
 ]
+

@@ -1,26 +1,9 @@
-"""
-Construction module — Tenant schema.
-
-Este arquivo mantém compatibilidade com models existentes (DailyReport, 
-ConstructionPhoto, ConstructionProgress) e exporta os novos models organizados.
-
-Novos models estão em:
-- models/phase.py: ConstructionPhase
-- models/task.py: ConstructionTask
-- models/progress.py: TaskPhoto, TaskProgressLog
-- models/cpm.py: TaskDependency, CPMSnapshot
-- models/evm.py: EVMSnapshot
-"""
 from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from simple_history.models import HistoricalRecords
 
 from apps.core.models import TenantAwareModel
-
-# =============================================================================
-# Legacy Models (mantidos para compatibilidade)
-# =============================================================================
 
 class DailyReport(TenantAwareModel):
     """
@@ -118,15 +101,6 @@ class DailyReport(TenantAwareModel):
 class ConstructionPhoto(TenantAwareModel):
     """
     Fotografia georreferenciada associada a um DailyReport.
-
-    The binary asset lives in S3 under the tenant-scoped prefix
-    `tenants/{tenant_slug}/construction/...`. Only the S3 object key
-    is stored here; presigned URLs are generated at request time.
-
-    HistoricalRecords is intentionally omitted — versioning binary
-    asset pointers adds storage overhead with no audit value.
-
-    Lives in tenant schema — isolated per company.
     """
 
     report = models.ForeignKey(
@@ -185,25 +159,9 @@ class ConstructionPhoto(TenantAwareModel):
     def __str__(self) -> str:
         return f'Foto {self.id} — {self.report}'
 
-    @property
-    def has_geotag(self) -> bool:
-        """Returns True when both latitude and longitude are present."""
-        return self.latitude is not None and self.longitude is not None
-
-
 class ConstructionProgress(TenantAwareModel):
     """
     Aggregated progress snapshot for a Building.
-
-    This is a derived/computed record updated whenever an APPROVED
-    DailyReport is created or modified for the building. It is NOT
-    versioned (HistoricalRecords omitted) because the source of truth
-    is the DailyReport history itself.
-
-    OneToOne with Building ensures at most one progress record per
-    building within a tenant schema.
-
-    Lives in tenant schema — isolated per company.
     """
 
     building = models.OneToOneField(
@@ -239,31 +197,3 @@ class ConstructionProgress(TenantAwareModel):
 
     def __str__(self) -> str:
         return f'{self.building} — {self.progress_pct}%'
-
-
-# =============================================================================
-# New Models (importados dos módulos)
-# =============================================================================
-
-from .models.phase import ConstructionPhase
-from .models.task import ConstructionTask
-from .models.progress import TaskPhoto, TaskProgressLog
-from .models.cpm import TaskDependency, CPMSnapshot
-from .models.evm import EVMSnapshot
-from .models.project import ConstructionProject
-
-__all__ = [
-    # Legacy
-    'DailyReport',
-    'ConstructionPhoto',
-    'ConstructionProgress',
-    # New
-    'ConstructionPhase',
-    'ConstructionTask',
-    'TaskPhoto',
-    'TaskProgressLog',
-    'TaskDependency',
-    'CPMSnapshot',
-    'EVMSnapshot',
-    'ConstructionProject',
-]
