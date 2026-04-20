@@ -52,7 +52,7 @@ CONTENT_SECURITY_POLICY = {
         'style-src': ("'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'),
         'font-src': ("'self'", 'https://fonts.gstatic.com', 'data:'),
         'img-src': ("'self'", 'data:', 'blob:', 'https:'),
-        'connect-src': ("'self'", 'https://*.sentry.io', 'https://*.imos.cv'),
+        'connect-src': ("'self'", 'https://*.sentry.io', 'https://*.imos.cv', 'https://*.proptech.cv', 'https://proptech.cv'),
         'frame-src': ("'self'",),
         'object-src': ("'none'",),
         'base-uri': ("'self'",),
@@ -136,6 +136,19 @@ TENANT_APPS = [
     'apps.budget',  # Orçamentos e base de preços CV
     'apps.workflows',  # Integração e automação de workflows
 ]
+
+# =============================================================
+# CORS & Security (Sprint 5 Staging Fix)
+# =============================================================
+from corsheaders.defaults import default_headers
+
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'x-tenant-schema',
+]
+
+# Default allowed origins for proptech.cv demo
+CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', cast=Csv(), default='https://demo.proptech.cv,https://proptech.cv')
+CORS_ALLOW_CREDENTIALS = True
 
 INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
 

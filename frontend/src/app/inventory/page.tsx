@@ -9,6 +9,7 @@
 import { useState, useCallback } from "react";
 import { Search, SlidersHorizontal, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { UnitModal } from "@/components/inventory/UnitModal";
+import { UnitDetailsModal } from "@/components/inventory/UnitDetailsModal";
 import { cn } from "@/lib/utils";
 import { useUnits, type UnitStatus } from "@/hooks/useUnits";
 import { UnitStatusBadge } from "@/components/ui/StatusBadge";
@@ -50,6 +51,8 @@ export default function InventoryPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [areaMin, setAreaMin] = useState("");
   const [areaMax, setAreaMax] = useState("");
+
+  const [selectedUnit, setSelectedUnit] = useState<any | null>(null);
 
   const { data, isLoading, isError } = useUnits({
     page,
@@ -97,6 +100,12 @@ export default function InventoryPage() {
       <UnitModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
+      />
+
+      <UnitDetailsModal 
+        unit={selectedUnit}
+        isOpen={!!selectedUnit}
+        onClose={() => setSelectedUnit(null)}
       />
 
       {/* Filter bar */}
@@ -229,6 +238,7 @@ export default function InventoryPage() {
                     <tr
                       key={unit.id}
                       className="hover:bg-muted/30 transition-colors cursor-pointer"
+                      onClick={() => setSelectedUnit(unit)}
                     >
                       <td className="px-4 py-3.5 font-mono font-semibold text-foreground">
                         {unit.code}

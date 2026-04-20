@@ -154,3 +154,21 @@ export function useAddAdvance() {
     },
   });
 }
+
+/**
+ * Hook consolidado para a página de finanças da obra
+ */
+export function useProjectFinance(projectId: string) {
+  const summary = useProjectFinanceSummary(projectId);
+  const expenses = useProjectExpenses(projectId);
+  const advances = useProjectAdvances(projectId);
+
+  return {
+    summary: summary.data,
+    expenses: expenses.data,
+    advances: advances.data,
+    isLoading: summary.isLoading || expenses.isLoading || advances.isLoading,
+    isError: summary.isError || expenses.isError || advances.isError,
+    error: summary.error || expenses.error || advances.error,
+  };
+}

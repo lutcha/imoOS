@@ -40,14 +40,14 @@ export type ProgressCallback = (progress: IFCLoadProgress) => void;
  */
 export class IFCLoader {
   private components: OBC.Components;
-  private fragments: OBC.Fragments;
+  private fragments: OBC.FragmentsManager;
   private fragmentIfcLoader: OBC.IfcLoader;
   private isInitialized: boolean = false;
   
   constructor() {
     this.components = new OBC.Components();
-    this.fragments = new OBC.Fragments(this.components);
-    this.fragmentIfcLoader = new OBC.IfcLoader(this.components);
+    this.fragments = this.components.get(OBC.FragmentsManager);
+    this.fragmentIfcLoader = this.components.get(OBC.IfcLoader);
   }
 
   /**

@@ -21,6 +21,8 @@ from .views import (
     CPMViewSet,
     EVMViewSet,
     ConstructionDashboardViewSet,
+    DailyReportViewSet,
+    ConstructionPhotoViewSet,
 )
 
 router = DefaultRouter()
@@ -31,6 +33,8 @@ router.register(r'dependencies', TaskDependencyViewSet, basename='task-dependenc
 router.register(r'cpm', CPMViewSet, basename='cpm')
 router.register(r'evm', EVMViewSet, basename='evm')
 router.register(r'dashboard', ConstructionDashboardViewSet, basename='construction-dashboard')
+router.register(r'daily-reports', DailyReportViewSet, basename='daily-report')
+router.register(r'construction-photos', ConstructionPhotoViewSet, basename='construction-photo')
 
 urlpatterns = [
     path('', include(router.urls)),

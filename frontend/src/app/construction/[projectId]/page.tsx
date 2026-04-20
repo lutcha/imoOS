@@ -36,6 +36,7 @@ import { formatDate, formatCveCompact } from "@/lib/format";
 
 const TABS = [
   { id: "overview", label: "Visão Geral", icon: FileText },
+  { id: "logs", label: "Diário", icon: ClipboardList },
   { id: "gantt", label: "Gantt", icon: BarChart3 },
   { id: "finance", label: "Financeiro", icon: TrendingUp },
   { id: "budget", label: "Orçamento", icon: ClipboardList },

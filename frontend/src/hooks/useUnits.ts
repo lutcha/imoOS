@@ -75,6 +75,32 @@ export interface UnitFilters {
   area_bruta__lte?: number;
 }
 
+export type OccurrenceStatus = "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CANCELLED";
+export type OccurrencePriority = "LOW" | "NORMAL" | "HIGH" | "URGENT";
+
+export interface UnitOccurrence {
+  id: string;
+  unit: string;
+  unit_code: string;
+  reported_by_name: string;
+  assigned_to: string | null;
+  assigned_to_name: string | null;
+  occurrence_type: "TECHNICAL" | "MAINTENANCE" | "STRUCTURAL" | "OTHER";
+  description: string;
+  priority: OccurrencePriority;
+  status: OccurrenceStatus;
+  status_display: string;
+  created_at: string;
+  resolved_at: string | null;
+}
+
+export interface UnitOccurrencesPage {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: UnitOccurrence[];
+}
+
 // ----- Query keys -----
 
 export const unitKeys = {
@@ -83,6 +109,8 @@ export const unitKeys = {
     ["units", schema, "list", filters] as const,
   detail: (schema: string, id: string) =>
     ["units", schema, "detail", id] as const,
+  occurrences: (schema: string, unitId?: string) =>
+    ["units", schema, "occurrences", unitId || "all"] as const,
 };
 
 // ----- Hooks -----
@@ -122,7 +150,6 @@ export function useUpdateUnitStatus() {
         .patch<Unit>(`/inventory/units/${id}/update_status/`, { status })
         .then((r) => r.data),
 
-    // Optimistic update — skill: react-query-tenant
     onMutate: async ({ id, status }) => {
       await queryClient.cancelQueries({ queryKey: unitKeys.all(schema) });
       const prev = queryClient.getQueryData(unitKeys.detail(schema, id));
@@ -164,5 +191,36 @@ export function useUnitTypes() {
         .get<{ results: UnitType[] }>("/inventory/unit-types/")
         .then((r) => r.data.results),
     enabled: !!schema,
+  });
+}
+
+export function useUnitOccurrences(unitId?: string) {
+  const { schema } = useTenant();
+
+  return useQuery<UnitOccurrencesPage>({
+    queryKey: unitKeys.occurrences(schema, unitId),
+    queryFn: () =>
+      apiClient
+        .get<UnitOccurrencesPage>("/inventory/unit-occurrences/", {
+          params: unitId ? { unit: unitId } : {},
+        })
+        .then((r) => r.data),
+    enabled: !!schema,
+  });
+}
+
+export function useResolveOccurrence() {
+  const qc = useQueryClient();
+  const { schema } = useTenant();
+
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiClient
+        .post<UnitOccurrence>(`/inventory/unit-occurrences/${id}/resolve/`)
+        .then((r) => r.data),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: unitKeys.occurrences(schema) });
+      qc.invalidateQueries({ queryKey: unitKeys.occurrences(schema, data.unit) });
+    },
   });
 }

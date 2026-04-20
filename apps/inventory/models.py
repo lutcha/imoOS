@@ -117,3 +117,66 @@ class UnitPricing(models.Model):
         elif self.discount_type == self.DISCOUNT_FIXED:
             return self.price_cve - self.discount_value
         return self.price_cve
+
+
+class UnitOccurrence(models.Model):
+    """
+    Registo de ocorrências técnicas, defeitos ou manutenção em unidades.
+    Permite o acompanhamento do ciclo de vida físico da fração.
+    """
+    TYPE_DEFECT = 'DEFECT'
+    TYPE_IMPROVEMENT = 'IMPROVEMENT'
+    TYPE_PREVENTIVE = 'PREVENTIVE'
+    TYPE_CLEANING = 'CLEANUP'
+    TYPE_CHOICES = [
+        (TYPE_DEFECT, 'Defeito/Avaria'),
+        (TYPE_IMPROVEMENT, 'Melhoria'),
+        (TYPE_PREVENTIVE, 'Manutenção Preventiva'),
+        (TYPE_CLEANING, 'Limpeza/Finalização'),
+    ]
+
+    STATUS_OPEN = 'OPEN'
+    STATUS_IN_PROGRESS = 'IN_PROGRESS'
+    STATUS_RESOLVED = 'RESOLVED'
+    STATUS_CHOICES = [
+        (STATUS_OPEN, 'Aberto'),
+        (STATUS_IN_PROGRESS, 'Em Resolução'),
+        (STATUS_RESOLVED, 'Resolvido'),
+    ]
+
+    PRIORITY_LOW = 'LOW'
+    PRIORITY_MEDIUM = 'MEDIUM'
+    PRIORITY_HIGH = 'HIGH'
+    PRIORITY_CHOICES = [
+        (PRIORITY_LOW, 'Baixa'),
+        (PRIORITY_MEDIUM, 'Média'),
+        (PRIORITY_HIGH, 'Alta'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    unit = models.ForeignKey(Unit, on_delete=models.CASCADE, related_name='occurrences')
+    occurrence_type = models.CharField(max_length=20, choices=TYPE_CHOICES, default=TYPE_DEFECT)
+    description = models.TextField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_OPEN)
+    priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default=PRIORITY_MEDIUM)
+    
+    reported_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='reported_occurrences')
+    assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_occurrences')
+    
+    resolved_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    history = HistoricalRecords()
+
+    class Meta:
+        verbose_name = 'Ocorrência de Unidade'
+        verbose_name_plural = 'Ocorrências de Unidade'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['status', 'priority']),
+            models.Index(fields=['unit', 'status']),
+        ]
+
+    def __str__(self):
+        return f'{self.get_occurrence_type_display()} - {self.unit.code} ({self.get_status_display()})'

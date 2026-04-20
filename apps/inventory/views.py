@@ -7,8 +7,10 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from apps.users.permissions import IsTenantMember
-from .models import Unit, UnitType, UnitPricing
-from .serializers import UnitSerializer, UnitTypeSerializer, UnitPricingSerializer
+from .models import Unit, UnitType, UnitPricing, UnitOccurrence
+from .serializers import (
+    UnitSerializer, UnitTypeSerializer, UnitPricingSerializer, UnitOccurrenceSerializer
+)
 from .filters import UnitFilter
 
 MAX_UPLOAD_BYTES = 5 * 1024 * 1024  # 5 MB
@@ -56,15 +58,6 @@ class UnitViewSet(viewsets.ModelViewSet):
     def import_csv(self, request):
         """
         Upload a CSV file to bulk-import Units asynchronously via Celery.
-
-        Accepts a multipart/form-data POST with a single ``file`` field
-        containing a UTF-8 (or Excel BOM) CSV.  Returns a Celery task ID
-        that can be polled for progress.
-
-        CSV required columns: code, floor_id, unit_type_code, area_bruta
-        CSV optional columns: description, area_util, orientation,
-                              floor_number, price_cve, price_eur,
-                              discount_type, discount_value
         """
         from .tasks import import_units_from_csv
 
@@ -76,7 +69,6 @@ class UnitViewSet(viewsets.ModelViewSet):
         if csv_file.size > MAX_UPLOAD_BYTES:
             return Response({'detail': 'Ficheiro demasiado grande (máximo 5 MB).'}, status=400)
 
-        # utf-8-sig strips the Excel BOM if present
         csv_content = csv_file.read().decode('utf-8-sig')
 
         task = import_units_from_csv.delay(
@@ -91,3 +83,25 @@ class UnitTypeViewSet(viewsets.ModelViewSet):
     queryset = UnitType.objects.all()
     serializer_class = UnitTypeSerializer
     permission_classes = [IsAuthenticated, IsTenantMember]
+
+
+class UnitOccurrenceViewSet(viewsets.ModelViewSet):
+    queryset = UnitOccurrence.objects.all().select_related('unit', 'reported_by', 'assigned_to')
+    serializer_class = UnitOccurrenceSerializer
+    permission_classes = [IsAuthenticated, IsTenantMember]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['unit', 'status', 'occurrence_type', 'priority']
+    search_fields = ['description', 'unit__code']
+    ordering_fields = ['created_at', 'priority', 'status']
+
+    def perform_create(self, serializer):
+        serializer.save(reported_by=self.request.user)
+
+    @action(detail=True, methods=['post'])
+    def resolve(self, request, pk=None):
+        from django.utils import timezone
+        occurrence = self.get_object()
+        occurrence.status = UnitOccurrence.STATUS_RESOLVED
+        occurrence.resolved_at = timezone.now()
+        occurrence.save(update_fields=['status', 'resolved_at', 'updated_at'])
+        return Response(UnitOccurrenceSerializer(occurrence).data)

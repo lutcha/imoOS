@@ -303,8 +303,39 @@ class EVMTrendSerializer(serializers.Serializer):
     cpi = serializers.ListField(child=serializers.FloatField())
 
 
-class EVMForecastSerializer(serializers.Serializer):
-    """Serializer para previsões EVM."""
-    cost_forecast = serializers.DictField()
-    schedule_forecast = serializers.DictField()
-    recommendations = serializers.ListField(child=serializers.CharField())
+class ConstructionPhotoSerializer(serializers.ModelSerializer):
+    """Serializer para fotos do diário de obra."""
+    
+    class Meta:
+        model = ConstructionPhoto
+        fields = [
+            'id', 'report', 's3_key', 'thumbnail_s3_key', 'caption',
+            'latitude', 'longitude', 'has_geotag', 'created_by', 'created_at'
+        ]
+        read_only_fields = ['created_by', 'created_at']
+
+    def create(self, validated_data):
+        validated_data['created_by'] = self.context['request'].user
+        return super().create(validated_data)
+
+
+class DailyReportSerializer(serializers.ModelSerializer):
+    """Serializer para o diário de obra (versão simples)."""
+    
+    author = UserSerializer(read_only=True)
+    photos = ConstructionPhotoSerializer(many=True, read_only=True)
+    project_name = serializers.CharField(source='project.name', read_only=True)
+    building_name = serializers.CharField(source='building.name', read_only=True, allow_null=True)
+    
+    class Meta:
+        model = DailyReport
+        fields = [
+            'id', 'project', 'project_name', 'building', 'building_name',
+            'date', 'author', 'summary', 'progress_pct', 'status',
+            'weather', 'workers_count', 'photos', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['author', 'created_at', 'updated_at']
+
+    def create(self, validated_data):
+        validated_data['author'] = self.context['request'].user
+        return super().create(validated_data)

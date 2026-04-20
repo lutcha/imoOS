@@ -26,6 +26,8 @@ from .models import (
     TaskDependency,
     CPMSnapshot,
     EVMSnapshot,
+    DailyReport,
+    ConstructionPhoto,
 )
 from .serializers import (
     ConstructionPhaseSerializer,
@@ -41,9 +43,72 @@ from .serializers import (
     EVMTrendSerializer,
     EVMForecastSerializer,
     TaskProgressUpdateSerializer,
+    DailyReportSerializer,
+    ConstructionPhotoSerializer,
 )
 from .services import CPMCalculator, EVMCalculator, ProgressUpdater
 from .permissions import IsEngineerOrAdmin
+
+
+# =============================================================================
+# Daily Report (Diário de Obra) ViewSet
+# =============================================================================
+
+class DailyReportViewSet(viewsets.ModelViewSet):
+    """ViewSet para o Diário de Obra."""
+    
+    queryset = DailyReport.objects.all().select_related('project', 'building', 'author').prefetch_related('photos')
+    serializer_class = DailyReportSerializer
+    permission_classes = [IsAuthenticated, IsTenantMember]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['project', 'building', 'status', 'date']
+    search_fields = ['summary', 'weather']
+    ordering_fields = ['date', 'created_at', 'progress_pct']
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+
+    @action(detail=True, methods=['post'])
+    def submit(self, request, pk=None):
+        """Mudar estado para SUBMITTED."""
+        report = self.get_object()
+        if report.status != DailyReport.STATUS_DRAFT:
+            return Response(
+                {'detail': 'Apenas rascunhos podem ser submetidos.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        report.status = DailyReport.STATUS_SUBMITTED
+        report.save(update_fields=['status', 'updated_at'])
+        return Response(DailyReportSerializer(report).data)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsEngineerOrAdmin])
+    def approve(self, request, pk=None):
+        """Aprovar relatório (requer permissão de engenheiro/admin)."""
+        report = self.get_object()
+        if report.status != DailyReport.STATUS_SUBMITTED:
+            return Response(
+                {'detail': 'Apenas relatórios submetidos podem ser aprovados.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        report.status = DailyReport.STATUS_APPROVED
+        report.save(update_fields=['status', 'updated_at'])
+        
+        # Opcional: Aqui poderíamos disparar o recálculo do ConstructionProgress
+        
+        return Response(DailyReportSerializer(report).data)
+
+
+class ConstructionPhotoViewSet(viewsets.ModelViewSet):
+    """ViewSet para fotos do Diário de Obra."""
+    
+    queryset = ConstructionPhoto.objects.all().select_related('report', 'created_by')
+    serializer_class = ConstructionPhotoSerializer
+    permission_classes = [IsAuthenticated, IsTenantMember]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['report']
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
 
 
 # =============================================================================
