@@ -56,13 +56,10 @@ X_FRAME_OPTIONS = 'DENY'
 CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', cast=Csv(), default='https://demo.proptech.cv,https://proptech.cv')
 CORS_ALLOW_CREDENTIALS = True
 
-# Ensure x-tenant-schema is allowed for multi-tenancy (both cases)
+# Ensure x-tenant-schema and all others are allowed for multi-tenancy
 from corsheaders.defaults import default_headers
-CORS_ALLOW_HEADERS = list(default_headers) + [
-    'x-tenant-schema',
-    'X-Tenant-Schema',
-    'tenant',
-]
+CORS_ALLOW_ALL_HEADERS = True
+CORS_EXPOSE_HEADERS = ['Content-Disposition', 'x-tenant-schema']
 
 # =============================================================
 # Static & Media
