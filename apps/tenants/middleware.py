@@ -38,6 +38,8 @@ def _schema_from_jwt(request) -> str | None:
 _HEALTH_PATHS = frozenset([
     '/api/v1/health/',
     '/api/v1/health/detailed/',
+    '/v1/health/',
+    '/v1/health/detailed/',
     '/health/',
     '/health/detailed/',
 ])
@@ -54,6 +56,10 @@ _AUTH_PATHS = frozenset([
     '/api/v1/users/auth/token/refresh/',
     '/api/v1/users/auth/superadmin/token/',
     '/api/v1/users/auth/superadmin/token/refresh/',
+    '/v1/users/auth/token/',
+    '/v1/users/auth/token/refresh/',
+    '/v1/users/auth/superadmin/token/',
+    '/v1/users/auth/superadmin/token/refresh/',
     '/users/auth/token/',
     '/users/auth/token/refresh/',
     '/users/auth/superadmin/token/',
@@ -64,6 +70,8 @@ _AUTH_PATHS = frozenset([
 _SETUP_PATHS = frozenset([
     '/api/v1/setup/status/',
     '/api/v1/setup/superuser/',
+    '/v1/setup/status/',
+    '/v1/setup/superuser/',
     '/setup/status/',
     '/setup/superuser/',
 ])

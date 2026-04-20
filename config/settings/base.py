@@ -44,17 +44,21 @@ if not DEBUG:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
 
-# Content Security Policy (CSP)
-CSP_DEFAULT_SRC = ("'self'",)
-CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://*.sentry.io')
-CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", 'https://fonts.googleapis.com')
-CSP_FONT_SRC = ("'self'", 'https://fonts.gstatic.com', 'data:')
-CSP_IMG_SRC = ("'self'", 'data:', 'blob:', 'https:')
-CSP_CONNECT_SRC = ("'self'", 'https://*.sentry.io', 'https://*.imos.cv')
-CSP_FRAME_SRC = ("'self'",)
-CSP_OBJECT_SRC = ("'none'",)
-CSP_BASE_URI = ("'self'",)
-CSP_FORM_ACTION = ("'self'",)
+# Content Security Policy (CSP) - Updated for django-csp 4.0
+CONTENT_SECURITY_POLICY = {
+    'DIRECTIVES': {
+        'default-src': ("'self'",),
+        'script-src': ("'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://*.sentry.io'),
+        'style-src': ("'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'),
+        'font-src': ("'self'", 'https://fonts.gstatic.com', 'data:'),
+        'img-src': ("'self'", 'data:', 'blob:', 'https:'),
+        'connect-src': ("'self'", 'https://*.sentry.io', 'https://*.imos.cv'),
+        'frame-src': ("'self'",),
+        'object-src': ("'none'",),
+        'base-uri': ("'self'",),
+        'form-action': ("'self'",),
+    }
+}
 
 # Permissions Policy (formerly Feature Policy)
 PERMISSIONS_POLICY = {
@@ -90,7 +94,7 @@ SHARED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.admin',
-    'django.contrib.gis',
+    # 'django.contrib.gis',
 
     # Shared infrastructure
     'apps.users',
@@ -145,7 +149,7 @@ SHOW_PUBLIC_IF_NO_TENANT_FOUND = False
 # =============================================================
 DATABASES = {
     'default': {
-        'ENGINE': 'config.postgis_tenant_backend',
+        'ENGINE': 'django_tenants.postgresql_backend',
         'NAME': config('DB_NAME', default='imos'),
         'USER': config('DB_USER', default='imos'),
         'PASSWORD': config('DB_PASSWORD', default=''),
