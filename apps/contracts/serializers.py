@@ -2,7 +2,7 @@ from datetime import date
 
 from rest_framework import serializers
 
-from .models import Contract, Payment, ContractTemplate, PaymentPattern
+from .models import Contract, Payment, ContractTemplate, PaymentPattern, SignatureRequest
 
 
 class ContractTemplateSerializer(serializers.ModelSerializer):
