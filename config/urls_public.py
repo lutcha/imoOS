@@ -58,6 +58,7 @@ urlpatterns = [
     path('api/v1/', include(_admin_router.urls)),
     # Super-admin API (is_staff required by SuperAdminTenantViewSet)
     path('api/v1/superadmin/', include(_superadmin_router.urls)),
+    path('superadmin/', include(_superadmin_router.urls)), # DO workaround
 
     # Prometheus metrics (Sprint 7)
     path('metrics/', exports.ExportToDjangoView, name='prometheus-metrics'),
