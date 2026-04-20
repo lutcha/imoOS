@@ -13,6 +13,8 @@ from apps.users.serializers import UserSerializer
 from apps.projects.serializers import ProjectSerializer, BuildingSerializer
 
 from .models import (
+    DailyReport,
+    ConstructionPhoto,
     ConstructionPhase,
     ConstructionTask,
     TaskPhoto,
