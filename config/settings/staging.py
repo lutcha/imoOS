@@ -87,7 +87,7 @@ X_FRAME_OPTIONS = 'DENY'
 # =============================================================
 # CORS — staging frontend only
 # =============================================================
-CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', cast=Csv(), default='')
+CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', cast=Csv(), default='https://demo.proptech.cv,https://proptech.cv')
 CORS_ALLOW_CREDENTIALS = True
 
 # =============================================================
