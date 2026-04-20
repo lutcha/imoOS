@@ -29,6 +29,7 @@ urlpatterns = [
     path('api/v1/', include('apps.tenants.urls')),
     path('api/v1/', include('apps.memberships.urls')),
     path('api/v1/users/', include('apps.users.urls')),
+    path('users/', include('apps.users.urls')),  # Para contornar DO App Platform a remover /api/v1
     path('api/v1/projects/', include('apps.projects.urls')),
     path('api/v1/inventory/', include('apps.inventory.urls')),
     path('api/v1/crm/', include('apps.crm.urls')),

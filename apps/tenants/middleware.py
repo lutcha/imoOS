@@ -52,6 +52,10 @@ _AUTH_PATHS = frozenset([
     '/api/v1/users/auth/token/refresh/',
     '/api/v1/users/auth/superadmin/token/',
     '/api/v1/users/auth/superadmin/token/refresh/',
+    '/users/auth/token/',
+    '/users/auth/token/refresh/',
+    '/users/auth/superadmin/token/',
+    '/users/auth/superadmin/token/refresh/',
 ])
 
 # Setup paths for initial superuser creation (DigitalOcean deployment)

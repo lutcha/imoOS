@@ -49,6 +49,7 @@ urlpatterns = [
 
     # Auth (allowed on platform domain)
     path('api/v1/users/', include('apps.users.urls')),
+    path('users/', include('apps.users.urls')),  # Para contornar DO App Platform a remover /api/v1,
 
     # Dashboard (sometimes reversed during auth/member checks)
     path('api/v1/dashboard/', include('apps.core.dashboard_urls')),
