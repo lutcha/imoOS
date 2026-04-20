@@ -51,10 +51,14 @@ SECURE_BROWSER_XSS_FILTER = True
 X_FRAME_OPTIONS = 'DENY'
 
 # =============================================================
-# CORS — production frontend only
+# CORS — production & staging frontend
 # =============================================================
-CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', cast=Csv(), default='')
+CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', cast=Csv(), default='https://demo.proptech.cv,https://proptech.cv')
 CORS_ALLOW_CREDENTIALS = True
+
+# Ensure x-tenant-schema is allowed for multi-tenancy
+from corsheaders.defaults import default_headers
+CORS_ALLOW_HEADERS = list(default_headers) + ['x-tenant-schema']
 
 # =============================================================
 # Static & Media
