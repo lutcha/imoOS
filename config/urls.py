@@ -27,21 +27,49 @@ urlpatterns = [
     
     # API V1
     path('api/v1/', include('apps.tenants.urls')),
+    path('', include('apps.tenants.urls')),
+    
     path('api/v1/', include('apps.memberships.urls')),
+    path('', include('apps.memberships.urls')),
+    
     path('api/v1/users/', include('apps.users.urls')),
     path('users/', include('apps.users.urls')),  # Para contornar DO App Platform a remover /api/v1
+    
     path('api/v1/projects/', include('apps.projects.urls')),
+    path('projects/', include('apps.projects.urls')),
+    
     path('api/v1/inventory/', include('apps.inventory.urls')),
+    path('inventory/', include('apps.inventory.urls')),
+    
     path('api/v1/crm/', include('apps.crm.urls')),
+    path('crm/', include('apps.crm.urls')),
+    
     path('api/v1/contracts/', include('apps.contracts.urls')),
+    path('contracts/', include('apps.contracts.urls')),
+    
     path('api/v1/construction/', include('apps.construction.urls')),
+    path('construction/', include('apps.construction.urls')),
+    
     path('api/v1/payments/', include('apps.payments.urls')),
+    path('payments/', include('apps.payments.urls')),
+    
     path('api/v1/marketplace/', include('apps.marketplace.urls')),
+    path('marketplace/', include('apps.marketplace.urls')),
+    
     path('api/v1/investors/', include('apps.investors.urls')),
+    path('investors/', include('apps.investors.urls')),
+    
     path('api/v1/budget/', include('apps.budget.urls')),
+    path('budget/', include('apps.budget.urls')),
+    
     path('api/v1/integrations/', include('apps.integrations.urls')),
+    path('integrations/', include('apps.integrations.urls')),
+    
     path('api/v1/workflows/', include('apps.workflows.urls')),
+    path('workflows/', include('apps.workflows.urls')),
+    
     path('api/v1/dashboard/', include('apps.core.dashboard_urls')),
+    path('dashboard/', include('apps.core.dashboard_urls')),
     
     # Documentation
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
