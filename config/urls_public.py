@@ -38,14 +38,24 @@ urlpatterns = [
 
     # Public unauthenticated
     path('api/v1/crm/lead-capture/', LeadCaptureView.as_view(), name='lead-capture-public'),
+    path('crm/lead-capture/', LeadCaptureView.as_view(), name='lead-capture-public'),
+    
     path('api/v1/sign/<uuid:token>/', SignatureView.as_view(), name='contract-sign'),
+    path('sign/<uuid:token>/', SignatureView.as_view(), name='contract-sign'),
+    
     # imo.cv platform webhook — resolves tenant from imocv_listing_id
     path('api/v1/marketplace/webhook/imocv/', ImoCvPlatformWebhookView.as_view(), name='imocv-webhook-platform'),
+    path('marketplace/webhook/imocv/', ImoCvPlatformWebhookView.as_view(), name='imocv-webhook-platform'),
 
     # Tenant Registration (Sprint 7 - Prompt 03)
     path('api/v1/register/', TenantRegistrationCreateView.as_view(), name='tenant-register'),
+    path('register/', TenantRegistrationCreateView.as_view(), name='tenant-register'),
+    
     path('api/v1/register/verify/', TenantRegistrationVerifyView.as_view(), name='tenant-register-verify'),
+    path('register/verify/', TenantRegistrationVerifyView.as_view(), name='tenant-register-verify'),
+    
     path('api/v1/register/status/', TenantRegistrationStatusView.as_view(), name='tenant-register-status'),
+    path('register/status/', TenantRegistrationStatusView.as_view(), name='tenant-register-status'),
 
     # Auth (allowed on platform domain)
     path('api/v1/users/', include('apps.users.urls')),
@@ -53,9 +63,11 @@ urlpatterns = [
 
     # Dashboard (sometimes reversed during auth/member checks)
     path('api/v1/dashboard/', include('apps.core.dashboard_urls')),
+    path('dashboard/', include('apps.core.dashboard_urls')),
 
     # Platform admin (is_staff required by TenantViewSet)
     path('api/v1/', include(_admin_router.urls)),
+    path('', include(_admin_router.urls)),
     # Super-admin API (is_staff required by SuperAdminTenantViewSet)
     path('api/v1/superadmin/', include(_superadmin_router.urls)),
     path('superadmin/', include(_superadmin_router.urls)), # DO workaround
