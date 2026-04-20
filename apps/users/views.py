@@ -9,118 +9,58 @@ from .serializers import UserSerializer, TenantTokenObtainPairSerializer
 
 
 class TenantTokenObtainPairView(TokenObtainPairView):
-    """
-    Custom Login view to inject tenant claims in JWT.
-
-    Supports explicit tenant resolution via `tenant_domain` in the request body.
-    Node.js 18+ native fetch treats `Host` as a forbidden header and silently
-    ignores overrides, so we cannot rely on the Host header for service-to-service
-    calls from Next.js. The client must pass `tenant_domain` in the POST body.
-    """
+    """Login tenant. Recebe tenant_domain no body para resolver o schema."""
     serializer_class = TenantTokenObtainPairSerializer
 
     def post(self, request, *args, **kwargs):
-        # If the caller supplies `tenant_domain` in the body, switch to that
-        # tenant's schema before authentication.  This is necessary because
-        # Node.js fetch (Node 18+) forbids overriding the Host header, so we
-        # cannot use the Host-based django-tenants resolution for server-side
-        # calls from the Next.js API route.
         tenant_domain = request.data.get('tenant_domain')
         if tenant_domain:
             try:
                 from apps.tenants.models import Domain
-                domain_obj = Domain.objects.select_related('tenant').get(
-                    domain=tenant_domain
-                )
+                domain_obj = Domain.objects.select_related('tenant').get(domain=tenant_domain)
                 connection.set_tenant(domain_obj.tenant)
             except Exception:
-                from rest_framework.response import Response as _Response
-                return _Response(
-                    {'detail': 'Tenant não encontrado.'},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+                return Response({'detail': 'Tenant não encontrado.'}, status=400)
         return super().post(request, *args, **kwargs)
 
 
 class SuperAdminTokenObtainPairView(TokenObtainPairView):
-    """
-    Superadmin login view - always operates on public schema.
-    Validates that user is_staff=True.
-    """
+    """Login superadmin. Sempre em schema público. Requer is_staff=True."""
     serializer_class = TenantTokenObtainPairSerializer
 
     def post(self, request, *args, **kwargs):
-        # Force public schema for superadmin lookup
         connection.set_schema_to_public()
-
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
-        # Get user and verify is_staff
         email = request.data.get('email', '').lower().strip()
         try:
             user = User.objects.get(email=email)
             if not user.is_staff:
-                return Response(
-                    {'detail': 'Acesso restrito a administradores da plataforma.'},
-                    status=status.HTTP_403_FORBIDDEN
-                )
+                return Response({'detail': 'Acesso restrito a staff.'}, status=403)
         except User.DoesNotExist:
-            # Return same error as regular auth to avoid user enumeration
-            return Response(
-                {'detail': 'Credenciais inválidas.'},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-
-        return Response(serializer.validated_data, status=status.HTTP_200_OK)
+            return Response({'detail': 'Credenciais inválidas.'}, status=401)
+        return Response(serializer.validated_data, status=200)
 
 
 class TenantTokenRefreshView(TokenRefreshView):
-    """
-    Custom TokenRefreshView that preserves tenant claims in the new access token.
-
-    The default TokenRefreshView only returns { access } without re-injecting
-    the tenant claims (tenant_schema, tenant_name, email, role, full_name).
-
-    This custom view:
-    1. Decodes the refresh token to extract tenant claims
-    2. Creates a new access token with the same claims
-    3. Returns { access, tenant_schema, tenant_name } for frontend convenience
-    """
+    """Refresh tenant session. Preserva claims tenant_schema no novo access token."""
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
-        refresh_token_str = serializer.validated_data['refresh']
-        refresh = RefreshToken(refresh_token_str)
-
-        # Extract tenant claims from refresh token
+        refresh = RefreshToken(serializer.validated_data['refresh'])
         tenant_schema = refresh.get('tenant_schema')
         tenant_name = refresh.get('tenant_name')
-
-        # Create new access token with the same claims
         access = refresh.access_token
         if tenant_schema:
             access['tenant_schema'] = tenant_schema
         if tenant_name:
             access['tenant_name'] = tenant_name
-
-        # Return both the access token and tenant info for frontend convenience
-        return Response({
-            'access': str(access),
-            'tenant_schema': tenant_schema,
-            'tenant_name': tenant_name,
-        })
+        return Response({'access': str(access), 'tenant_schema': tenant_schema, 'tenant_name': tenant_name})
 
 
 class SuperAdminTokenRefreshView(TenantTokenRefreshView):
-    """
-    Superadmin token refresh — forces public schema before validating the JWT.
-    Registered at /auth/superadmin/token/refresh/ which is in _AUTH_PATHS so the
-    tenant middleware bypasses Host-based resolution and sets the public schema.
-    The actual JWT validation is purely cryptographic (no extra DB query needed).
-    """
+    """Refresh superadmin session. Força public schema."""
 
     def post(self, request, *args, **kwargs):
         connection.set_schema_to_public()
