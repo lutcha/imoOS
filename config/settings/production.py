@@ -56,9 +56,13 @@ X_FRAME_OPTIONS = 'DENY'
 CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', cast=Csv(), default='https://demo.proptech.cv,https://proptech.cv')
 CORS_ALLOW_CREDENTIALS = True
 
-# Ensure x-tenant-schema is allowed for multi-tenancy
+# Ensure x-tenant-schema is allowed for multi-tenancy (both cases)
 from corsheaders.defaults import default_headers
-CORS_ALLOW_HEADERS = list(default_headers) + ['x-tenant-schema']
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'x-tenant-schema',
+    'X-Tenant-Schema',
+    'tenant',
+]
 
 # =============================================================
 # Static & Media
@@ -66,11 +70,15 @@ CORS_ALLOW_HEADERS = list(default_headers) + ['x-tenant-schema']
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+# Ensure CorsMiddleware is at the absolute top for preflight handling
+# especially before tenant and security middleware in production
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'apps.tenants.middleware.ImoOSTenantMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Serve static via WhiteNoise
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ] + [m for m in MIDDLEWARE if m not in (  # noqa: F821
+    'corsheaders.middleware.CorsMiddleware',
     'apps.tenants.middleware.ImoOSTenantMiddleware',
     'django.middleware.security.SecurityMiddleware',
 )]
