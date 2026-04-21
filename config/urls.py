@@ -98,6 +98,10 @@ urlpatterns = [
     path('v1/dashboard/', include('apps.core.dashboard_urls')),
     path('dashboard/', include('apps.core.dashboard_urls')),
     
+    path('api/v1/tenant/', include('apps.tenants.urls')),
+    path('v1/tenant/', include('apps.tenants.urls')),
+    path('tenant/', include('apps.tenants.urls')),
+    
     # Documentation
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
