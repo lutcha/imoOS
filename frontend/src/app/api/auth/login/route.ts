@@ -22,8 +22,12 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { access, refresh, tenant_schema, tenant_domain } = await resp.json();
-  const response = NextResponse.json({ access_token: access, tenant_schema, tenant_domain: tenant_domain ?? '' });
+  const { access, refresh, tenant_schema, tenant_domain: resp_tenant_domain } = await resp.json();
+  const response = NextResponse.json({ 
+    access_token: access, 
+    tenant_schema, 
+    tenant_domain: resp_tenant_domain ?? '' 
+  });
   response.cookies.set("refresh_token", refresh, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
