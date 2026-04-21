@@ -138,12 +138,20 @@ TENANT_APPS = [
 ]
 
 # =============================================================
-# CORS & Security (Sprint 5 Staging Fix)
+# CORS & Security (Sprint 5)
 # =============================================================
+CORS_ALLOW_ALL_ORIGINS = True  # Stabilize staging first
+CORS_ALLOW_CREDENTIALS = True
+CORS_PREFLIGHT_MAX_AGE = 0  # Disable preflight cache during stabilization
+
 from corsheaders.defaults import default_headers
 
 CORS_ALLOW_HEADERS = list(default_headers) + [
     'x-tenant-schema',
+    'X-Tenant-Schema',
+    'X-TENANT-SCHEMA',
+    'x-tenant-name',
+    'X-Tenant-Name',
 ]
 
 # Default allowed origins for proptech.cv demo
