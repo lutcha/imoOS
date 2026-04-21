@@ -98,8 +98,8 @@ jobs:
       bash -c 'python manage.py migrate_schemas --shared && 
       python manage.py migrate_schemas --executor=parallel && 
       python manage.py ensure_public_tenant && 
-      python manage.py ensure_demo_tenant && 
-      python manage.py ensure_demo_users && 
+      python manage.py ensure_demo_tenant --schema=demo_promotora --name="Demo Promotora" --domain=demo.proptech.cv --plan=pro && 
+      python manage.py ensure_demo_users --tenant=demo_promotora && 
       python manage.py populate_demo_data && 
       echo "Migrations and Demo Data population completed."'
     source_dir: /
