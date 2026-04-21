@@ -41,7 +41,6 @@ from .serializers import (
     EVMSnapshotSerializer,
     GanttDataSerializer,
     EVMTrendSerializer,
-    EVMForecastSerializer,
     TaskProgressUpdateSerializer,
     DailyReportSerializer,
     ConstructionPhotoSerializer,
