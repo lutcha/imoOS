@@ -98,7 +98,10 @@ jobs:
       bash -c 'python manage.py migrate_schemas --shared && 
       python manage.py migrate_schemas --executor=parallel && 
       python manage.py ensure_public_tenant && 
-      echo "Migrations completed. Use /api/v1/setup/superuser/ endpoint to create superuser"'
+      python manage.py ensure_demo_tenant && 
+      python manage.py ensure_demo_users && 
+      python manage.py populate_demo_data && 
+      echo "Migrations and Demo Data population completed."'
     source_dir: /
 name: imos-staging
 region: ams
