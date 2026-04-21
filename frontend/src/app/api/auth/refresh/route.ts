@@ -37,14 +37,15 @@ export async function POST() {
     return response;
   }
 
-  const { access, tenant_schema, tenant_name } = await djangoResp.json();
+  const { access, tenant_schema, tenant_name, tenant_domain } = await djangoResp.json();
 
-  // tenant_schema is now returned directly from the backend
-  // No need to decode JWT manually
+  // tenant_schema and tenant_domain are returned directly from the backend.
+  // No need to decode JWT manually.
 
   return NextResponse.json({
     access_token: access,
     tenant_schema,
     tenant_name,
+    tenant_domain: tenant_domain ?? '',
   });
 }

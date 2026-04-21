@@ -7,7 +7,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { jwtDecode } from "jwt-decode";
-import { setAccessToken, setTenantSchema, getAccessToken } from "@/lib/api-client";
+import { setAccessToken, setTenantSchema, setTenantDomain, getAccessToken } from "@/lib/api-client";
 
 interface JwtClaims {
   user_id: string;
@@ -97,14 +97,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           throw new Error("Session expired");
         }
         
-        const { access_token, tenant_schema } = await resp.json();
-        
+        const { access_token, tenant_schema, tenant_domain } = await resp.json();
+
         if (!access_token) {
           throw new Error("No token received");
         }
 
         setAccessToken(access_token);
         setTenantSchema(tenant_schema);
+        if (tenant_domain) setTenantDomain(tenant_domain);
         const { user, tenant } = hydrateFromToken(access_token);
         setState({ user, tenant, isLoading: false, isAuthenticated: true });
       } catch {
@@ -133,14 +134,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw new Error(err.detail ?? "Credenciais inválidas");
     }
 
-    const { access_token, tenant_schema } = await resp.json();
-    
+    const { access_token, tenant_schema, tenant_domain } = await resp.json();
+
     if (!access_token) {
       throw new Error("Invalid response from server");
     }
-    
+
     setAccessToken(access_token);
     setTenantSchema(tenant_schema);
+    if (tenant_domain) setTenantDomain(tenant_domain);
     const { user, tenant } = hydrateFromToken(access_token);
     setState({ user, tenant, isLoading: false, isAuthenticated: true });
   }, []);
@@ -153,6 +155,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     setAccessToken(null);
     setTenantSchema(null);
+    setTenantDomain(null);
     setState({ user: null, tenant: null, isLoading: false, isAuthenticated: false });
     
     // Hard redirect to login

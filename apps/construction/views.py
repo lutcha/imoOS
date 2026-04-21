@@ -28,6 +28,7 @@ from .models import (
     EVMSnapshot,
     DailyReport,
     ConstructionPhoto,
+    ConstructionProject,
 )
 from .serializers import (
     ConstructionPhaseSerializer,
@@ -44,6 +45,7 @@ from .serializers import (
     TaskProgressUpdateSerializer,
     DailyReportSerializer,
     ConstructionPhotoSerializer,
+    ConstructionProjectSerializer,
 )
 from .services import CPMCalculator, EVMCalculator, ProgressUpdater
 from .permissions import IsEngineerOrAdmin
@@ -595,3 +597,80 @@ class ConstructionDashboardViewSet(viewsets.ViewSet):
 
 # Import timezone no topo
 from django.utils import timezone
+
+
+# =============================================================================
+# ConstructionProject ViewSet
+# =============================================================================
+
+class ConstructionProjectViewSet(viewsets.ModelViewSet):
+    """
+    CRUD para projetos de obra (ConstructionProject).
+    Expõe /api/v1/construction/projects/ conforme esperado pelo frontend.
+    """
+
+    serializer_class = ConstructionProjectSerializer
+    permission_classes = [IsAuthenticated, IsTenantMember]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['status', 'project', 'building']
+    search_fields = ['name', 'description']
+    ordering_fields = ['created_at', 'start_planned', 'name']
+
+    def get_queryset(self):
+        return ConstructionProject.objects.select_related(
+            'contract', 'project', 'building', 'unit', 'created_by'
+        ).order_by('-created_at')
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
+
+
+# =============================================================================
+# Construction Stats View (top-level /construction/stats/)
+# =============================================================================
+
+class ConstructionStatsViewSet(viewsets.ViewSet):
+    """
+    Endpoint de estatísticas agregadas de construção.
+    GET /api/v1/construction/stats/
+    """
+
+    permission_classes = [IsAuthenticated, IsTenantMember]
+
+    def list(self, request, *args, **kwargs):
+        """Estatísticas globais de todos os projetos de obra."""
+        total = ConstructionProject.objects.count()
+        in_progress = ConstructionProject.objects.filter(
+            status=ConstructionProject.STATUS_IN_PROGRESS
+        ).count()
+        completed = ConstructionProject.objects.filter(
+            status=ConstructionProject.STATUS_COMPLETED
+        ).count()
+        planning = ConstructionProject.objects.filter(
+            status=ConstructionProject.STATUS_PLANNING
+        ).count()
+        on_hold = ConstructionProject.objects.filter(
+            status=ConstructionProject.STATUS_ON_HOLD
+        ).count()
+
+        # Task-level stats
+        total_tasks = ConstructionTask.objects.count()
+        overdue_tasks = ConstructionTask.objects.filter(
+            status__in=[
+                ConstructionTask.STATUS_PENDING,
+                ConstructionTask.STATUS_IN_PROGRESS,
+            ],
+            due_date__lt=timezone.now().date(),
+        ).count()
+
+        return Response({
+            'total': total,
+            'in_progress': in_progress,
+            'completed': completed,
+            'planning': planning,
+            'on_hold': on_hold,
+            'tasks': {
+                'total': total_tasks,
+                'overdue': overdue_tasks,
+            },
+        })

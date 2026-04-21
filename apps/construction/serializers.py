@@ -22,6 +22,7 @@ from .models import (
     TaskDependency,
     CPMSnapshot,
     EVMSnapshot,
+    ConstructionProject,
 )
 
 
@@ -341,3 +342,25 @@ class DailyReportSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data['author'] = self.context['request'].user
         return super().create(validated_data)
+
+
+# =============================================================================
+# ConstructionProject Serializer
+# =============================================================================
+
+class ConstructionProjectSerializer(serializers.ModelSerializer):
+    """Serializer para projetos de obra (ConstructionProject)."""
+
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    progress_percent = serializers.FloatField(read_only=True)
+
+    class Meta:
+        model = ConstructionProject
+        fields = [
+            'id', 'name', 'description', 'status', 'status_display',
+            'contract', 'project', 'building', 'unit',
+            'start_planned', 'end_planned', 'start_actual', 'end_actual',
+            'bim_model_s3_key', 'progress_percent',
+            'created_by', 'created_at', 'updated_at',
+        ]
+        read_only_fields = ['created_by', 'created_at', 'updated_at', 'progress_percent']

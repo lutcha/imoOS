@@ -23,6 +23,8 @@ from .views import (
     ConstructionDashboardViewSet,
     DailyReportViewSet,
     ConstructionPhotoViewSet,
+    ConstructionProjectViewSet,
+    ConstructionStatsViewSet,
 )
 
 router = DefaultRouter()
@@ -35,6 +37,8 @@ router.register(r'evm', EVMViewSet, basename='evm')
 router.register(r'dashboard', ConstructionDashboardViewSet, basename='construction-dashboard')
 router.register(r'daily-reports', DailyReportViewSet, basename='daily-report')
 router.register(r'construction-photos', ConstructionPhotoViewSet, basename='construction-photo')
+router.register(r'projects', ConstructionProjectViewSet, basename='construction-project')
+router.register(r'stats', ConstructionStatsViewSet, basename='construction-stats')
 
 urlpatterns = [
     path('', include(router.urls)),

@@ -22,6 +22,15 @@ class TenantTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['full_name'] = user.get_full_name() or user.email
         token['is_staff'] = user.is_staff  # Sprint 7: Super-admin access
 
+        # Inject primary tenant domain so the frontend can point the API client
+        # at the correct subdomain (e.g. demo.proptech.cv) after login.
+        try:
+            from apps.tenants.models import Domain as TenantDomain
+            d = TenantDomain.objects.filter(tenant=connection.tenant, is_primary=True).first()
+            token['tenant_domain'] = d.domain if d else ''
+        except Exception:
+            token['tenant_domain'] = ''
+
         return token
 
     def validate(self, attrs):
@@ -32,9 +41,10 @@ class TenantTokenObtainPairSerializer(TokenObtainPairSerializer):
         data['refresh'] = str(refresh)
         data['access'] = str(refresh.access_token)
 
-        # Expose tenant_schema and user info in response body for frontend
+        # Expose tenant_schema, tenant_domain and user info in response body for frontend
         data['tenant_schema'] = refresh.get('tenant_schema')
         data['tenant_name'] = refresh.get('tenant_name')
+        data['tenant_domain'] = refresh.get('tenant_domain', '')
         data['user'] = UserSerializer(self.user).data
 
         return data

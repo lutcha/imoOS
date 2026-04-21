@@ -11,6 +11,7 @@ const API_URL =
 // In-memory token store — cleared on page unload (XSS safe)
 let _accessToken: string | null = null;
 let _tenantSchema: string | null = null;
+let _tenantDomain: string | null = null;
 
 export function setAccessToken(token: string | null): void {
   _accessToken = token;
@@ -35,6 +36,24 @@ const apiClient = axios.create({
   timeout: 10_000,
   headers: { "Content-Type": "application/json" },
 });
+
+/**
+ * Switch the API client baseURL to the tenant's own subdomain.
+ * After login/refresh the backend returns `tenant_domain` (e.g. demo.proptech.cv).
+ * Business endpoints only exist under the tenant subdomain, not the public root.
+ */
+export function setTenantDomain(domain: string | null): void {
+  _tenantDomain = domain;
+  if (domain) {
+    const protocol =
+      typeof window !== "undefined" ? window.location.protocol : "https:";
+    apiClient.defaults.baseURL = `${protocol}//${domain}/api/v1`;
+  }
+}
+
+export function getTenantDomain(): string | null {
+  return _tenantDomain;
+}
 
 // Request interceptor — inject JWT + tenant header + trailing slash
 apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
@@ -94,10 +113,11 @@ apiClient.interceptors.response.use(
         // Call Next.js API route — reads httpOnly refresh cookie
         const resp = await fetch("/api/auth/refresh", { method: "POST" });
         if (!resp.ok) throw new Error("Refresh failed");
-        const { access_token, tenant_schema } = await resp.json();
+        const { access_token, tenant_schema, tenant_domain } = await resp.json();
 
         setAccessToken(access_token);
         setTenantSchema(tenant_schema);
+        if (tenant_domain) setTenantDomain(tenant_domain);
         processQueue(access_token);
 
         originalRequest.headers.Authorization = `Bearer ${access_token}`;
@@ -106,6 +126,7 @@ apiClient.interceptors.response.use(
         processQueue(null);
         setAccessToken(null);
         setTenantSchema(null);
+        setTenantDomain(null);
         if (typeof window !== "undefined") {
           window.location.href = "/login";
         }

@@ -14,14 +14,21 @@ class TenantTokenObtainPairView(TokenObtainPairView):
 
     def post(self, request, *args, **kwargs):
         tenant_domain = request.data.get('tenant_domain')
+        _tenant_domain = ''
         if tenant_domain:
             try:
                 from apps.tenants.models import Domain
                 domain_obj = Domain.objects.select_related('tenant').get(domain=tenant_domain)
                 connection.set_tenant(domain_obj.tenant)
+                _tenant_domain = domain_obj.domain
             except Exception:
                 return Response({'detail': 'Tenant não encontrado.'}, status=400)
-        return super().post(request, *args, **kwargs)
+        response = super().post(request, *args, **kwargs)
+        if response.status_code == 200 and _tenant_domain:
+            response.data['tenant_domain'] = _tenant_domain
+        elif response.status_code == 200 and 'tenant_domain' not in response.data:
+            response.data['tenant_domain'] = ''
+        return response
 
 
 class SuperAdminTokenObtainPairView(TokenObtainPairView):
@@ -56,7 +63,25 @@ class TenantTokenRefreshView(TokenRefreshView):
             access['tenant_schema'] = tenant_schema
         if tenant_name:
             access['tenant_name'] = tenant_name
-        return Response({'access': str(access), 'tenant_schema': tenant_schema, 'tenant_name': tenant_name})
+
+        # Look up the primary domain for this tenant so the frontend can
+        # point the API client at the correct subdomain after a token refresh.
+        tenant_domain = ''
+        try:
+            from apps.tenants.models import Domain
+            domain_obj = Domain.objects.filter(
+                tenant__schema_name=tenant_schema, is_primary=True
+            ).first()
+            tenant_domain = domain_obj.domain if domain_obj else ''
+        except Exception:
+            tenant_domain = ''
+
+        return Response({
+            'access': str(access),
+            'tenant_schema': tenant_schema,
+            'tenant_name': tenant_name,
+            'tenant_domain': tenant_domain,
+        })
 
 
 class SuperAdminTokenRefreshView(TenantTokenRefreshView):
