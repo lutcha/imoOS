@@ -38,6 +38,7 @@ class Command(BaseCommand):
             self._create_projects_and_inventory()
             self._create_crm_leads()
             self._create_contracts()
+            self._create_construction_data()
             self.stdout.write(self.style.SUCCESS('Demo data population complete.'))
         except Exception as exc:  # noqa: BLE001
             self.stderr.write(self.style.ERROR(f'Demo data population failed: {exc}'))
@@ -290,5 +291,122 @@ class Command(BaseCommand):
                     'amount_cve': amount,
                     'status': pstatus,
                     'paid_date': due_date if pstatus == Payment.STATUS_PAID else None,
+                }
+            )
+
+    def _create_construction_data(self):
+        from apps.construction.models import ConstructionProject, ConstructionPhase, ConstructionTask
+        from apps.contracts.models import Contract
+        from apps.users.models import User
+
+        admin = User.objects.filter(email='admin@demo.cv').first()
+        contracts = Contract.objects.filter(status=Contract.STATUS_ACTIVE)
+
+        self.stdout.write('  Creating construction data...')
+        for contract in contracts:
+            if not contract.unit or not contract.unit.floor or not contract.unit.floor.building:
+                continue
+                
+            cp, created = ConstructionProject.objects.get_or_create(
+                contract=contract,
+                defaults={
+                    'name': f'Obra: {contract.unit.code}',
+                    'project': contract.unit.floor.building.project,
+                    'building': contract.unit.floor.building,
+                    'unit': contract.unit,
+                    'status': ConstructionProject.STATUS_IN_PROGRESS,
+                    'start_planned': contract.signed_at,
+                    'end_planned': contract.signed_at + timedelta(days=365),
+                    'created_by': admin,
+                }
+            )
+            if created:
+                self.stdout.write(f'    Created construction project for unit {contract.unit.code}')
+
+            # Create Phases for the Project
+            project = contract.unit.floor.building.project
+            building = contract.unit.floor.building
+            
+            # Phase: Foundation (Completed)
+            phase_f, _ = ConstructionPhase.objects.get_or_create(
+                project=project,
+                building=building,
+                phase_type='FOUNDATION',
+                defaults={
+                    'name': f'Fundação - {building.name}',
+                    'start_planned': project.start_date,
+                    'end_planned': project.start_date + timedelta(days=60),
+                    'status': ConstructionPhase.STATUS_COMPLETED,
+                    'progress_percent': Decimal('100.00'),
+                    'order': 1,
+                    'created_by': admin,
+                }
+            )
+            
+            # Phase: Structure (In Progress)
+            phase_s, _ = ConstructionPhase.objects.get_or_create(
+                project=project,
+                building=building,
+                phase_type='STRUCTURE',
+                defaults={
+                    'name': f'Estrutura - {building.name}',
+                    'start_planned': project.start_date + timedelta(days=61),
+                    'end_planned': project.start_date + timedelta(days=180),
+                    'status': ConstructionPhase.STATUS_IN_PROGRESS,
+                    'progress_percent': Decimal('45.00'),
+                    'order': 2,
+                    'created_by': admin,
+                }
+            )
+
+            # Create Tasks
+            # Task 1 (Completed)
+            ConstructionTask.objects.get_or_create(
+                wbs_code=f'{building.code}-F01',
+                defaults={
+                    'name': 'Escavação e Limpeza',
+                    'project': project,
+                    'building': building,
+                    'phase': phase_f,
+                    'status': ConstructionTask.STATUS_COMPLETED,
+                    'estimated_cost': Decimal('500000'),
+                    'actual_cost': Decimal('520000'),
+                    'progress_percent': Decimal('100.00'),
+                    'due_date': project.start_date + timedelta(days=15),
+                    'created_by': admin,
+                }
+            )
+            
+            # Task 2 (In Progress)
+            ConstructionTask.objects.get_or_create(
+                wbs_code=f'{building.code}-S01',
+                defaults={
+                    'name': 'Pilares e Vigas - Piso 1',
+                    'project': project,
+                    'building': building,
+                    'phase': phase_s,
+                    'status': ConstructionTask.STATUS_IN_PROGRESS,
+                    'estimated_cost': Decimal('1200000'),
+                    'actual_cost': Decimal('400000'),
+                    'progress_percent': Decimal('30.00'),
+                    'due_date': date.today() + timedelta(days=15),
+                    'created_by': admin,
+                }
+            )
+            
+            # Task 3 (Overdue)
+            ConstructionTask.objects.get_or_create(
+                wbs_code=f'{building.code}-S02',
+                defaults={
+                    'name': 'Lajes de Transição',
+                    'project': project,
+                    'building': building,
+                    'phase': phase_s,
+                    'status': ConstructionTask.STATUS_PENDING,
+                    'estimated_cost': Decimal('800000'),
+                    'actual_cost': Decimal('0'),
+                    'progress_percent': Decimal('0.00'),
+                    'due_date': date.today() - timedelta(days=5),
+                    'created_by': admin,
                 }
             )

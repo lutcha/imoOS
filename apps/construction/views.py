@@ -639,38 +639,69 @@ class ConstructionStatsViewSet(viewsets.ViewSet):
 
     def list(self, request, *args, **kwargs):
         """Estatísticas globais de todos os projetos de obra."""
-        total = ConstructionProject.objects.count()
-        in_progress = ConstructionProject.objects.filter(
+        from django.db.models import Sum, Avg, Count
+        from django.utils import timezone
+        
+        projects = ConstructionProject.objects.all()
+        now = timezone.now().date()
+        
+        # Project counts
+        total_projects = projects.count()
+        active_projects = projects.filter(
             status=ConstructionProject.STATUS_IN_PROGRESS
         ).count()
-        completed = ConstructionProject.objects.filter(
+        completed_projects = projects.filter(
             status=ConstructionProject.STATUS_COMPLETED
         ).count()
-        planning = ConstructionProject.objects.filter(
-            status=ConstructionProject.STATUS_PLANNING
-        ).count()
-        on_hold = ConstructionProject.objects.filter(
-            status=ConstructionProject.STATUS_ON_HOLD
+        delayed_projects = projects.exclude(
+            status=ConstructionProject.STATUS_COMPLETED
+        ).filter(
+            end_planned__lt=now
         ).count()
 
-        # Task-level stats
-        total_tasks = ConstructionTask.objects.count()
-        overdue_tasks = ConstructionTask.objects.filter(
-            status__in=[
-                ConstructionTask.STATUS_PENDING,
-                ConstructionTask.STATUS_IN_PROGRESS,
-            ],
-            due_date__lt=timezone.now().date(),
-        ).count()
+        # Average Progress across all phases
+        avg_progress = ConstructionPhase.objects.aggregate(
+            avg=Avg('progress_percent')
+        )['avg'] or 0
+
+        # Budgets (Separated per user request)
+        # 1. Total Sales Value (Revenue from contracts)
+        total_sales_value = projects.aggregate(
+            total=Sum('contract__total_price_cve')
+        )['total'] or 0
+
+        # 2. Construction Budgets (Expenses from tasks)
+        construction_stats = ConstructionTask.objects.aggregate(
+            total_budget=Sum('estimated_cost'),
+            total_actual=Sum('actual_cost')
+        )
+        total_construction_budget = construction_stats['total_budget'] or 0
+        total_actual_construction_cost = construction_stats['total_actual'] or 0
+
+        # Budget Variance
+        # variance = ((actual - budget) / budget) * 100 if budget > 0 else 0
+        budget_variance_pct = 0
+        if total_construction_budget > 0:
+            budget_variance_pct = ((total_actual_construction_cost - total_construction_budget) / total_construction_budget) * 100
+
+        # Detailed Task status
+        tasks_qs = ConstructionTask.objects.all()
+        pending_tasks = tasks_qs.filter(status=ConstructionTask.STATUS_PENDING).count()
+        completed_tasks = tasks_qs.filter(status=ConstructionTask.STATUS_COMPLETED).count()
+        blocked_tasks = tasks_qs.filter(status=ConstructionTask.STATUS_BLOCKED).count()
 
         return Response({
-            'total': total,
-            'in_progress': in_progress,
-            'completed': completed,
-            'planning': planning,
-            'on_hold': on_hold,
-            'tasks': {
-                'total': total_tasks,
-                'overdue': overdue_tasks,
-            },
+            'total_projects': total_projects,
+            'active_projects': active_projects,
+            'completed_projects': completed_projects,
+            'delayed_projects': delayed_projects,
+            'average_progress': float(avg_progress),
+            'total_sales_value': float(total_sales_value),
+            'total_budget_cve': float(total_construction_budget),
+            'total_actual_cost_cve': float(total_actual_construction_cost),
+            'budget_variance_pct': float(budget_variance_pct),
+            'total_tasks': total_tasks,
+            'pending_tasks': pending_tasks,
+            'completed_tasks': completed_tasks,
+            'blocked_tasks': blocked_tasks,
         })

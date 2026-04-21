@@ -105,8 +105,63 @@ class ConstructionProject(TenantAwareModel):
     
     @property
     def progress_percent(self):
-        """Calcular progresso baseado nas fases."""
+        """
+        Calcular progresso baseado no prédio ou fases se vinculadas.
+        Aqui assumimos as fases do Projecto imobiliário.
+        """
+        # Se o ConstructionProject tiver suas próprias fases no futuro, priorizar.
+        # Por agora, usa o progresso do prédio ou projeto global.
         phases = self.project.phases.all()
+        if self.building:
+            phases = phases.filter(building=self.building)
+            
         if not phases:
             return 0
-        return sum(p.progress_percent for p in phases) / phases.count()
+            
+        total_progress = sum(p.progress_percent for p in phases)
+        return float(total_progress / phases.count())
+
+    @property
+    def is_delayed(self):
+        """Verificar se está atrasado em relação ao plano."""
+        from django.utils import timezone
+        if self.status == self.STATUS_COMPLETED:
+            return False
+        if not self.end_planned:
+            return False
+        return self.end_planned < timezone.now().date()
+
+    @property
+    def sales_value(self):
+        """Valor de venda do contrato associado."""
+        return self.contract.total_price_cve
+
+    @property
+    def estimated_construction_cost(self):
+        """
+        Custo de construção estimado. 
+        Calculado a partir das tasks do Projecto/Building.
+        """
+        from apps.construction.models.task import ConstructionTask
+        from django.db.models import Sum
+        
+        # Filtramos tasks que pertencem ao mesmo projeto e prédio
+        qs = ConstructionTask.objects.filter(project=self.project)
+        if self.building:
+            qs = qs.filter(building=self.building)
+            
+        result = qs.aggregate(total=Sum('estimated_cost'))
+        return result['total'] or 0
+
+    @property
+    def actual_construction_cost(self):
+        """Custo de construção real até o momento."""
+        from apps.construction.models.task import ConstructionTask
+        from django.db.models import Sum
+        
+        qs = ConstructionTask.objects.filter(project=self.project)
+        if self.building:
+            qs = qs.filter(building=self.building)
+            
+        result = qs.aggregate(total=Sum('actual_cost'))
+        return result['total'] or 0

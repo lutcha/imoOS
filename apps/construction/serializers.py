@@ -352,15 +352,35 @@ class ConstructionProjectSerializer(serializers.ModelSerializer):
     """Serializer para projetos de obra (ConstructionProject)."""
 
     status_display = serializers.CharField(source='get_status_display', read_only=True)
-    progress_percent = serializers.FloatField(read_only=True)
+    status = serializers.SerializerMethodField()
+    overall_progress_pct = serializers.FloatField(source='progress_percent', read_only=True)
+    is_delayed = serializers.BooleanField(read_only=True)
+    sales_value = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+    budget_cve = serializers.DecimalField(source='estimated_construction_cost', max_digits=12, decimal_places=2, read_only=True)
+    actual_cost_cve = serializers.DecimalField(source='actual_construction_cost', max_digits=12, decimal_places=2, read_only=True)
+    start_date = serializers.DateField(source='start_planned', read_only=True)
+    expected_end_date = serializers.DateField(source='end_planned', read_only=True)
+    actual_end_date = serializers.DateField(source='end_actual', read_only=True)
 
     class Meta:
         model = ConstructionProject
         fields = [
             'id', 'name', 'description', 'status', 'status_display',
             'contract', 'project', 'building', 'unit',
-            'start_planned', 'end_planned', 'start_actual', 'end_actual',
-            'bim_model_s3_key', 'progress_percent',
+            'start_date', 'expected_end_date', 'actual_end_date',
+            'bim_model_s3_key', 'overall_progress_pct', 'is_delayed',
+            'sales_value', 'budget_cve', 'actual_cost_cve',
             'created_by', 'created_at', 'updated_at',
         ]
-        read_only_fields = ['created_by', 'created_at', 'updated_at', 'progress_percent']
+        read_only_fields = [
+            'created_by', 'created_at', 'updated_at', 
+            'overall_progress_pct', 'is_delayed',
+            'sales_value', 'budget_cve', 'actual_cost_cve',
+            'start_date', 'expected_end_date', 'actual_end_date',
+        ]
+
+    def get_status(self, obj):
+        """Map status to frontend expectations (IN_PROGRESS -> ACTIVE)."""
+        if obj.status == 'IN_PROGRESS':
+            return 'ACTIVE'
+        return obj.status
