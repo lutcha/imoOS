@@ -176,10 +176,11 @@ DATABASE_ROUTERS = ['django_tenants.routers.TenantSyncRouter']
 # Middleware
 # =============================================================
 MIDDLEWARE = [
-    'django_prometheus.middleware.PrometheusBeforeMiddleware',  # Sprint 7 - must be first
-    'corsheaders.middleware.CorsMiddleware',  # MUST be before tenant and security for preflight
-    'apps.tenants.middleware.ImoOSTenantMiddleware',  # MUST be after Prometheus
+    'corsheaders.middleware.CorsMiddleware',  # Top priority for preflight
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
+    'apps.tenants.middleware.ImoOSTenantMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -188,7 +189,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',
-    'django_prometheus.middleware.PrometheusAfterMiddleware',  # Sprint 7 - must be last
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'

@@ -76,18 +76,6 @@ CSRF_TRUSTED_ORIGINS = [
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# Ensure CorsMiddleware is at the absolute top for preflight handling
-# especially before tenant and security middleware in production
-MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
-    'apps.tenants.middleware.ImoOSTenantMiddleware',
-    'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
-] + [m for m in MIDDLEWARE if m not in (  # noqa: F821
-    'corsheaders.middleware.CorsMiddleware',
-    'apps.tenants.middleware.ImoOSTenantMiddleware',
-    'django.middleware.security.SecurityMiddleware',
-)]
 
 # Media via DigitalOcean Spaces (production/ prefix)
 AWS_LOCATION = 'production'
